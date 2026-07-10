@@ -1,0 +1,180 @@
+/* Fundo escuro atrás do modal 
+.modal_overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}*/
+
+/* Caixa principal do modal */
+.icone_alerta {
+  background: #fff;
+  border-radius: 2px;
+  padding: 5px;
+  margin-left: 42%;
+  margin-top: 5%;
+  
+}
+
+/* Estilo para o conteúdo do modal */
+.modal_conteudo {
+  font-family: 'Saira';
+  background: #fff;
+  border-radius: 2px;
+  padding: 20px;
+  width: 350px;
+  max-width: 90%;
+  box-shadow: 0 1px 3px 0px rgba(0, 0, 0, 0.2);
+  margin-top: 60%;
+  margin-left: 10%;
+  font-size: 15px;
+  overflow:auto;
+  flex:auto;
+  max-height: 40vh;
+
+}
+
+
+
+/* Cabeçalho do modal */
+.modal_cabecalho {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Corpo do modal */
+.modal_corpo {
+  margin: 15px 0;
+  overflow: auto;
+  flex:1
+}
+
+/* Lista de mensagens */
+.lista_mensagens {
+  list-style: none;
+  padding: 0;
+}
+
+.item_mensagem {
+  margin-bottom: 8px;
+  padding: 6px;
+  background: #fff;
+  border-radius: 6px;
+}
+
+/* Rodapé com botão de fechar */
+.modal_rodape {
+  text-align: right;
+}
+
+.btn_fechar_rodape {
+  background: #ff5252;
+  border: none;
+  padding: 8px 14px;
+  color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* Responsividade para modal em celulares e tablets */
+@media (max-width: 768px) {
+  .modal_conteudo {
+    width: calc(100% - 30px);
+    margin: 20px 15px;
+    padding: 16px;
+    font-size: 14px;
+    margin-top: 30%;
+  }
+
+  .icone_alerta {
+    padding: 16px;
+    margin-left: 0;
+    text-align: center;
+  }
+
+  .modal_cabecalho {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .btn_fechar_rodape {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+  }
+}
+
+/*Modal Content*/
+.modal_overlay_content {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999999;
+}
+
+.modal_box_content {
+  font-family: 'Saira';
+  position: relative;
+  z-index: 1000000;
+  background: #fff;
+  border-radius: 2px;
+  max-width: 95%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+}
+
+/* tamanhos */
+.modal_box_content.large {
+  width: 1000px;
+}
+
+.modal_box_content.fullscreen {
+  width: 95vw;
+  height: 90vh;
+}
+
+/* header */
+.modal_header_content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #ddd;
+}
+
+/* body */
+.modal_body_content {
+  padding: 16px;
+  overflow: auto;
+  /*scroll interno */
+  flex: 1;
+}
+
+/* footer */
+.modal_footer_content {
+  padding: 12px 16px;
+  text-align: right;
+  border-top: 1px solid #ddd;
+}
+
+/* botão fechar */
+.btn_close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+}

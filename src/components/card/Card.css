@@ -1,0 +1,73 @@
+.card {
+    align-items: center;
+    text-align: center;
+    text-decoration: none;
+
+}
+
+.card :hover :not(.card-ti) {
+    cursor: pointer;
+    background-color: #333;
+    color: #F0F1F3;
+}
+
+/*Container principal*/
+#bloco {
+    background-color: #F0F1F3;
+    border: none;
+}
+
+/*Icones*/
+.card-ti {
+    color: #26ace2;
+    font-size: 36px;
+    padding: 20px 30px;
+    margin-bottom: 5px;
+    transition: all 500ms cubic-bezier(0.42, 0, 0, 0.99);
+
+}
+
+.card-ti:hover {
+    color: #8bc34a !important;
+    font-size: 40px;
+}
+
+/*Corpo do card*/
+.card_home {
+    color: black;
+    box-shadow: 0 1px 3px 0px rgba(0, 0, 0, 0.2);
+    height: 190px;
+    width: 300px;
+    font-family: 'Saira';
+    background-color: aliceblue;
+    padding-top: 16px;
+}
+
+.card_home :hover {
+    color: #F0F1F3;
+}
+/*Footer do card*/
+.nome_footer{
+    color:rgb(170, 170, 175);
+    font-size: 12px;
+}
+
+/*Margem dos cards em relação ao topo da tela*/
+.card-container {
+    margin-top: 10%;
+}
+
+.card-container-2 {
+    margin-top: 5%;
+}
+
+/*Nome do card*/
+.nome_card {
+
+    font-size: 16px;
+    line-height: 16px;
+    font-weight: 500;
+    color: #333;
+    margin-top: 10px;
+    padding: 20px 30px 2;
+}

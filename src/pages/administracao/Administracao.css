@@ -1,0 +1,40 @@
+.quantidade {
+    width: 75px;
+    border: solid 1px;
+    height: 28px;
+}
+
+#pagination {
+    font-family: 'Saira';
+    position: relative;
+    color: #bdbdbd;
+}
+
+.dataTable {
+    min-width: 720px;
+    font-family: 'Saira';
+    clear: both;
+    margin-top: 0px !important;
+    margin-bottom: 0px !important;
+    max-width: none !important;
+}
+.table-bordered{
+    border-radius: 2px;
+    border-style: none;
+
+}
+#criterios-pesquisa{
+    width: 100px;
+}
+select.select-item {
+	font-family: 'Saira';
+	border: 1px solid #dbd9d9;
+	border-radius: 2px;
+	height: 35px;
+	width: 210px;
+}
+select.select-item:focus {
+	border-color: #5c8efa;
+}
+
+

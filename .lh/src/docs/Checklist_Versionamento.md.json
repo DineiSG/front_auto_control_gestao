@@ -1,0 +1,30 @@
+{
+    "sourceFile": "src/docs/Checklist_Versionamento.md",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 3,
+            "patches": [
+                {
+                    "date": 1768480524994,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1768486854151,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -42,9 +42,9 @@\n     --------------------------------------------------------------------------------\r\n \r\n     ✅Responsividade aplicada ?\r\n \r\n-    [] Sim [] Não [] Não se aplica\r\n+    [x] Sim [] Não [] Não se aplica\r\n     --------------------------------------------------------------------------------\r\n \r\n     ✅Debugs realizados ? Erros encontrados e corrigidos ?\r\n \r\n"
+                },
+                {
+                    "date": 1768486864003,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -37,9 +37,9 @@\n     --------------------------------------------------------------------------------\r\n \r\n     ✅Front end desenvolvido ?\r\n \r\n-    [] Sim [] Não [] Não se aplica\r\n+    [x] Sim [] Não [] Não se aplica\r\n     --------------------------------------------------------------------------------\r\n \r\n     ✅Responsividade aplicada ?\r\n \r\n@@ -47,14 +47,14 @@\n     --------------------------------------------------------------------------------\r\n \r\n     ✅Debugs realizados ? Erros encontrados e corrigidos ?\r\n \r\n-    [] Sim [] Não [] Não se aplica\r\n+    [x] Sim [] Não [] Não se aplica\r\n     --------------------------------------------------------------------------------\r\n \r\n     ✅Testes unitários realizados ?\r\n \r\n-    [] Sim [] Não [] Não se aplica\r\n+    [x] Sim [] Não [] Não se aplica\r\n     --------------------------------------------------------------------------------\r\n \r\n     ✅Nova versão obedece aos requisitos não-funcionais ?\r\n \r\n"
+                },
+                {
+                    "date": 1768486875765,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -57,9 +57,9 @@\n     --------------------------------------------------------------------------------\r\n \r\n     ✅Nova versão obedece aos requisitos não-funcionais ?\r\n \r\n-    [] Sim [] Não [] Não se aplica\r\n+    [x] Sim [] Não [] Não se aplica\r\n \r\n \r\n \r\n 📌Mudanças que entrarão na proxima versao:\r\n"
+                }
+            ],
+            "date": 1768480524994,
+            "name": "Commit-0",
+            "content": "**🧭 CHECKLIST DE DESENVOLVIMENTO DE FEATURES (VERSAO 2.0.1)**\r\n\r\n## ✅ ESCOPO CONTROLADO DA NOVA VERSAO\r\n\r\n📌**CONTROLE DE VERSAO**\r\n\r\n📌Qual o tipo de mudança? \r\n\r\n- [] *MAJOR* = Mudança que que pode quebrar por compatibilidade\r\n- [] *MINOR* = Nova função adicionada, sem risco de quebra por compatibilidade;\r\n- [x] *PATCH* = Mudanças pontuais, como novas funções dentro de componentes, correções de bugs;\r\n\r\n- Nº VERSAO ATUAL: 2.2.0\r\n- Nº NOVA VERSAO: 2.2.1\r\n\r\n**################################################################################################**\r\n\r\n📌Descreva as funcionalidades que serão incluidas na nova versao:\r\n\r\n- Campos de input *KM* e *Tipo de Combustivel*, campo selecionavel *Cambio* no formulario de Cadastro de Veículos (c/ e s/ consulta à base bin) e no formulário de Edição de Dados;\r\n- No Relatório de Estoque adicionar as colunas correspondentes aos campos acima;\r\n- Adição dos campos especificados acima no banco de dados, na tabela veiculos;\r\n- Adição dos campos especificados na entidade Veiculos na API;\r\n\r\n📌Previsao de entrega: 15/01/2026\r\n\r\n📌Avaliação de evolução do desenvolvimento da feature:\r\n\r\n    ✅Tabela do banco de dados criada ou modificada ?\r\n\r\n    [x] Sim [] Não [] Nao se aplica\r\n    -------------------------------------------------------------------------------\r\n\r\n    ✅Api preparada para realizar a comunicação entre front end e banco de dados ?\r\n\r\n    [x] Sim [] Não [] Não se aplica\r\n    --------------------------------------------------------------------------------\r\n\r\n    ✅Front end desenvolvido ?\r\n\r\n    [] Sim [] Não [] Não se aplica\r\n    --------------------------------------------------------------------------------\r\n\r\n    ✅Responsividade aplicada ?\r\n\r\n    [] Sim [] Não [] Não se aplica\r\n    --------------------------------------------------------------------------------\r\n\r\n    ✅Debugs realizados ? Erros encontrados e corrigidos ?\r\n\r\n    [] Sim [] Não [] Não se aplica\r\n    --------------------------------------------------------------------------------\r\n\r\n    ✅Testes unitários realizados ?\r\n\r\n    [] Sim [] Não [] Não se aplica\r\n    --------------------------------------------------------------------------------\r\n\r\n    ✅Nova versão obedece aos requisitos não-funcionais ?\r\n\r\n    [] Sim [] Não [] Não se aplica\r\n\r\n\r\n\r\n📌Mudanças que entrarão na proxima versao:\r\n\r\n- Com respeito aos novos campos:\r\n- Adicionar na tabela Baixas no BD e na entidade Baixas;\r\n- Configurar a Baixa Automática, adicionando-os;\r\n- Inclui-los no relatorio do historico do veículo;  \r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n"
+        }
+    ]
+}

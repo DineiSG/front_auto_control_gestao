@@ -1,0 +1,26 @@
+{
+    "sourceFile": "default.conf",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 2,
+            "patches": [
+                {
+                    "date": 1769674522064,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1769674531155,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,7 +1,7 @@\n server {\r\n     listen 80;\r\n-    server_name autocontrol.com;\r\n+    server_name wwwautocontrol.com;\r\n     root /usr/share/nginx/html;\r\n \r\n     index index.html;\r\n \r\n"
+                },
+                {
+                    "date": 1769674678564,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -0,0 +1,19 @@\n+server {\r\n+    listen 80;\r\n+    server_name wwwautocontrol.com;\r\n+    root /usr/share/nginx/html;\r\n+\r\n+    index index.html;\r\n+\r\n+    location / {\r\n+        try_files $uri /index.html;\r\n+    }\r\n+\r\n+    location ~* \\.(?:ico|css|js|gif|jpe?g|png|woff2?|eot|ttf|svg)$ {\r\n+        expires 6M;\r\n+        access_log off;\r\n+        add_header Cache-Control \"public\";\r\n+    }\r\n+\r\n+    error_page 404 /index.html;\r\n+}\n\\ No newline at end of file\n"
+                }
+            ],
+            "date": 1769674522063,
+            "name": "Commit-0",
+            "content": "server {\r\n    listen 80;\r\n    server_name autocontrol;\r\n    root /usr/share/nginx/html;\r\n\r\n    index index.html;\r\n\r\n    location / {\r\n        try_files $uri /index.html;\r\n    }\r\n\r\n    location ~* \\.(?:ico|css|js|gif|jpe?g|png|woff2?|eot|ttf|svg)$ {\r\n        expires 6M;\r\n        access_log off;\r\n        add_header Cache-Control \"public\";\r\n    }\r\n\r\n    error_page 404 /index.html;\r\n}"
+        }
+    ]
+}

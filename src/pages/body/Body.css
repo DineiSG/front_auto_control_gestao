@@ -1,0 +1,11 @@
+.menu_container {
+    display: flex;
+    position: relative;
+    z-index: 12;
+}
+#home{
+    text-decoration: none !important;
+    font-size: 30px;
+    color:white
+
+}

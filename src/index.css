@@ -1,0 +1,284 @@
+@font-face {
+	font-family: Saira;
+	src: url('../src/assets/saira/Saira-Regular.otf');
+	font-weight: normal;
+}
+
+@font-face {
+	font-family: Saira;
+	src: url('../src/assets/saira/Saira-SemiBold.otf');
+	font-weight: 500;
+}
+
+@font-face {
+	font-family: Saira;
+	src: url('../src/assets/saira/Saira-ExtraLight.otf');
+	font-weight: 300;
+}
+
+p {
+	font-family: 'Saira';
+}
+
+#path {
+	display: inherit;
+	padding: 5px 20px;
+	margin: 10px 0px;
+	position:fixed;
+	background: #F0F1F3;
+	font-family: 'Saira';
+	font-size: 12px;
+	
+}
+
+@media screen and (max-width: 1300px) {
+	#path {
+		display: none !important;
+	}
+}
+
+.link_a {
+	margin-right: 5px;
+	text-decoration: none;
+}
+
+.atual {
+	color: #8BC34A;
+}
+
+#card-path {
+	color: #333;
+	font-size: 10px;
+}
+
+#options {
+	display: inline-flexbox
+}
+#date_select {
+	padding: 8px 20px 4px;
+	line-height: 48px;
+	color: #333333;
+	font-family: 'Saira';
+	font-size: 15px;
+	font-weight: 500;
+}
+
+.box-base {
+	box-shadow: 0 1px 3px 0px rgba(0, 0, 0, 0.2);
+	border-radius: 2px;
+	background-color: #fff;
+	padding-left: 16px;
+	padding-right: 16px;
+	padding-bottom: 15px;
+	margin-bottom: 50px;
+	margin-top:-35px;
+	vertical-align: baseline;
+
+}
+
+.panel-heading {
+	padding: 5px 3px 0px;
+	line-height: 45px;
+	color: #333333;
+	display: flex;
+	font-family: 'Saira';
+	font-size: 15px;
+	font-weight: 500;
+	
+}
+
+.sub-panel-heading {
+	padding-top: 15px;
+	padding-bottom: 15px;
+	padding-left: 20px;
+	padding-right: 20px;
+	line-height: 48px;
+	color: #333333;
+	display: flex;
+	font-family: 'Saira';
+	font-size: 15px;
+	font-weight: 500;
+	border-top: 2px solid #f0f1f3;
+	margin-top: 25px;
+}
+
+.label {
+	margin-right: 10px;
+	font-family: 'Saira';
+}
+
+#criterios {
+	padding-left: 15px;
+}
+
+select {
+	font-family: 'Saira';
+	border: 1px solid #dbd9d9;
+	border-radius: 2px;
+	height: 35px;
+	width: 200px;
+}
+
+#select-label {
+	margin-left: 3%;
+}
+
+
+input {
+	border: 1px solid #dbd9d9;
+	border-radius: 2px;
+
+}
+
+#input-all,
+#select-all {
+	border-radius: 2px;
+	border: none;
+	font-family: 'Saira';
+}
+
+#select-all :focus {
+	border-color: #5c8efa;
+}
+
+#input-all :focus {
+	border-color: #5c8efa;
+	outline: none
+}
+
+#ti-black {
+	color: #333;
+	font-size: 25px;
+	margin-right: 15px;
+	
+}
+
+#formulario {
+	margin-top: 10px;
+	padding-bottom: 20px;
+}
+
+#alerta {
+
+	text-align: center;
+}
+
+#graficos {
+	font-family: 'Saira';
+
+
+}
+
+/*Buttons*/
+.button {
+	font-family: 'Saira';
+	font-weight: 600;
+	border: none;
+	font-size: 13px;
+	width: 150px;
+	height: 30px;
+	border-radius: 2px;
+	transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+	text-align: center;
+	touch-action: manipulation;
+	background-image: none;
+	margin: 15px 6px 0;
+	position: relative;
+	line-height: 1.45;
+}
+
+#button_login{
+	font-family: 'Saira';
+}
+
+
+.button.primary {
+	font-family: 'Saira';
+	background-color: #26ace2;
+	color: white;
+	font-weight: 600;
+}
+
+.button.primary:hover {
+	background-color: #26ace2;
+}
+
+.button.secondary {
+	background-color: #6c757d;
+	color: white;
+}
+
+.button.secondary:hover {
+	background-color: #545b62;
+}
+
+.button.danger {
+	background-color: #dc3545;
+	font-family: 'Saira';
+	color: white;
+}
+
+.button.danger:hover {
+	background-color: #bd2130;
+}
+
+.button.disabled {
+	background-color: #cccccc;
+	cursor: not-allowed;
+}
+.button.sign_page{
+	font-family: 'Saira';
+	background-color: #2f7950;
+	color:white
+}
+
+.table {
+	font-family: inherit;
+	font-size: 12px;
+	font-style: inherit;
+	font-weight: inherit;
+	margin: 0;
+	outline: 0;
+	padding: 0;
+	text-decoration: none;
+	vertical-align: baseline;
+}
+
+.table-responsive{
+	overflow-x: auto;
+	display: block;
+}
+
+#btn_link{
+	text-decoration: none !important;
+	color: white;
+	font-weight: 600;
+	font-family: 'Saira';
+}
+
+@media print {
+
+	.logo-img {
+		visibility: hidden;
+	}
+
+	.corpo-menu {
+		visibility: hidden;
+	}
+
+	header {
+		visibility: hidden;
+	}
+
+	#estoque,
+	#estoque * {
+		visibility: visible;
+	}
+
+	#estoque {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+	}
+}

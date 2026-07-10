@@ -1,0 +1,153 @@
+.corpo_menu {
+  font-family: 'Saira', sans-serif;
+  list-style: none;
+  background-color: #333333;
+  width: 275px;
+  height: auto;
+  font-size: 15px;
+  overflow: visible;
+
+}
+
+@media screen and (max-width: 1300px) {
+  .corpo_menu {
+    display: none !important;
+  }
+
+  .logo_img {
+    display: none !important;
+  }
+}
+
+/*itens do menu*/
+
+.item_menu {
+  text-decoration: none;
+  color: #fff;
+  background-color: #484848;
+  padding: 12px 155px 12px 20px;
+  border: none;
+  min-width: 275px;
+  font-weight: 400;
+  max-width: 100%;
+  justify-content: space-between;
+  white-space: nowrap;
+  display: flex;
+  cursor: pointer;
+}
+
+#item_menu {
+  text-decoration: none;
+  color: #fff;
+  background-color: #484848;
+  padding: 12px 16px;
+}
+
+#botoes {
+  text-decoration: none;
+  color: #fff;
+  background-color: #484848;
+  padding: 0px 0px;
+  margin: 0px 0px 4px;
+  list-style: none;
+  border: none;
+  height: 47px;
+  border-radius: 0px;
+  margin-bottom: 3px;
+}
+
+.dropdown {
+  text-decoration: none;
+  color: #fff;
+  background-color: #484848;
+  padding: 12px 155px 12px 20px;
+  border: none;
+  width: 275px;
+  font-weight: 400;
+  margin-bottom: 3px;
+  display: flex;
+  gap: 4px;
+}
+
+.dropdown :hover {
+  background-color: #26ace2;
+  ;
+}
+
+.dropdown-list {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-in-out;
+  margin-left: 20px; /* recuo visual */
+}
+
+/* Estado aberto */
+.dropdown-list.open {
+  max-height: 500px; /* valor grande suficiente para todos os itens */
+}
+
+.botoes {
+  text-decoration: none;
+  color: #fff;
+  background-color: #484848;
+  padding: 0px 0px;
+  margin: 0px 0px 4px;
+  list-style: none;
+  border: none;
+  height: 47px;
+  border-radius: 0px;
+}
+
+.botoes :hover {
+  background-color: #26ace2;
+  ;
+}
+
+.separator {
+  font-size: 12px;
+  font-weight: 500;
+  color: #bdbdbd;
+  text-decoration: none;
+  list-style: none;
+  padding: 12px 16px;
+  height: 40px;
+}
+
+#ti {
+  margin-right: 16px;
+  color: #26ace2;
+}
+
+#ti :hover {
+  color: #fff;
+}
+
+
+.ti {
+  margin-right: 16px;
+  color: #fff;
+}
+
+
+
+
+@media print {
+
+
+  .corpo-menu {
+    visibility: hidden;
+  }
+
+
+  #estoque,
+  #estoque * {
+    visibility: visible;
+  }
+
+  #estoque {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+}

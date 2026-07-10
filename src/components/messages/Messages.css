@@ -1,0 +1,10 @@
+.messages {
+    position: absolute;
+    top: 50;
+    right: 10;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    padding: 16px;
+    min-width: 150px
+}
