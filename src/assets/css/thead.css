@@ -1,5 +1,5 @@
 #barra_navegacao {
-	background-color: #ad26e2;
+	background-color: #680d8b;
 	height: 66px;
 	position: sticky;/*Fixa a barra de navegação no topo*/
 	top: 0;
@@ -16,15 +16,13 @@
 
 .icon-bg {
 	display: block;
-	border-radius: 50%;
 	height: 40px;
 	width: 40px;
-	padding: 0;
 	line-height: 40px;
-	font-size: 20px;
+	font-size: 30px;
 	text-align: center;
 	border: none;
-	background-color: #ad26e2;
+	background-color: #680d8b;
 
 }
 

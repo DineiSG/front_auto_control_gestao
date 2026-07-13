@@ -32,8 +32,6 @@ const Login = () => {
                 alert("Falha no login. Verifique suas credenciais.");
             }
 
-
-
         } catch (error) {
             alert("Erro ao tentar logar.");
             console.error(error);
@@ -44,15 +42,15 @@ const Login = () => {
         <div>
             <ContainerPrincipal >
                 <div className='col-md3 d-flex flex-column align-items-center align-self-center justify-content-center'
-                    style={{ backgroundColor: "#5c8efa", marginTop: "40px", borderRadius: "10px", padding: "50px" }}>
+                    style={{ backgroundColor: "#680d8b", marginTop: "40px", borderRadius: "2px", padding: "50px" }}>
                     <div className="d-flex align-items-center mb-1">
                         <img src='./LogoAutoControl.png' alt="Auto Control" width={470} height={300} />
                     </div>
-                    <form className='d-flex flex-column align-items-center justify-content-center' id='input_login' onSubmit={handleSubmit}>
-                        <Input id="input_login" label="Login:" type="text" style={{ width: '200px' }} nameInput="usuario" name="login" placeholder="Login"
+                    <form className='d-flex flex-column align-items-center justify-content-center' id='input_login'>
+                        <Input id="input_login" type="text" style={{ width: '300px' }} nameInput="usuario" name="login" placeholder="Login"
                             value={username} onChange={(e) => setUsername(e.target.value)} />
                         <br />
-                        <Input className={login} label="Senha:" type={showSenha ? "text" : "password"} style={{ width: "200px" }} nameInput="senha" name="senha" placeholder="Senha"
+                        <Input className={login} type={showSenha ? "text" : "password"} style={{ width: "300px" }} nameInput="senha" name="senha" placeholder="Senha"
                             value={password} onChange={(e) => setPassword(e.target.value)} />
                         <br />
                         <button type="button" onClick={() => setShowSenha(!showSenha)} style={{ background: "none", border: "none", cursor: "pointer" }}
@@ -63,10 +61,11 @@ const Login = () => {
                             )}
                         </button>
                         <br />
-                        <div className="d-flex align-items-center mb-3" id="button_login" >
-                            <Button className='button.primary' as={Link} to="/home" type="submit" onClick={handleSubmit}>ACESSAR</Button >
-                        </div>
+
                     </form>
+                    <div className="d-flex align-items-center mb-3" id="button_login" >
+                        <Button className='button.primary' as={Link} to="/home" type="submit" onClick={handleSubmit}>ACESSAR</Button >
+                    </div>
                 </div>
             </ContainerPrincipal>
         </div >

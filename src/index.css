@@ -38,6 +38,7 @@ p {
 }
 
 .link_a {
+	color: #8304b6;
 	margin-right: 5px;
 	text-decoration: none;
 }
@@ -255,6 +256,8 @@ input {
 	font-weight: 600;
 	font-family: 'Saira';
 }
+
+
 
 @media print {
 

@@ -87,7 +87,7 @@ const Administracao = () => {
                     </div>
                 </div>
                 <div className="container d-flex justify-content-center card-container">
-                                        <div className="card col-md-4" id="bloco"  >
+                    <div className="card col-md-4" id="bloco"  >
                         <Card classBody={"card_home"} classLink={"/cadastro_veiculo_compra"} classNameIcon={"ti ti-car card-ti"} classFooter={"nome_footer"} text_title={"CADASTRO FORPLAN"}
                             text_footer={<>Cadastrar um veiculo adquirido <br /> por meio do Forplan</>} />
                     </div>

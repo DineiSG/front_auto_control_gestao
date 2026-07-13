@@ -3,7 +3,6 @@ import ContainerSecundario from '../../../components/container/ContainerSecundar
 import * as XLSX from "xlsx";
 import { useGetData } from '../../../services/useGetData';
 import { formatDateInfo } from "../../../hooks/formatDate";
-import { calculateDaysInStock } from "../../../hooks/useCalc";
 import { useFilterPeriodo } from "../../../hooks/useFilterPeriodo";
 import "../GestaoEstoque.css";
 import Box from '../../../components/box/Box'
@@ -11,6 +10,7 @@ import Table from "../../../components/table/Table";
 import Input from "../../../components/input/Input";
 import Select from "../../../components/select/Select";
 import Button from "../../../components/button/Button";
+import { Label } from "recharts";
 
 const RelatorioEstoque = () => {
 
@@ -70,11 +70,7 @@ const RelatorioEstoque = () => {
         { key: 'ano_fabricacao', label: 'ANO FABRICAÇÃO' },
         { key: 'ano_modelo', label: 'ANO MODELO' },
         { key: 'placa', label: 'PLACA' },
-        { key: 'renavan', label: 'RENAVAN' },
-        /*{ key: 'dias_estoque', label: 'DIAS EM ESTOQUE', format: (value) => value !== undefined ? `${value} dia(s)` : 'N/A' /*in */ 
-        { key: 'combustivel', label: 'COMBUSTÍVEL' },
-        { key: 'cambio', label: 'CÂMBIO' },
-        { key: 'quilometragem', label: 'QUILOMETRAGEM' }
+        /*{ key: 'dias_estoque', label: 'DIAS EM ESTOQUE', format: (value) => value !== undefined ? `${value} dia(s)` : 'N/A' /*in */
 
     ]
 
@@ -151,25 +147,31 @@ const RelatorioEstoque = () => {
                                 <p>VERIFICAR ESTOQUE DE VEÍCULOS</p>
                             </div>
                         </div>
-                        <div className="d-flex flex-row-reverse" >
-                            <div className="d-flex justify-content-start">
-                                <div className="p-2 ">
-                                    <Input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} id='criterios-pesquisa' tooltipPlacement="top" tooltipText={"Busque pela placa, loja, marca, modelo ou cor."} />
+                    </div>
+                    <div className="d-flex flex-column align-items-end">
+                        <div className="p-2 ">
+                            <Input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} id='criterios-pesquisa'
+                                tooltipPlacement="top" tooltipText={"Busque pela placa, loja, marca, modelo ou cor."} placeholder={"Filtro"} />
+                        </div>
+                    </div>
+                    <div className="d-flex flex-column align-items-end" >
+                        <div className=" d-flex justify-content-between" >
+                            <div className="p-2 ">
+                            </div>
+                            <div className="d-flex align-items-center gap-3">
+                                {status !== "ok" && (<p className={status === "error" ? "text-danger" : "text-muted", "mb-0"} >{message} </p>)}
+                                <div className="d-flex flex-column ">
+                                    <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} tooltipText="Buscar por um veículo em uma data específica"
+                                        tooltipPlacement="top" />
                                 </div>
-                                <div className="d-flex align-items-center gap-3">
-                                    {status !== "ok" && (<p className={status === "error" ? "text-danger" : "text-muted", "mb-0"} >{message} </p>)}
-                                    <div className="d-flex flex-column ">
-                                        <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} tooltipText="Buscar por um veículo em uma data específica"
-                                            tooltipPlacement="top" />
-                                    </div>
-                                    <div className="d-flex flex-column">
-                                        <Input type="date" value={endDate} min={startDate || undefined} onChange={(e) => setEndDate(e.target.value)} tooltipText="Buscar por um veículo em uma data específica"
-                                            tooltipPlacement="top" />
-                                    </div>
-                                    <div className="p-2">
-                                        <div className="p-1 ">
-                                            <Select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} options={options} className={"quantidade"} />
-                                        </div>
+                                <div className="d-flex flex-column">
+                                    <Input type="date" value={endDate} min={startDate || undefined} onChange={(e) => setEndDate(e.target.value)}
+                                        tooltipText="Buscar por um veículo em uma data específica"
+                                        tooltipPlacement="top" />
+                                </div>
+                                <div className="p-2">
+                                    <div className="p-1 ">
+                                        <Select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} options={options} className={"quantidade"} />
                                     </div>
                                 </div>
                             </div>
@@ -177,7 +179,8 @@ const RelatorioEstoque = () => {
                     </div>
                     <div className="table-responsive" ref={tabelaRef}>
                         <div>
-                            <Table data={hasResults ? paginatedData : []} columns={colunas} className={"table table-striped table-bordered table-data dataTable no-footer"} role="grid" id="estoque" />
+                            <Table data={hasResults ? paginatedData : []} columns={colunas}
+                                className={"table table-striped table-bordered table-data dataTable no-footer"} role="grid" id="estoque" />
                         </div>
                     </div>
                     <div className="d-flex justify-content-between" id="pagination" >

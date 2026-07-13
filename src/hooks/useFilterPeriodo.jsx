@@ -26,7 +26,7 @@ import { useMemo, useState } from "react";
 export function useFilterPeriodo({
   data,
   dateKey = "dataRegistro",
-  initialMessage = "Selecione as datas de inicio e fim para determinar um período para a busca dos registros",
+  initialMessage = "Selecione as datas de inicio e fim para determinar um período para a busca. ",
   emptyMessage = "Não houve registros no período selecionado",
 }) {
   // Inputs de datas (formatos aceitos pelo <input type="date">: "YYYY-MM-DD")

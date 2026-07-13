@@ -12,6 +12,7 @@ import "./Body.css"
 
 import ContainerPrincipal from "../../components/container/ContainerPrincipal";
 import ContainerSecundario from "../../components/container/ContainerSecundario";
+import Sidebar from "../../components/sidebar/Sidebar";
 
 //Importação de páginas
 import RegistrarVenda from "../lojista/vendas/RegistrarVenda"
@@ -64,6 +65,11 @@ function Body() {
     setShowSidebar(!showSidebar);
   }
 
+  const hideSidebar = "/"
+
+  const shouldHideSidebar = hideSidebar.includes(location.pathname);
+
+
   return (
     <ContainerPrincipal className="container-principal">
       {!shouldHideNavbar && (
@@ -73,7 +79,7 @@ function Body() {
 
             {/*Responsável pelo icone que aciona a barra lateral */}
             <button className="navbar-brand icon-bg p-0" onClick={toggleSidebar} >
-              <img src="./LogoAutoControl.png" width={80} height={50} alt="" />
+              <img src="./LogoAutoControl.png" width={90} height={50} alt="" />
             </button>
             <div className="w-100 text-center" style={{ marginTop: "15px", color: "white" }} >
               {/*Alterando para exibir apenas o primeiro nome do usuario.*/}
@@ -81,23 +87,20 @@ function Body() {
             </div>
 
           </div >
-          <div className="d-flex justify-content-end" >
-            <div className="p-3">
-              <a href="/home" id="home">
-                <i className="ti ti-home" />
-              </a>
-            </div>
-          </div>
+
           <ModalCam />
         </header>
       )}
       <div className="menu_container">
-        {/*{showSidebar && (
-          <Sidebar id="sidebar"></Sidebar>
-        )}*/}
+
+        {showSidebar && (
+          !shouldHideSidebar && (< Sidebar id="sidebar"></Sidebar>)
+        )}
+
         <ContainerSecundario >
           <Routes>
-            <Route path="/" element={<Login />} />
+            <Route path="/" hideSidebar={hideSidebar} element={<Login />} />
+
             <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
 
             {/* Modulo Lojista */}
@@ -135,12 +138,12 @@ function Body() {
 
             {/* Adicione outras rotas conforme necessário */}
           </Routes>
-          
+
         </ContainerSecundario>
-         <footer className="footer"></footer>
+        <footer className="footer"></footer>
       </div>
-    </ContainerPrincipal>
-   
+    </ContainerPrincipal >
+
   );
 }
 export default Body;

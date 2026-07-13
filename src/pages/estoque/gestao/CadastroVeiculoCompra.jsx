@@ -313,7 +313,7 @@ const CadastroVeiculoCompra = () => {
                     <Box >
                         <div className='panel-heading'>
                             <i className='ti ti-car' id="ti-black" ></i>
-                            <p>CADASTRO DE VEICULOS<br /> Selecione a loja e informe a placa do veículo para buscar os dados na Base BIN do Detran.
+                            <p>CADASTRO DE VEICULOS FORPLAN<br /> Selecione a loja e informe a placa do veículo para buscar os dados na Base BIN do Detran.
                                 <br></br> Caso os dados nao estejam disponiveis na Base BIN, insira as informações manualmente.</p>
                         </div>
                         <Form onSubmit={handleSubmit}>

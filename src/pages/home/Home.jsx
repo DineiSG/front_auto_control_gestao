@@ -41,7 +41,6 @@ const Home = () => {
                 </div>
             </div>
             <div className="container d-flex justify-content-center card-container">
-
                 <div className="row justify-content-center w-100">
                     {cards
                         .filter(card => card.roles.includes(user?.role))
