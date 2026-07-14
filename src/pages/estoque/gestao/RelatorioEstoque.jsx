@@ -51,7 +51,7 @@ const RelatorioEstoque = () => {
 
         // Ordena do mais recente para o mais antigo
         filtrados.sort((a, b) => {
-            return new Date(b.dataRegistro) - new Date(a.dataRegistro);
+            return new Date(b.data_registro) - new Date(a.data_registro);
         });
 
         // dados completos
@@ -148,12 +148,7 @@ const RelatorioEstoque = () => {
                             </div>
                         </div>
                     </div>
-                    <div className="d-flex flex-column align-items-end">
-                        <div className="p-2 ">
-                            <Input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} id='criterios-pesquisa'
-                                tooltipPlacement="top" tooltipText={"Busque pela placa, loja, marca, modelo ou cor."} placeholder={"Filtro"} />
-                        </div>
-                    </div>
+
                     <div className="d-flex flex-column align-items-end" >
                         <div className=" d-flex justify-content-between" >
                             <div className="p-2 ">
@@ -161,12 +156,12 @@ const RelatorioEstoque = () => {
                             <div className="d-flex align-items-center gap-3">
                                 {status !== "ok" && (<p className={status === "error" ? "text-danger" : "text-muted", "mb-0"} >{message} </p>)}
                                 <div className="d-flex flex-column ">
-                                    <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} tooltipText="Buscar por um veículo em uma data específica"
+                                    <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} tooltipText="Data inicial"
                                         tooltipPlacement="top" />
                                 </div>
                                 <div className="d-flex flex-column">
                                     <Input type="date" value={endDate} min={startDate || undefined} onChange={(e) => setEndDate(e.target.value)}
-                                        tooltipText="Buscar por um veículo em uma data específica"
+                                        tooltipText="Data final"
                                         tooltipPlacement="top" />
                                 </div>
                                 <div className="p-2">
@@ -177,6 +172,15 @@ const RelatorioEstoque = () => {
                             </div>
                         </div>
                     </div>
+                    <div className="d-flex flex-column align-items-end">
+                        {hasResults? (
+                        <div className="p-2 ">
+                            <Input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} id='criterios-pesquisa'
+                                tooltipPlacement="top" tooltipText={"Filtrar pela placa, loja, marca, modelo ou cor."} placeholder={"Filtro"} />
+                    </div>
+                        ): null}
+                    </div>
+                    <br />
                     <div className="table-responsive" ref={tabelaRef}>
                         <div>
                             <Table data={hasResults ? paginatedData : []} columns={colunas}

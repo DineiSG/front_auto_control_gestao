@@ -183,22 +183,14 @@ const RelatoriosMovimentacao = () => {
                     {select === 'baixas' && (
                         <>
                             <div className="d-flex flex-column align-items-end" >
-                                <div className=" d-flex justify-content-between" >
-                                    <div className="p-2" >
-                                        <Input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-                                            placeholder={"Filtro"} id='criterios-pesquisa' tooltipText="Filtrar por placa, nome da loja ou motivo da baixa"
-                                            tooltipPlacement="top" />
-                                    </div>
-                                </div>
-                                <br />
                                 <div className="d-flex align-items-center gap-3">
                                     {status !== "ok" && (<p className={status === "error" ? "text-danger" : "text-muted", "mb-0"} >{message} </p>)}
                                     <div className="d-flex flex-column ">
-                                        <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} tooltipText="Buscar por um veículo em uma data específica"
+                                        <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} tooltipText="Data inicial"
                                             tooltipPlacement="top" />
                                     </div>
                                     <div className="d-flex flex-column">
-                                        <Input type="date" value={endDate} min={startDate || undefined} onChange={(e) => setEndDate(e.target.value)} tooltipText="Buscar por um veículo em uma data específica"
+                                        <Input type="date" value={endDate} min={startDate || undefined} onChange={(e) => setEndDate(e.target.value)} tooltipText="Data final"
                                             tooltipPlacement="top" />
                                     </div>
                                     <div className="p-2">
@@ -206,6 +198,16 @@ const RelatoriosMovimentacao = () => {
                                             <Select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} options={options} className={"quantidade"} />
                                         </div>
                                     </div>
+                                </div>
+                                <div className=" d-flex justify-content-between" >
+                                    {hasResults ? (
+                                        <div className="p-2" >
+                                            <Input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+                                                placeholder={"Filtro"} id='criterios-pesquisa' tooltipText="Filtrar por placa, nome da loja ou motivo da baixa"
+                                                tooltipPlacement="top" />
+                                        </div>
+
+                                    ) : null}
                                 </div>
                             </div>
                             <br />
