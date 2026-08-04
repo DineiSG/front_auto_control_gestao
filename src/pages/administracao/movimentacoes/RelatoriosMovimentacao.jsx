@@ -18,7 +18,7 @@ import ContainerSecundario from "../../../components/container/ContainerSecundar
 const RelatoriosMovimentacao = () => {
 
     const [filteredBaixas, setFilteredBaixas] = useState([]);
-    const [filteredLiberacoes, setFilteredLiberacoes] = useState([]);
+    const [filteredLiberacoes, setFilteredLiberacoes] = useState([]); 
     const [searchTerm, setSearchTerm] = useState('');
     const [select, setSelect] = useState(false);
     const [pageSize, setPageSize] = useState(10);
@@ -261,14 +261,6 @@ const RelatoriosMovimentacao = () => {
                     {select === 'liberacoes' && (
                         <>
                             <div className="d-flex flex-column align-items-end" >
-                                <div className=" d-flex justify-content-between" >
-                                    <div className="p-2" >
-                                        <Input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-                                            placeholder={"Filtro"} id='criterios-pesquisa' tooltipText="Filtrar por placa, nome da loja ou motivo da liberação"
-                                            tooltipPlacement="top" />
-                                    </div>
-                                </div>
-                                <br />
                                 <div className="d-flex align-items-center gap-3">
                                     {status !== "ok" && (<p className={status === "error" ? "text-danger" : "text-muted", "mb-0"} >{message} </p>)}
                                     <div className="d-flex flex-column ">
@@ -284,6 +276,16 @@ const RelatoriosMovimentacao = () => {
                                             <Select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} options={options} className={"quantidade"} />
                                         </div>
                                     </div>
+                                </div>
+                                <div className=" d-flex justify-content-between" >
+                                    {hasResults ? (
+                                        <div className="p-2" >
+                                            <Input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+                                                placeholder={"Filtro"} id='criterios-pesquisa' tooltipText="Filtrar por placa, nome da loja ou motivo da liberação"
+                                                tooltipPlacement="top" />
+                                        </div>
+                                    ) : null}
+
                                 </div>
                             </div>
                             <br />

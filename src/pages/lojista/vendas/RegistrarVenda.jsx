@@ -217,7 +217,7 @@ const RegistrarVenda = () => {
       placa, id: veiculo.id, marca: veiculo.marca, modelo: veiculo.modelo, cor: veiculo.cor, unidade: veiculo.unidade,
       renavam: veiculo.renavan, comprador, vendedor, nascimento, rg, cpf, telefone, email, cep: dadosPostais.cep, rua: dadosCEP.rua,
       endereco, bairro: dadosPostais.neighborhood, cidade: dadosPostais.city, uf: dadosPostais.state,
-      valorVenda, valorFipe, valorFinanciamento, valorEntrada, tipoVenda, instituicao, dataRegistro, observacoes
+      valorVenda, valorFipe, valorFinanciamento, valorEntrada, tipoVenda, instituicao, dataRegistro, observacoes, audit:user?.nome
     }
 
     // Padroniza para caixa alta

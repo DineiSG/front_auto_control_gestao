@@ -11,6 +11,7 @@ import { usePostData } from '../../../services/usePostData';
 import { formatTimestamp } from '../../../hooks/formatDate';
 import { formatCNPJ, formatTel } from "../../../hooks/useMask"
 import EditarCadastroLoja from "./EditarCadastroLoja";
+import { useAuth } from "../../../hooks/useAuth"
 
 const CadastroLoja = () => {
 
@@ -18,16 +19,18 @@ const CadastroLoja = () => {
   const [email, setEmail] = useState('')
   const [descricao, setDescricao] = useState('')
   const [qtdVeiculos, setQtdVeiculos] = useState('')
+  const [qtdEstoqueExtra, setQtdEstoqueExtra] = useState('')
   const [cnpj, setCnpj] = useState('')
 
   const resertForm = () => {
-    setCnpj(''), setDescricao(''), setEmail(''), setQtdVeiculos(''), setTelefone('')
+    setCnpj(''), setDescricao(''), setEmail(''), setQtdVeiculos(''), setTelefone(''), setQtdEstoqueExtra('')
   }
 
 
   // Envia os dados do veículo
   const { createData } = usePostData('/lojas')
 
+  const { user } = useAuth()
 
   // Função para converter campos em CAIXA ALTA
   const toUpperFields = (obj, fields = []) => {
@@ -47,7 +50,7 @@ const CadastroLoja = () => {
     const data_registro = formatTimestamp(new Date())
 
     // Envia os dados da loja
-    let dados = { descricao, telefone, email, qtdVeiculos, data_registro, cnpj }
+    let dados = { descricao, telefone, email, qtdVeiculos, qtdEstoqueExtra, data_registro, cnpj, audit: user?.nome }
     console.log('Dados a serem enviados: ', dados)
 
     // Padroniza para caixa alta
@@ -121,6 +124,10 @@ const CadastroLoja = () => {
               <div className="col-12 col-md-6">
                 <Input label={"Quantidade de Veículos:"} type={"text"} style={{ width: '80px' }} nameInput={"marca"}
                   value={qtdVeiculos} onChange={(e) => setQtdVeiculos(e.target.value)} required />
+              </div>
+              <div className="col-12 col-md-6">
+                <Input label={"Estoque Extra:"} type={"text"} style={{ width: '80px' }} nameInput={"marca"}
+                  value={qtdEstoqueExtra} onChange={(e) => setQtdEstoqueExtra(e.target.value)} required />
               </div>
               <div className="d-flex flex-row-reverse">
                 <Button type="submit" variant='primary'>ENVIAR</Button>

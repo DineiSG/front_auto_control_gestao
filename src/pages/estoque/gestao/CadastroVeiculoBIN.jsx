@@ -12,13 +12,14 @@ import { usePostData } from '../../../services/usePostData';
 import { formatTimestamp } from '../../../hooks/formatDate';
 import { toUpperCaseData } from '../../../hooks/transformToUppercase';
 import { formatMillionUnit } from '../../../hooks/useMask';
+import { useAuth } from "../../../hooks/useAuth"
 
 const CadastroVeiculoBIN = () => {
     const [placa, setPlaca] = useState('')
     const [buscaPlaca, setBuscaPlaca] = useState([]);
     const [unidade, setUnidade] = useState('')
     const [selectEstoque, setSelectEstoque] = useState('')
-    const [cnpj_unidade, setCnpjUnidade] = useState('')
+    const [cnpjUnidade, setCnpjUnidade] = useState('')
     const [cambio, setCambio] = useState('')
     const [quilometragem, setQuilometragem] = useState('')
     const [qtd_portas, setQtdPortas] = useState('')
@@ -28,6 +29,8 @@ const CadastroVeiculoBIN = () => {
         quilometragem: '', combustivel: '', cambio: '', chassi: ''
     })
     const [editavel, setEditavel] = useState(true)
+
+    const { user } = useAuth()
 
     //Limpa o formulario apos o envio
     const resetForm = () => {
@@ -44,20 +47,20 @@ const CadastroVeiculoBIN = () => {
     };
 
     //Buscando os dados da loja para o select
-    const { data: dadosLoja, } = useGetData(`/lojas`);
+    const { data: dadosLoja } = useGetData(`/lojas`);
 
     // Ordena as lojas por descrição
     const lojasOrdenadas = dadosLoja.sort((a, b) => a.descricao.localeCompare(b.descricao))
 
     //Buscando os dados na base BIN do Detran
     // A URL da API deve ser ajustada conforme a configuração do backend
-    const { data: veiculo, } = useGetData(buscaPlaca ? `/veiculos/dados?placa=${placa}` : '');
-    
+    const { data: veiculo } = useGetData(buscaPlaca ? `/veiculos/dados?placa=${placa}` : '');
+
     // Salvando os dados do veiculo na tabela principal
-    const { createData } = usePostData('/veiculos');
+    const { createData: createEstoquePrincipal } = usePostData('/veiculos');
 
     // Salvando os dados do veiculo na tabela do estoque extra (pulmao)
-    const { createEstoqueExtra } = usePostData('/pulmao');
+    const { createData: createEstoqueExtra } = usePostData('/pulmao');
 
     // Usando useRef para armazenar a última placa buscada
     // Isso evita que a busca seja feita repetidamente para a mesma placa
@@ -163,7 +166,7 @@ const CadastroVeiculoBIN = () => {
             cambio,
             quilometragem,
             qtd_portas,
-            cnpj_unidade,
+            cnpjUnidade,
             marca: veiculo?.Fabricante ?? dadosVeiculo?.marca,
             modelo: veiculo?.MarcaModelo ?? dadosVeiculo?.modelo,
             cor: veiculo?.CorVeiculo ?? dadosVeiculo?.cor,
@@ -171,7 +174,8 @@ const CadastroVeiculoBIN = () => {
             ano_modelo: veiculo?.AnoModelo ?? dadosVeiculo?.ano_modelo,
             renavan: veiculo?.renavam ?? dadosVeiculo?.renavam,
             combustivel: veiculo?.Combustivel ?? dadosVeiculo?.combustivel,
-            chassi: veiculo?.chassi ?? dadosVeiculo?.chassi
+            chassi: veiculo?.chassi ?? dadosVeiculo?.chassi,
+            audit: user?.nome
         };
 
         // normaliza os campos para maiúsculo
@@ -211,56 +215,27 @@ const CadastroVeiculoBIN = () => {
                     return;
 
                 } else if (selectEstoque === 'pulmao') {
-                    // Busca a quantidade de veículos na unidade selecionada
-                    const responseUnidade = await fetch(`${import.meta.env.VITE_API_BASE_URL}/pulmao/unidade/${unidade}`);
-                    const data = await responseUnidade.json();
-                    const filteredResults = data.filter((veiculo) => veiculo.placa !== "").length;
-                    console.log("Quantidade de veiculos: ", filteredResults);
 
-                    // Busca a quantidade total de vagas da loja
-                    const responseLoja = await fetch(`${import.meta.env.VITE_API_BASE_URL}/lojas`);
-                    const dataLoja = await responseLoja.json();
-                    const loja = dataLoja.find((loja) => loja.descricao === dados.unidade);
-                    const vagasTotais = parseInt(loja.qtdEstoqueExtra, 10);
-                    console.log("Quantidade de vagas informadas no cadastro da loja: ", vagasTotais);
-
-                    //Vagas disponiveis sera obtido da subtração das vagas totais informado no cadastro da loja menos a quantidade de veiculos ja cadastrados
-                    const vagasDisponiveis = vagasTotais - filteredResults;
-                    console.log(`Quantidade de vagas disponíveis: ${vagasDisponiveis - 1}`);
-
-                    // Só permite o cadastro se houver vagas disponíveis
-                    if (vagasDisponiveis > 0) {
-                        const dadosUpper = toUpperCaseData(dados);
-                        await createEstoqueExtra(dadosUpper);
+                    const dadosUpper = toUpperCaseData(dados);
+                    const respostaEstoqueExtra = await createEstoqueExtra(dadosUpper);
+                    
+                    if (respostaEstoqueExtra.success) {
                         window.alert('Veículo cadastrado no Pulmao com sucesso');
                         resetForm() //Chama a função que limpa o formulario
                         //window.location.reload();
                     } else {
+                        
                         window.alert('Não há vagas disponíveis para esta loja.\nCadastro não realizado.');
                     }
 
                 } else {
-                    // Busca a quantidade de veículos na unidade selecionada
-                    const responseUnidade = await fetch(`${import.meta.env.VITE_API_BASE_URL}/veiculos/unidade/${unidade}`);
-                    const data = await responseUnidade.json();
-                    const filteredResults = data.filter((veiculo) => veiculo.placa !== "").length;
-                    console.log("Quantidade de veiculos: ", filteredResults);
-
-                    // Busca a quantidade total de vagas da loja
-                    const responseLoja = await fetch(`${import.meta.env.VITE_API_BASE_URL}/lojas`);
-                    const dataLoja = await responseLoja.json();
-                    const loja = dataLoja.find((loja) => loja.descricao === dados.unidade);
-                    const vagasTotais = parseInt(loja.qtdVeiculos, 10);
-                    console.log("Quantidade de vagas informadas no cadastro da loja: ", vagasTotais);
-
-                    //Vagas disponiveis sera obtido da subtração das vagas totais informado no cadastro da loja menos a quantidade de veiculos ja cadastrados
-                    const vagasDisponiveis = vagasTotais - filteredResults;
-                    console.log(`Quantidade de vagas disponíveis: ${vagasDisponiveis - 1}`);
 
                     // Só permite o cadastro se houver vagas disponíveis
-                    if (vagasDisponiveis > 0) {
-                        const dadosUpper = toUpperCaseData(dados);
-                        await createData(dadosUpper);
+
+                    const dadosUpper = toUpperCaseData(dados);
+                    const respostaEstoquePrincipal = await createEstoquePrincipal(dadosUpper);
+                    if (respostaEstoquePrincipal.success) {
+
                         resetForm() //Chama a função que limpa o formulario
                         window.alert('Veículo cadastrado com sucesso');
                         //window.location.reload();
@@ -273,8 +248,8 @@ const CadastroVeiculoBIN = () => {
                 console.error('Falha ao registrar o veículo: ', err);
                 window.alert('Erro ao tentar registrar o veículo.\nEntre em contato com o suporte.');
             }
-        }
-    };
+        };
+    }
 
     return (
         <div>
@@ -321,8 +296,8 @@ const CadastroVeiculoBIN = () => {
                                 <label className="label" id="select-label"><span>Estoque:</span></label>
                                 <select type='text' name='loja' value={selectEstoque} onChange={(e) => setSelectEstoque(e.target.value)} className="select-item" required >
                                     <option value='' >SELECIONE UM ESTOQUE</option>
-                                    <option value='veiculos'>ESTOQUE PRINCIPAL</option>
-                                    <option values='pulmao' disabled={true}>ESTOQUE EXTRA</option>
+                                    <option value='principal'>ESTOQUE PRINCIPAL</option>
+                                    <option value='pulmao'disabled={true}>ESTOQUE EXTRA</option>
                                 </select>
                             </div>
                             <div className="col-12 col-md-2">
@@ -392,5 +367,6 @@ const CadastroVeiculoBIN = () => {
         </div>
     )
 }
+
 
 export default CadastroVeiculoBIN

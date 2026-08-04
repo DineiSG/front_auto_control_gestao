@@ -12,6 +12,7 @@ import { formatTimestamp } from '../../../hooks/formatDate';
 import { formatTel, formatCNPJ } from "../../../hooks/useMask"
 
 import EditarCadastroFinanceira from "./EditarCadastroFinanceira";
+import { useAuth } from "../../../hooks/useAuth"
 
 const CadastroFinanceira = () => {
 
@@ -25,6 +26,8 @@ const CadastroFinanceira = () => {
         setAgente(''), setTelefone(''), setCnpj(''), setDescricao(''), setEmail('')
         
     }
+
+    const { user } = useAuth()
 
     // Envia os dados do veículo
     const { createData } = usePostData('/bancos')
@@ -47,7 +50,7 @@ const CadastroFinanceira = () => {
         const data_registro = formatTimestamp(new Date())
 
         // Envia os dados da loja
-        let dados = { descricao, telefone, email, data_registro, cnpj, agente }
+        let dados = { descricao, telefone, email, data_registro, cnpj, agente, audit:user?.nome }
 
         console.log('Dados a serem enviados: ', dados)
         // Padroniza para caixa alta

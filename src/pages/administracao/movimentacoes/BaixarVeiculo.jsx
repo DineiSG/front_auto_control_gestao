@@ -12,6 +12,7 @@ import { useState, useRef } from "react";
 import { useGetData } from '../../../services/useGetData';
 import { usePostData } from '../../../services/usePostData';
 import { useDeleteData } from '../../../services/useDeleteData';
+import { useAuth } from '../../../hooks/useAuth';
 
 
 const BaixarVeiculo = () => {
@@ -33,6 +34,8 @@ const BaixarVeiculo = () => {
         setPlaca(''), setSolicitante(''), setObservacoes('')
         ultimaPlacaBuscada.current = ''; // também reseta a ref
     };
+
+    const { user } = useAuth()
 
     // Base URL da API
     const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -144,7 +147,7 @@ const BaixarVeiculo = () => {
         let dados = {
             id: veiculo.id, placa, marca: dadosVeiculo.marca, modelo: dadosVeiculo.modelo, cor: dadosVeiculo.cor, renavan: dadosVeiculo.renavan,
             unidade: dadosVeiculo.unidade, data_cadastro: dadosVeiculo.data_cadastro, solicitante, observacoes, motivo: selectedMotivo,
-            ano_fabricacao: veiculo.ano_fabricacao, ano_modelo: dadosVeiculo.ano_modelo, dataRegistro
+            ano_fabricacao: veiculo.ano_fabricacao, ano_modelo: dadosVeiculo.ano_modelo, dataRegistro, audit:user?.nome
 
         }
 

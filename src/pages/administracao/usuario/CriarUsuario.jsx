@@ -8,6 +8,7 @@ import { useGetData } from '../../../services/useGetData'
 import Button from '../../../components/button/Button'
 import { useControlAuth } from '../../../services/useControlAuth'
 import EditarUsuario from './EditarUsuario'
+import { useAuth } from "../../../hooks/useAuth"
 //import { useApi } from '../../../hooks/useApi'
 
 const CriarUsuario = () => {
@@ -22,6 +23,8 @@ const CriarUsuario = () => {
   const resetForm = () => {
     setUnidade(''), setNome(''), setUsername(''), setPassword(''), setConfirmPassword('')
   }
+
+  const { user } = useAuth()
 
   // Base URL da API
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -106,7 +109,7 @@ const CriarUsuario = () => {
       return
     }
 
-    let dadosUsuario = { nome, unidade, password, tipo, username }
+    let dadosUsuario = { nome, unidade, password, tipo, username, audit:user?.nome }
     console.log('Dados informados: ', dadosUsuario)
 
     const usuario = toUpperFields(dadosUsuario, ['nome', 'unidade', 'tipo', 'username'])

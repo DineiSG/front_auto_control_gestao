@@ -15,9 +15,11 @@ const VendaPeriodo = () => {
 
     // Hook de período (defina aqui a chave da data na sua venda: "dataVenda", "createdAt", etc.)
     const { startDate, endDate, setStartDate, setEndDate, filteredData, status, message, hasResults, } = useFilterPeriodo({
-        data: vendas,
+        data: vendas,   
         dateKey: 'dataRegistro', // <-- ajuste para o nome da sua propriedade de data
     });
+
+    console.log("Vendas filtradas:", filteredData);
 
     // Ref do container do gráfico para gerar PDF
     const graphRef = useRef(null);

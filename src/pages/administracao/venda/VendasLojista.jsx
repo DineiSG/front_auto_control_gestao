@@ -46,6 +46,7 @@ const VendasLojista = () => {
             if (searchTerm.trim() !== '') {
                 const lower = searchTerm.toLowerCase();
                 filtrados = filtrados.filter(v =>
+                    v.placa?.toLowerCase().includes(lower) ||
                     v.unidade?.toLowerCase().includes(lower) ||
                     v.comprador?.toLowerCase().includes(lower) ||
                     v.vendedor?.toLowerCase().includes(lower) ||
@@ -56,12 +57,18 @@ const VendasLojista = () => {
                 );
             }
 
+            filtrados.sort((a, b) => {
+                return new Date(b.dataRegistro) - new Date(a.dataRegistro);
+            });
+
             if (filterDate !== '') {
                 filtrados = filtrados.filter(v => {
                     const dataRegistro = new Date(v.dataRegistro).toISOString().split('T')[0]; // YYYY-MM-DD
                     return dataRegistro === filterDate;
                 });
             }
+
+
 
             // dados completos
             setFilteredVehicles(filtrados);     // dados filtrados
@@ -71,17 +78,17 @@ const VendasLojista = () => {
 
     //Passando as colunas com as suas respectivas chaves
     const colunas = [
-        { key: 'comprador', label: 'COMPRADOR' },
-        { key: 'dataRegistro', label: 'DATA COMPRA', format: (value) => formatDateInfo(value) /*Formatando a data para 00/00/00 */ },
         { key: 'unidade', label: 'LOJA' },
+        { key: 'placa', label: 'PLACA' },
         { key: 'marca', label: 'MARCA' },
         { key: 'modelo', label: 'MODELO' },
         { key: 'cor', label: 'COR' },
+        { key: 'dataRegistro', label: 'DATA COMPRA', format: (value) => formatDateInfo(value) /*Formatando a data para 00/00/00 */ },
         { key: 'valorVenda', label: 'VALOR VENDA (R$)' },
+        { key: 'valorFinanciamento', label: 'VALOR FINANCIADO (R$)' },
         { key: 'tipoVenda', label: 'TIPO VENDA' },
         { key: 'instituicao', label: 'INSTITUIÇÃO FINANCEIRA' },
         { key: 'vendedor', label: 'VENDEDOR' }
-
     ]
 
 
@@ -102,13 +109,15 @@ const VendasLojista = () => {
     //Funçao que gera o excel da tabela
     const gerarExcel = () => {
         const formattedData = filteredVehicles.map(filtrados => ({
-            Comprador: filtrados.comprador,
-            Data_Compra: formatDateInfo(filtrados.dataRegistro),
+
             Loja: filtrados.unidade,
+            Placa: filtrados.placa,
             Marca: filtrados.marca,
             Modelo: filtrados.modelo,
             Cor: filtrados.cor,
+            Data_Compra: formatDateInfo(filtrados.dataRegistro),
             Valor_Venda: filtrados.valorVenda,
+            Valor_Financiamento: filtrados.valorFinanciamento,
             Tipo_Venda: filtrados.tipoVenda,
             Instituição: filtrados.instituicao,
             Vendedor: filtrados.vendedor
@@ -158,7 +167,7 @@ const VendasLojista = () => {
                                 <div className="d-flex justify-content-start">
                                     <div className="p-2 ">
                                         <Input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} id='criterios-pesquisa' tooltipPlacement="top"
-                                            tooltipText={"Busque pela loja,marca, modelo, cor, vendedor ou instituição financeira."} />
+                                            tooltipText={"Busque pela loja, placa, marca, modelo, cor, vendedor ou instituição financeira."} />
                                     </div>
                                     <div className="p-2 ">
                                         <Input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} tooltipPlacement="top" tooltipText={"Busque pela data de registro da venda do veículo."} />

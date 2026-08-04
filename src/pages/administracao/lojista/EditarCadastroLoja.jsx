@@ -14,7 +14,7 @@ const EditarCadastroLoja = () => {
     const [buscaLoja, setBuscaLoja] = useState('');
     const [editavel, setEditavel] = useState(false);
     // estado local com todos os campos
-    const [dadosLoja, setDadosLoja] = useState({ id: '', descricao: '', email: '', telefone: '', qtdVeiculos: '' });
+    const [dadosLoja, setDadosLoja] = useState({ id: '', descricao: '', email: '', telefone: '', qtdVeiculos: '', qtdEstoqueExtra: '' });
 
     const resetForm = () => {
         setDadosLoja({ id: '', descricao: '', email: '', telefone: '', qtdVeiculos: '' });
@@ -43,7 +43,7 @@ const EditarCadastroLoja = () => {
             setEditavel(true);
         } else {
             setEditavel(false);
-            setDadosLoja({ id: '', descricao: '', email: '', telefone: '', qtdVeiculos: '' });
+            setDadosLoja({ id: '', descricao: '', email: '', telefone: '', qtdVeiculos: '', qtdEstoqueExtra: '' });
         }
     };
 
@@ -55,7 +55,8 @@ const EditarCadastroLoja = () => {
                 descricao: dados.descricao ?? '',
                 email: dados.email ?? '',
                 telefone: dados.telefone ?? '',
-                qtdVeiculos: dados.qtdVeiculos ?? dados.qntVeiculos ?? ''
+                qtdVeiculos: dados.qtdVeiculos ?? dados.qntVeiculos ?? '',
+                qtdEstoqueExtra: dados.qtdEstoqueExtra ?? dados.qntEstoqueExtra ?? ''
             });
         } else if (dados && dados.erro) {
             console.log('Loja não encontrada');
@@ -93,7 +94,8 @@ const EditarCadastroLoja = () => {
             descricao: dadosLoja.descricao,
             telefone: dadosLoja.telefone,
             email: dadosLoja.email,
-            qtdVeiculos: dadosLoja.qtdVeiculos
+            qtdVeiculos: dadosLoja.qtdVeiculos,
+            qtdEstoqueExtra: dadosLoja.qtdEstoqueExtra
         };
 
         const dadosUpper = toUpperFields(dadosPayload, ['descricao']);
@@ -131,7 +133,7 @@ const EditarCadastroLoja = () => {
             try {
                 await deleteData(dadosLoja.id)
                 window.alert("Loja excluída com sucesso")
-                setDadosLoja({ id: '', descricao: '', email: '', telefone: '', qtdVeiculos: '' })
+                setDadosLoja({ id: '', descricao: '', email: '', telefone: '', qtdVeiculos: '', qtdEstoqueExtra: '' })
                 setEditavel(false)
                 resetForm()
             } catch {
@@ -168,6 +170,10 @@ const EditarCadastroLoja = () => {
                 <div className="col-12 col-md-12">
                     <Input label="Quantidade de Veículos:" type="text" style={{ width: '80px' }} nameInput="qtdVeiculos" value={dadosLoja.qtdVeiculos}
                         readOnly={!editavel} onChange={(e) => setDadosLoja(prev => ({ ...prev, qtdVeiculos: e.target.value }))} />
+                </div>
+                <div className="col-12 col-md-12">
+                    <Input label="Estoque Extra:" type="text" style={{ width: '80px' }} nameInput="qtdEstoqueExtra" value={dadosLoja.qtdEstoqueExtra}
+                        readOnly={!editavel} onChange={(e) => setDadosLoja(prev => ({ ...prev, qtdEstoqueExtra: e.target.value }))} />
                 </div>
                 <div className="col-12 col-md-6">
                     <div className="d-flex flex-row-start">

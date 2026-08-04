@@ -91,7 +91,7 @@ const VendaInstituicao = () => {
 
     // Filtragem por período
     const { startDate, endDate, setStartDate, setEndDate, filteredData, status, message, hasResults } = useFilterPeriodo({
-        sales: vendas,
+        data: vendas,
         dateKey: 'dataRegistro',
     });
 

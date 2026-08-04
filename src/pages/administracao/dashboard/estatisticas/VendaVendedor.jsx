@@ -15,7 +15,7 @@ const VendaVendedor = () => {
 
     // Hook de período (defina aqui a chave da data na sua venda: "dataVenda", "createdAt", etc.)
     const { startDate, endDate, setStartDate, setEndDate, filteredData, status, message, hasResults, } = useFilterPeriodo({
-        sales: vendas,
+        data: vendas,
         dateKey: 'dataRegistro', // <-- ajuste para o nome da sua propriedade de data
     });
 

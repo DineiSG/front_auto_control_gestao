@@ -12,6 +12,7 @@ import { useState, useEffect, useRef } from "react";
 import { useGetData } from '../../../services/useGetData';
 import { usePostData } from '../../../services/usePostData';
 import { useDeleteId } from '../../../services/useDeleteId';
+import { useAuth } from '../../../hooks/useAuth';
 
 const LiberarVeiculo = () => {
     const [placa, setPlaca] = useState('')
@@ -30,6 +31,8 @@ const LiberarVeiculo = () => {
         id: '', placa: '', marca: '', modelo: '', cor: '', observacoes: '', renavan: '',
         unidade: '', motivo: '', dataRegistro: '', data_cadastro: ''
     })
+
+    const { user } = useAuth()
 
     // buscando os dados no bd
     const { data: veiculo } = useGetData(buscaPlaca ? `/veiculos/placa/${placa}` : null)
@@ -167,7 +170,7 @@ const LiberarVeiculo = () => {
         let dados = {
             placa, id: veiculo.id, marca: dadosVeiculo.marca, modelo: dadosVeiculo.modelo, cor: dadosVeiculo.cor, renavan: dadosVeiculo.renavan,
             unidade: dadosVeiculo.unidade, data_cadastro: dadosVeiculo.data_cadastro, solicitante, observacoes, motivo: selectedMotivo,
-            ano_fabricacao: veiculo.ano_fabricacao, ano_modelo: dadosVeiculo.ano_modelo
+            ano_fabricacao: veiculo.ano_fabricacao, ano_modelo: dadosVeiculo.ano_modelo, audit:user?.nome
 
         }
 

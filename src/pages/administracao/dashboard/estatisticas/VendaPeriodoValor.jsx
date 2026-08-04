@@ -13,7 +13,31 @@ const VendaPeriodoValor = () => {
 
     // Busca todas as vendas
     const { data: vendas = [] } = useGetArray("/vendas");
-    console.log("Vendas carregadas:", vendas);
+
+
+        // Hook de período (defina aqui a chave da data na sua venda: "dataVenda", "createdAt", etc.)
+    const { startDate, endDate, setStartDate, setEndDate, filteredData, status, message, hasResults, } = useFilterPeriodo({
+        data: vendas,
+        dateKey: 'dataRegistro', // <-- ajuste para o nome da sua propriedade de data
+    });
+    console.log("Vendas filtradas:", filteredData);
+
+
+
+    // Ref do container do gráfico para gerar PDF
+    const graphRef = useRef(null); 
+
+    // Geração dos dados do gráfico a partir APENAS das vendas filtradas
+    const { chartData, chartOptions } = useGroupedChart({
+        data: filteredData, // <- somente o período selecionado
+        datasetLabel: "Vendas por Periodo",
+        groupByKey: "unidade",
+        valueKey: "valorVenda",
+        aggregate: "sum",
+        chartType: "bar",
+        sortBy: "value",
+        sortOrder: "desc"
+    });
 
     // Função para processar os dados e estruturar para a tabela
     const processarDadosTabela = (filteredData) => {
@@ -150,28 +174,7 @@ const VendaPeriodoValor = () => {
     };
 
 
-    // Hook de período (defina aqui a chave da data na sua venda: "dataVenda", "createdAt", etc.)
-    const { startDate, endDate, setStartDate, setEndDate, filteredData, status, message, hasResults, } = useFilterPeriodo({
-        sales: vendas,
-        dateKey: 'dataRegistro', // <-- ajuste para o nome da sua propriedade de data
-    });
 
-
-
-    // Ref do container do gráfico para gerar PDF
-    const graphRef = useRef(null);
-
-    // Geração dos dados do gráfico a partir APENAS das vendas filtradas
-    const { chartData, chartOptions } = useGroupedChart({
-        data: filteredData, // <- somente o período selecionado
-        datasetLabel: "Vendas por Periodo",
-        groupByKey: "unidade",
-        valueKey: "valorVenda",
-        aggregate: "sum",
-        chartType: "bar",
-        sortBy: "value",
-        sortOrder: "desc"
-    });
 
     // Função que gera o PDF do gráfico
     const gerarPDF = () => {
