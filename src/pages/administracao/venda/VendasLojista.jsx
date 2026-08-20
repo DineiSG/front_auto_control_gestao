@@ -3,19 +3,18 @@ import ContainerSecundario from '../../../components/container/ContainerSecundar
 import * as XLSX from "xlsx";
 import { useGetData } from '../../../services/useGetData';
 import { formatDateInfo } from "../../../hooks/formatDate";
-import { calculateDaysInStock } from "../../../hooks/useCalc";
 import "../../estoque/GestaoEstoque.css";
 import Box from '../../../components/box/Box'
 import Table from "../../../components/table/Table";
 import Input from "../../../components/input/Input";
 import Select from "../../../components/select/Select";
 import Button from "../../../components/button/Button";
+import { useFilterPeriodo } from "../../../hooks/useFilterPeriodo";
 
 const VendasLojista = () => {
 
     const [filteredVehicles, setFilteredVehicles] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
-    const [filterDate, setFilterDate] = useState('');
     const [pageSize, setPageSize] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
     const tabelaRef = useRef(null);
@@ -23,25 +22,18 @@ const VendasLojista = () => {
     //Recebendo os veículos da tabela
     const { data: veiculos } = useGetData(`/vendas`);
 
+
+    const { startDate, endDate, setStartDate, setEndDate, filteredData, message, status, hasResults } = useFilterPeriodo({
+        data: veiculos,
+        dateKey: 'dataRegistro', // <-- ajuste para o nome da sua propriedade de data
+    });
+
     //Recebe o array de objetos veiculos e realiza as tratativas de busca 
     useEffect(() => {
         if (veiculos && !veiculos.erro && Array.isArray(veiculos)) {
             console.log('Dados recebidos da API: ', veiculos);
-
-            // Organiza os veículos por loja (ordem alfabética)
-            const lojasOrdenadas = [...veiculos].sort((a, b) =>
-                (a?.unidade || '').localeCompare(b?.unidade || '')
-            );
-
-            //Calcula dias em estoque
-            const dadosComDias = lojasOrdenadas.map((veiculo) => ({
-                ...veiculo,
-                dias_estoque: calculateDaysInStock(veiculo.data_registro),
-            }));
-
-
             // Filtrar por termo e por data
-            let filtrados = [...dadosComDias];
+            let filtrados = [...filteredData];
 
             if (searchTerm.trim() !== '') {
                 const lower = searchTerm.toLowerCase();
@@ -61,20 +53,11 @@ const VendasLojista = () => {
                 return new Date(b.dataRegistro) - new Date(a.dataRegistro);
             });
 
-            if (filterDate !== '') {
-                filtrados = filtrados.filter(v => {
-                    const dataRegistro = new Date(v.dataRegistro).toISOString().split('T')[0]; // YYYY-MM-DD
-                    return dataRegistro === filterDate;
-                });
-            }
-
-
-
             // dados completos
             setFilteredVehicles(filtrados);     // dados filtrados
             setCurrentPage(1);                       // reseta para primeira página ao filtrar
         }
-    }, [veiculos, searchTerm, filterDate]);
+    }, [veiculos, searchTerm, filteredData]);
 
     //Passando as colunas com as suas respectivas chaves
     const colunas = [
@@ -163,24 +146,43 @@ const VendasLojista = () => {
                                     <p>RELATÓRIO DE VENDAS DE VEICULOS</p>
                                 </div>
                             </div>
-                            <div className="d-flex flex-row-reverse" >
-                                <div className="d-flex justify-content-start">
-                                    <div className="p-2 ">
-                                        <Input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} id='criterios-pesquisa' tooltipPlacement="top"
-                                            tooltipText={"Busque pela loja, placa, marca, modelo, cor, vendedor ou instituição financeira."} />
+                        </div>
+                        <div className="d-flex flex-column align-items-end" >
+                            <div className=" d-flex justify-content-between" >
+                                <div className="p-2 ">
+                                </div>
+                                <div className="d-flex align-items-center gap-3">
+                                    {status !== "ok" && (<p className={status === "error" ? "text-danger" : "text-muted", "mb-0"} >{message} </p>)}
+                                    <div className="d-flex flex-column ">
+                                        <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} tooltipText="Data inicial"
+                                            tooltipPlacement="top" />
                                     </div>
-                                    <div className="p-2 ">
-                                        <Input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} tooltipPlacement="top" tooltipText={"Busque pela data de registro da venda do veículo."} />
+                                    <div className="d-flex flex-column">
+                                        <Input type="date" value={endDate} min={startDate || undefined} onChange={(e) => setEndDate(e.target.value)}
+                                            tooltipText="Data final"
+                                            tooltipPlacement="top" />
                                     </div>
-                                    <div className="p-1 ">
-                                        <Select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} options={options} className={"quantidade"} />
+                                    <div className="p-2">
+                                        <div className="p-1 ">
+                                            <Select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} options={options} className={"quantidade"} />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                        <div className="d-flex flex-column align-items-end">
+                            {hasResults ? (
+                                <div className="p-2 ">
+                                    <Input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} id='criterios-pesquisa' tooltipPlacement="top"
+                                        tooltipText={"Busque pela loja, placa, marca, modelo, cor, vendedor, instituição financeira."} placeholder="Filtro" />
+                                </div>
+                            ) : null}
+                        </div>
+                        <br />
                         <div className="table-responsive" ref={tabelaRef}>
                             <div>
-                                <Table data={paginatedData} columns={colunas} className={"table table-striped table-bordered table-data dataTable no-footer"} role="grid" id="estoque" />
+                                <Table data={hasResults ? paginatedData : []} columns={colunas}
+                                    className={"table table-striped table-bordered table-data dataTable no-footer"} role="grid" id="estoque" />
                             </div>
                         </div>
                         <div className="d-flex justify-content-between" id="pagination" >

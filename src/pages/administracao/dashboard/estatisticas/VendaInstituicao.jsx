@@ -15,19 +15,48 @@ const VendaInstituicao = () => {
 
     const { data: vendas = [] } = useGetArray("/vendas");
 
+    // Função auxiliar para converter strings numéricas de forma segura
+    const converterStringParaNumero = (valor) => {
+        if (valor == null || valor === "") return 0;
+
+        // Se já for número, retorna ele mesmo
+        if (typeof valor === 'number') return isNaN(valor) ? 0 : valor;
+
+        const str = String(valor).trim();
+
+        // Se contém ponto e vírgula (ex: "20.000,00"), remove os pontos e troca a vírgula por ponto
+        if (str.includes('.') && str.includes(',')) {
+            const limpo = str.replace(/\./g, '').replace(',', '.');
+            const num = parseFloat(limpo);
+            return isNaN(num) ? 0 : num;
+        }
+
+        // Se contém apenas vírgula (ex: "20000,00" ou "20,00"), troca por ponto
+        if (str.includes(',') && !str.includes('.')) {
+            const limpo = str.replace(',', '.');
+            const num = parseFloat(limpo);
+            return isNaN(num) ? 0 : num;
+        }
+
+        // Caso seja formato padrão (ex: "20000.00" ou "20")
+        const num = parseFloat(str);
+        return isNaN(num) ? 0 : num;
+    };
+
     // Função para processar os dados e estruturar para a tabela
     const processarDadosTabela = (filteredData) => {
 
         if (!Array.isArray(filteredData)) {
             return [];
         }
-        // Mapa para armazenar os totais por loja e instituição
+
         const lojaInstituicaoMap = {};
 
-        // Agrupar e somar valores por loja e instituição
         filteredData.forEach((venda) => {
             const { unidade, instituicao, valorFinanciamento } = venda;
-            const valor = parseFloat((valorFinanciamento || "0.0").replace(',', '.'));
+
+            // Conversão corrigida usando a função auxiliar
+            const valor = converterStringParaNumero(valorFinanciamento);
 
             if (!lojaInstituicaoMap[unidade]) {
                 lojaInstituicaoMap[unidade] = { Total: 0 };
@@ -41,13 +70,16 @@ const VendaInstituicao = () => {
             lojaInstituicaoMap[unidade].Total += valor;
         });
 
-        // Converter o mapa em um array estruturado
         return Object.keys(lojaInstituicaoMap).map((loja) => {
             const instituicoes = Object.keys(lojaInstituicaoMap[loja]).filter(key => key !== 'Total');
             const instituicaoComPorcentagem = instituicoes.reduce((acc, instituicao) => {
                 const valor = lojaInstituicaoMap[loja][instituicao];
                 const total = lojaInstituicaoMap[loja].Total;
-                const porcentagem = ((valor / total) * 100).toFixed(2);
+
+                const porcentagem = (total > 0 && !isNaN(valor))
+                    ? ((valor / total) * 100).toFixed(2)
+                    : "0.00";
+
                 acc[instituicao] = { valor, porcentagem };
                 return acc;
             }, {});
@@ -58,6 +90,25 @@ const VendaInstituicao = () => {
                 Total: lojaInstituicaoMap[loja].Total,
             };
         });
+    };
+
+    // Funções auxiliares fora do JSX
+    const renderValor = (objetoColuna) => {
+        const val = Number(objetoColuna?.valor);
+        if (objetoColuna?.valor === undefined || objetoColuna?.valor === null || isNaN(val)) {
+            return '0,00';
+        }
+        return val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    };
+
+    const renderPorcentagem = (objetoColuna) => {
+        const pct = objetoColuna?.porcentagem;
+        const numPct = Number(pct);
+
+        if (pct === undefined || pct === null || isNaN(numPct) || String(pct).includes('NaN')) {
+            return '0.0%';
+        }
+        return `${pct}%`;
     };
 
     // Função para calcular totais gerais e porcentagens
@@ -194,8 +245,6 @@ const VendaInstituicao = () => {
         setDadosTabela(tabela);
     }, [filteredData]);
 
-    // Função para fechar o modal e limpar as mensagens
-
 
     return (
         <div className="d-flex flex-column align-items-center w-100">
@@ -239,12 +288,7 @@ const VendaInstituicao = () => {
                     </Button>
 
                     {/* Tabela com barra de rolagem horizontal */}
-                    <ModalContent
-                        isOpen={modalAberto}
-                        onClose={() => setModalAberto(false)}
-                        title=""
-                        size="fullscreen"
-                    >
+                    <ModalContent isOpen={modalAberto} onClose={() => setModalAberto(false)} title="" size="fullscreen" >
                         <h2>Tabela de Valores (Loja X Instituição)</h2>
                         <div className="w-100 d-flex justify-content-center mt-4" style={{ overflowX: "auto" }} >
                             <div className="table-responsive">
@@ -254,14 +298,14 @@ const VendaInstituicao = () => {
                                     }}>
                                         <thead>
                                             <tr>
-                                                <th>Loja</th>
+                                                <th></th>
                                                 {todasInstituicoes.map((coluna) => (
                                                     <>
-                                                        <th key={`${coluna}-valor`} style={{ color: 'blue' }}>{coluna}</th>
-                                                        <th key={`${coluna}-porcentagem`} style={{ color: 'red' }}>%{coluna}</th>
+                                                        <th key={`${coluna}-valor`} style={{ color: 'blue', textAlign: 'center' }}>{coluna}</th>
+                                                        <th key={`${coluna}-porcentagem`} style={{ color: 'red', textAlign: 'center' }}>% {coluna}</th>
                                                     </>
                                                 ))}
-                                                <th>Total</th>
+                                                <th>TOTAL</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -270,10 +314,11 @@ const VendaInstituicao = () => {
                                                     <td>{linha.loja}</td>
                                                     {todasInstituicoes.map((coluna) => (
                                                         <>
-                                                            <td key={`${coluna}-valor-${index}`} style={{ color: 'blue' }}>
-                                                                R$ {linha[coluna]?.valor !== undefined ? Number(linha[coluna].valor).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0,00'} </td>
-                                                            <td key={`${coluna}-porcentagem-${index}`} style={{ color: 'red' }}>
-                                                                {linha[coluna]?.porcentagem !== undefined ? `${linha[coluna].porcentagem}%` : '0%'}
+                                                            <td key={`${coluna}-valor-${index}`} style={{ color: 'blue', textAlign: 'center' }}>
+                                                                R$ {renderValor(linha[coluna])}
+                                                            </td>
+                                                            <td key={`${coluna}-porcentagem-${index}`} style={{ color: 'red', textAlign: 'center' }}>
+                                                                {renderPorcentagem(linha[coluna])}
                                                             </td>
                                                         </>
                                                     ))}
@@ -284,11 +329,11 @@ const VendaInstituicao = () => {
                                                 <td style={{ fontWeight: '700' }}>TOTAL GERAL</td>
                                                 {todasInstituicoes.map((coluna) => (
                                                     <>
-                                                        <td key={`${coluna}-total`} style={{ color: 'blue' }}>
-                                                            R$ {coluna?.valor !== undefined ? Number(coluna.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0,00'}
+                                                        <td key={`${coluna}-total`} style={{ color: 'blue', textAlign: 'center' }}>
+                                                            R$ {totaisComPorcentagem[coluna]?.valor?.toFixed(2) || '0,00'}
                                                         </td>
-                                                        <td key={`${coluna}-porcentagem-total`} style={{ color: 'red' }}>
-                                                            {totaisComPorcentagem[coluna]?.porcentagem || '0'}%
+                                                        <td key={`${coluna}-porcentagem-total`} style={{ color: 'red', textAlign: 'center' }}>
+                                                            {totaisComPorcentagem[coluna]?.porcentagem || '0'} %
                                                         </td>
                                                     </>
                                                 ))}

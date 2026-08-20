@@ -159,6 +159,8 @@ const CadastroVeiculoBIN = () => {
         e.preventDefault();
         const data_registro = formatTimestamp(new Date());
 
+        const tipoDeAquisicao = 'COMUM'
+
         let dados = {
             placa,
             data_registro,
@@ -175,7 +177,8 @@ const CadastroVeiculoBIN = () => {
             renavan: veiculo?.renavam ?? dadosVeiculo?.renavam,
             combustivel: veiculo?.Combustivel ?? dadosVeiculo?.combustivel,
             chassi: veiculo?.chassi ?? dadosVeiculo?.chassi,
-            audit: user?.nome
+            audit: user?.nome,
+            tipoAquisicao: tipoDeAquisicao
         };
 
         // normaliza os campos para maiúsculo

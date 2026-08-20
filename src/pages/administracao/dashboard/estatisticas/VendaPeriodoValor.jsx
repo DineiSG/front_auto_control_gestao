@@ -6,16 +6,18 @@ import Input from "../../../../components/input/Input"
 import { useGetArray } from "../../../../services/useGetArray"
 import useGroupedChart from "../../../../hooks/useGroupedChart"; // seu hook atual
 import { useFilterPeriodo } from "../../../../hooks/useFilterPeriodo"; // o hook criado acima
+import ModalContent from "../../../../components/modal/ModalContent";
 import * as XLSX from 'xlsx';
 
 const VendaPeriodoValor = () => {
     const [dadosTabela, setDadosTabela] = useState([]);
+    const [modalAberto, setModalAberto] = useState(false);
 
     // Busca todas as vendas
     const { data: vendas = [] } = useGetArray("/vendas");
 
 
-        // Hook de período (defina aqui a chave da data na sua venda: "dataVenda", "createdAt", etc.)
+    // Hook de período (defina aqui a chave da data na sua venda: "dataVenda", "createdAt", etc.)
     const { startDate, endDate, setStartDate, setEndDate, filteredData, status, message, hasResults, } = useFilterPeriodo({
         data: vendas,
         dateKey: 'dataRegistro', // <-- ajuste para o nome da sua propriedade de data
@@ -25,7 +27,7 @@ const VendaPeriodoValor = () => {
 
 
     // Ref do container do gráfico para gerar PDF
-    const graphRef = useRef(null); 
+    const graphRef = useRef(null);
 
     // Geração dos dados do gráfico a partir APENAS das vendas filtradas
     const { chartData, chartOptions } = useGroupedChart({
@@ -39,6 +41,34 @@ const VendaPeriodoValor = () => {
         sortOrder: "desc"
     });
 
+    // Função auxiliar para converter strings numéricas de forma segura
+    const converterStringParaNumero = (valor) => {
+        if (valor == null || valor === "") return 0;
+
+        // Se já for número, retorna ele mesmo
+        if (typeof valor === 'number') return isNaN(valor) ? 0 : valor;
+
+        const str = String(valor).trim();
+
+        // Se contém ponto e vírgula (ex: "20.000,00"), remove os pontos e troca a vírgula por ponto
+        if (str.includes('.') && str.includes(',')) {
+            const limpo = str.replace(/\./g, '').replace(',', '.');
+            const num = parseFloat(limpo);
+            return isNaN(num) ? 0 : num;
+        }
+
+        // Se contém apenas vírgula (ex: "20000,00" ou "20,00"), troca por ponto
+        if (str.includes(',') && !str.includes('.')) {
+            const limpo = str.replace(',', '.');
+            const num = parseFloat(limpo);
+            return isNaN(num) ? 0 : num;
+        }
+
+        // Caso seja formato padrão (ex: "20000.00" ou "20")
+        const num = parseFloat(str);
+        return isNaN(num) ? 0 : num;
+    };
+
     // Função para processar os dados e estruturar para a tabela
     const processarDadosTabela = (filteredData) => {
         if (!Array.isArray(filteredData)) {
@@ -51,7 +81,8 @@ const VendaPeriodoValor = () => {
         // Agrupar e somar valores por modelo e loja
         filteredData.forEach((venda) => {
             const { modelo, unidade, valorVenda } = venda; // assumindo que o campo agora é 'modelo' e 'valorVenda'
-            const valor = parseFloat((valorVenda || "0.0").replace(',', '.'));
+            // Conversão corrigida usando a função auxiliar
+            const valor = converterStringParaNumero(valorVenda);
 
             if (!modeloLojaMap[modelo]) {
                 modeloLojaMap[modelo] = { Total: 0 };
@@ -71,7 +102,11 @@ const VendaPeriodoValor = () => {
             const lojaComPorcentagem = lojas.reduce((acc, loja) => {
                 const valor = modeloLojaMap[modelo][loja];
                 const total = modeloLojaMap[modelo].Total;
-                const porcentagem = total > 0 ? ((valor / total) * 100).toFixed(2) : "0.00";
+
+                const porcentagem = (total > 0 && !isNaN(valor))
+                    ? ((valor / total) * 100).toFixed(2)
+                    : "0.00";
+
                 acc[loja] = { valor, porcentagem };
                 return acc;
             }, {});
@@ -84,6 +119,28 @@ const VendaPeriodoValor = () => {
         });
     };
 
+    // Funções auxiliares fora do JSX
+    const renderValor = (objetoColuna) => {
+        const val = Number(objetoColuna?.valor);
+        if (objetoColuna?.valor === undefined || objetoColuna?.valor === null || isNaN(val)) {
+            return '0,00';
+        }
+        return val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    };
+
+    const renderPorcentagem = (objetoColuna) => {
+        const pct = objetoColuna?.porcentagem;
+        const numPct = Number(pct);
+
+        if (pct === undefined || pct === null || isNaN(numPct) || String(pct).includes('NaN')) {
+            return '0.0%';
+        }
+        return `${pct}%`;
+    };
+
+
+
+
     // Função para calcular totais gerais por loja e porcentagens em relação ao total geral
     const calcularTotaisGerais = (dados) => {
         if (!dados || dados.length === 0) {
@@ -95,21 +152,20 @@ const VendaPeriodoValor = () => {
 
         dados.forEach((linha) => {
             Object.keys(linha).forEach((coluna) => {
-                if (coluna !== 'modelo' && coluna !== 'Total') {
+                if (coluna !== 'loja' && coluna !== 'Total') {
                     const valor = linha[coluna]?.valor || 0;
                     totaisPorLoja[coluna] = (totaisPorLoja[coluna] || 0) + valor;
                 }
             });
+
+            totalGeral += linha.Total || 0;
         });
 
-        // Somar todos os totais por loja para obter o total geral
-        totalGeral = Object.values(totaisPorLoja).reduce((soma, valor) => soma + valor, 0);
-
-        // Calcular porcentagens por loja em relação ao total geral
-        const totaisComPorcentagem = Object.keys(totaisPorLoja).reduce((acc, loja) => {
-            const valor = totaisPorLoja[loja];
-            const porcentagem = totalGeral > 0 ? ((valor / totalGeral) * 100).toFixed(2) : "0.00";
-            acc[loja] = { valor, porcentagem };
+        // Calcular porcentagens
+        const totaisComPorcentagem = Object.keys(totaisPorLoja).reduce((acc, coluna) => {
+            const valor = totaisPorLoja[coluna];
+            const porcentagem = ((valor / totalGeral) * 100).toFixed(2);
+            acc[coluna] = { valor, porcentagem };
             return acc;
         }, {});
 
@@ -247,67 +303,75 @@ const VendaPeriodoValor = () => {
                     </div>
                     <br />
                     <br />
-
+                    <Button onClick={() => setModalAberto(true)} className="bg-blue-500 text-white px-4 py-2 rounded mt-3">
+                        VISUALIZAR TABELA
+                    </Button>
                     {/* Tabela com barra de rolagem horizontal */}
-                    <h5>Tabela de Valores</h5>
-                    <div className="w-100 d-flex justify-content-center mt-4">
-                        <div className="table-responsive" style={{ maxWidth: "1000px", overflowX: "auto", width: "100%" }}>
-                            {dadosTabela.length > 0 ? (
-                                <table className="table table-striped table-light " border="1" style={{ minWidth: "800px" }}>
-                                    <thead>
-                                        <tr>
-                                            <th></th>
-                                            {todasLojas.map((coluna) => (
-                                                <>
-                                                    <th key={`${coluna}-valor`} style={{ color: 'blue' }}>{coluna}</th>
-                                                    <th key={`${coluna}-porcentagem`} style={{ color: 'red' }}>%{coluna}</th>
-                                                </>
-                                            ))}
-                                            <th>Total</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {dadosTabela.map((linha, index) => (
-                                            <tr key={index}>
-                                                <td>{linha.modelo}</td>
+                    <ModalContent isOpen={modalAberto} onClose={() => setModalAberto(false)} title="" size="fullscreen" >
+                        <h2>Tabela de Valores</h2>
+                        <div className="w-100 d-flex justify-content-center mt-4" style={{ overflowX: "auto" }}>
+                            <div className="table-responsive" >
+                                {dadosTabela.length > 0 ? (
+                                    <table className="table table-striped table-light " border="1" cellPadding="5" cellSpacing="0" style={{
+                                        minWidth: "max-content"
+                                    }}>
+                                        <thead>
+                                            <tr>
+                                                <th></th>
                                                 {todasLojas.map((coluna) => (
                                                     <>
-                                                        <td key={`${coluna}-valor-${index}`} style={{ color: 'blue' }}>
-                                                            R$ {linha[coluna]?.valor !== undefined ? linha[coluna].valor.toFixed(2) : '0.00'}
+                                                        <th key={`${coluna}-valor`} style={{ color: 'blue' }}>{coluna}</th>
+                                                        <th key={`${coluna}-porcentagem`} style={{ color: 'red' }}>%{coluna}</th>
+                                                    </>
+                                                ))}
+                                                <th>TOTAL</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {dadosTabela.map((linha, index) => (
+                                                <tr key={index}>
+                                                    <td>{linha.modelo}</td>
+                                                    {todasLojas.map((coluna) => (
+                                                        <>
+                                                            <td key={`${coluna}-valor-${index}`} style={{ color: 'blue', textAlign: 'center' }}>
+                                                                R$ {renderValor(linha[coluna])}
+                                                            </td>
+                                                            <td key={`${coluna}-porcentagem-${index}`} style={{ color: 'red', textAlign: 'center' }}>
+                                                                {renderPorcentagem(linha[coluna])}
+                                                            </td>
+                                                        </>
+                                                    ))}
+                                                    <td>R$ {linha.Total !== undefined ? linha.Total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0,00'}</td>
+                                                </tr>
+                                            ))}
+                                            <tr>
+                                                <td style={{ fontWeight: '700' }}>TOTAL GERAL</td>
+                                                {todasLojas.map((coluna) => (
+                                                    <>
+                                                        <td key={`${coluna}-total`} style={{ color: 'blue', textAlign: 'center' }}>
+                                                            R$ {totaisComPorcentagem[coluna]?.valor?.toFixed(2) || '0,00'}
                                                         </td>
-                                                        <td key={`${coluna}-porcentagem-${index}`} style={{ color: 'red' }}>
-                                                            {linha[coluna]?.porcentagem !== undefined ? `${linha[coluna].porcentagem}%` : '0%'}
+                                                        <td key={`${coluna}-porcentagem-total`} style={{ color: 'red', textAlign: 'center' }}>
+                                                            {totaisComPorcentagem[coluna]?.porcentagem || '0.0'} %
                                                         </td>
                                                     </>
                                                 ))}
-                                                <td>R$ {linha.Total.toFixed(2)}</td>
+                                                <td>R$ {totalGeral.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                             </tr>
-                                        ))}
-                                        <tr>
-                                            <td style={{ fontWeight: '700' }}>TOTAL GERAL</td>
-                                            {todasLojas.map((coluna) => (
-                                                <>
-                                                    <td key={`${coluna}-total`} style={{ color: 'blue' }}>
-                                                        R$ {totaisComPorcentagem[coluna]?.valor?.toFixed(2) || '0.00'}
-                                                    </td>
-                                                    <td key={`${coluna}-porcentagem-total`} style={{ color: 'red' }}>
-                                                        {totaisComPorcentagem[coluna]?.porcentagem || '0'}%
-                                                    </td>
-                                                </>
-                                            ))}
-                                            <td>R$ {totalGeral.toFixed(2)}</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            ) : null}
+                                        </tbody>
+                                    </table>
+                                ) : null}
+                            </div>
                         </div>
-                    </div>
-                    <br />
-                    <div className="d-flex justify-content-end w-100 px-3" style={{ maxWidth: "1000px" }}>
-                        <Button onClick={generateExcel} className="bg-green-500 text-white px-4 py-2 rounded mt-3">
-                            GERAR EXCEL
-                        </Button>
-                    </div>
+                        <br />
+                        <div className="d-flex justify-content-start w-100 " style={{ maxWidth: "1000px" }}>
+                            <Button onClick={generateExcel} className="bg-green-500 text-white px-4 py-2 rounded mt-3">
+                                GERAR EXCEL
+                            </Button>
+                        </div>
+                        <br />
+                        <br />
+                    </ModalContent>
                     <br />
                     <br />
 

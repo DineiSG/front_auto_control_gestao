@@ -45,7 +45,8 @@ const RelatorioEstoque = () => {
                 v.modelo?.toLowerCase().includes(lower) ||
                 v.cor?.toLowerCase().includes(lower) ||
                 v.cambio?.toLowerCase().includes(lower) ||
-                v.combustivel?.toLowerCase().includes(lower)
+                v.combustivel?.toLowerCase().includes(lower) ||
+                v.tipoAquisicao?.toLowerCase().includes(lower)
             );
         }
 
@@ -64,12 +65,13 @@ const RelatorioEstoque = () => {
     const colunas = [
         { key: 'unidade', label: 'LOJA' },
         { key: 'data_registro', label: 'DATA CADASTRO', format: (value) => formatDateInfo(value) /*Formatando a data para 00/00/00 */ },
+        { key: 'placa', label: 'PLACA' },
         { key: 'marca', label: 'MARCA' },
         { key: 'modelo', label: 'MODELO' },
         { key: 'cor', label: 'COR' },
         { key: 'ano_fabricacao', label: 'ANO FABRICAÇÃO' },
         { key: 'ano_modelo', label: 'ANO MODELO' },
-        { key: 'placa', label: 'PLACA' },
+        { key: 'tipoAquisicao', label: 'TIPO DE AQUISIÇÃO' },
         /*{ key: 'dias_estoque', label: 'DIAS EM ESTOQUE', format: (value) => value !== undefined ? `${value} dia(s)` : 'N/A' /*in */
 
     ]
@@ -104,8 +106,8 @@ const RelatorioEstoque = () => {
             Dias_Estoque: filtrados.dias_estoque,
             Combustível: filtrados.combustivel,
             Câmbio: filtrados.cambio,
-            Quilometragem: filtrados.quilometragem
-
+            Quilometragem: filtrados.quilometragem,
+            Tipo_Aquisição: filtrados.tipoAquisicao
         }))
 
         const worksheet = XLSX.utils.json_to_sheet(formattedData)
@@ -148,7 +150,6 @@ const RelatorioEstoque = () => {
                             </div>
                         </div>
                     </div>
-
                     <div className="d-flex flex-column align-items-end" >
                         <div className=" d-flex justify-content-between" >
                             <div className="p-2 ">
@@ -173,12 +174,12 @@ const RelatorioEstoque = () => {
                         </div>
                     </div>
                     <div className="d-flex flex-column align-items-end">
-                        {hasResults? (
-                        <div className="p-2 ">
-                            <Input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} id='criterios-pesquisa'
-                                tooltipPlacement="top" tooltipText={"Filtrar pela placa, loja, marca, modelo ou cor."} placeholder={"Filtro"} />
-                    </div>
-                        ): null}
+                        {hasResults ? (
+                            <div className="p-2 ">
+                                <Input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} id='criterios-pesquisa'
+                                    tooltipPlacement="top" tooltipText={"Filtrar pela placa, loja, marca, modelo ou cor."} placeholder={"Filtro"} />
+                            </div>
+                        ) : null}
                     </div>
                     <br />
                     <div className="table-responsive" ref={tabelaRef}>
