@@ -100,6 +100,8 @@ const EditarUsuario = () => {
         await deleteData(deleteUser)
         window.alert("Usuário excluido com sucesso")
         resetForm()
+        console.log("Usuario criado")
+        window.scrollTo({ top: 0, behavior: 'smooth'})
       } catch {
         window.alert("Não foi possivel excluir o usuario. Entre em contato com o suporte.")
       }
@@ -110,7 +112,7 @@ const EditarUsuario = () => {
     <div>
       <div className='panel-heading'>
         <i className='ti ti-search' id="ti-black"></i>
-        <p>BUSCAR USUARIO <br /> Informe o username</p>
+        <p>EDITAR A SENHA DE UM USUARIO <br /> Informe o username</p>
       </div>
       <Form onSubmit={handleEdit}>
         <div className="col-12 col-md-4">
@@ -120,6 +122,7 @@ const EditarUsuario = () => {
           {/* id escondido */}
           <Input type="hidden" value={dadosUsuario.id} readOnly />
         </div>
+        {/*
         <div className="col-12 col-md-6">
           <Input label="Nome:" type="text" style={{ width: '200px' }} nameInput="nome" value={dadosUsuario.nome} readOnly />
         </div>
@@ -132,13 +135,12 @@ const EditarUsuario = () => {
         <br />
         <br />
         <br />
-        <br />
-        <div className='panel-heading'>
+        <br />*/}        <div className='panel-heading'>
           <i className='ti ti-lock' id="ti-black" tipo="hidden"></i>
           <p>ALTERAR SENHA</p>
         </div>
         <div className="col-12 col-md-12">
-          <Input label={"Senha:"} type={"password"} maxLength={"50"} style={{ width: '200px' }} nameInput={"password"}
+          <Input label={"Nova Senha:"} type={"password"} maxLength={"50"} style={{ width: '200px' }} nameInput={"password"}
             value={password} onChange={(e) => setPassword(e.target.value)} />
         </div>
         <div className="col-12 col-md-12" style={{ display: "flex", alignItems: "center", gap: "10px" }}>

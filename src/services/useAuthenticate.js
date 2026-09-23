@@ -11,7 +11,7 @@ export async function apiRequest(endpoint, options = {}) {
         ...options
     };
 
-    const response = await fetch(`${API}${endpoint}`, config);
+    const response = await fetch (`${API}${endpoint}`, config);
 
     if (!response.ok) {
         const error = await response.json().catch(() => null);

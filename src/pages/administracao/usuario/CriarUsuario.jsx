@@ -3,34 +3,44 @@ import ContainerSecundario from '../../../components/container/ContainerSecundar
 import Box from '../../../components/box/Box'
 import Form from '../../../components/form/Form'
 import Input from '../../../components/input/Input'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useGetData } from '../../../services/useGetData'
 import Button from '../../../components/button/Button'
-import { useControlAuth } from '../../../services/useControlAuth'
+//import { useControlAuth } from '../../../services/useControlAuth'
 import EditarUsuario from './EditarUsuario'
-import { useAuth } from "../../../hooks/useAuth"
+//import { useAuth } from "../../../hooks/useAuth"
+import Table from "../../../components/table/Table"
 //import { useApi } from '../../../hooks/useApi'
 
 const CriarUsuario = () => {
-  const [nome, setNome] = useState('');
-  const [unidade, setUnidade] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [errorFront, setErrorFront] = useState("")
-  const [tipo, setTipo] = useState('');
-  const [username, setUsername] = useState('')
+  //const [nome, setNome] = useState('');
+  //const [unidade, setUnidade] = useState('');
+  //const [password, setPassword] = useState('');
+  //const [confirmPassword, setConfirmPassword] = useState('')
+  //const [errorFront, setErrorFront] = useState("")
+  //const [tipo, setTipo] = useState('');
+  //const [username, setUsername] = useState('')
+  const [usuariosCadastrados, setUsuariosCadastrados] = useState([])
 
-  const resetForm = () => {
+  /*const resetForm = () => {
     setUnidade(''), setNome(''), setUsername(''), setPassword(''), setConfirmPassword('')
-  }
+  }*/
 
-  const { user } = useAuth()
+  const tabelaRef = useRef(null);
+
+  //const { user } = useAuth()
 
   // Base URL da API
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+  // Recebe os dados das lojas para popular o select
+  //const { data: dadosLoja } = useGetData(`/lojas`)
+
+  // Recebe os dados dos usuarios para popular a tabela
+  const { data: usuarios } = useGetData(`/usuario`)
+
   // Função para converter campos em CAIXA ALTA
-  const toUpperFields = (obj, fields = []) => {
+  /*const toUpperFields = (obj, fields = []) => {
     const copy = { ...obj }
     fields.forEach((f) => {
       if (copy[f] !== undefined && copy[f] !== null) {
@@ -38,41 +48,41 @@ const CriarUsuario = () => {
       }
     })
     return copy
-  }
+  }*/
 
-  const { data: dadosLoja } = useGetData(`/lojas`)
+
   // Ordena as lojas por descrição
-  const lojasOrdenadas = dadosLoja.sort((a, b) => a.descricao.localeCompare(b.descricao))
+  //const lojasOrdenadas = dadosLoja.sort((a, b) => a.descricao.localeCompare(b.descricao))
 
   //Enviando os dados pora o banco. chamando a apide autenticação
-  const { createUser, loading } = useControlAuth("/create-user")
+  //const { createUser, loading } = useControlAuth("/create-user")
 
-  const handleBlur = async () => {
-
-    const userCad = username.toUpperCase()
-    console.log(userCad)
-
-    try {
-      // 1 Verifica se o usuario existe
-      const resUser = await fetch(`${API_BASE_URL}/usuario/username/${userCad}`);
-
-      if (resUser.status === 200) {
-        // Já cadastrado → limpar e bloquear
-        window.alert('Ja consta um usuario cadastrado com este nome. Caso deseje criar um novo, insira um nome válido');
-        resetForm()
-        return;
-      } else if (resUser.status !== 404) {
-        window.alert("Não foi possivel validar se o usuario ja existe. Por favor entre em contato com o suporte.")
-        throw new Error(`Erro na API de cadastro de usuario: ${resUser.status}`);
-      }
-
-    } catch (erro) {
-      console.error('Erro ao buscar usuario:', erro);
-    }
-  }
+  /* const handleBlur = async () => {
+ 
+     const userCad = username.toUpperCase()
+     console.log(userCad)
+ 
+     try {
+       // 1 Verifica se o usuario existe
+       const resUser = await fetch(`${API_BASE_URL}/usuario/username/${userCad}`);
+ 
+       if (resUser.status === 200) {
+         // Já cadastrado → limpar e bloquear
+         window.alert('Ja consta um usuario cadastrado com este nome. Caso deseje criar um novo, insira um nome válido');
+         resetForm()
+         return;
+       } else if (resUser.status !== 404) {
+         window.alert("Não foi possivel validar se o usuario ja existe. Por favor entre em contato com o suporte.")
+         throw new Error(`Erro na API de cadastro de usuario: ${resUser.status}`);
+       }
+ 
+     } catch (erro) {
+       console.error('Erro ao buscar usuario:', erro);
+     }
+   }*/
 
   //Criando o username a partir do nome, pegando o primeiro e o último nome.
-  useEffect(() => {
+  /*useEffect(() => {
     const tipoUsuario = tipo
 
     if (tipoUsuario === 'administrador' || tipoUsuario === 'suporte' || tipoUsuario === 'colaborador') {
@@ -88,19 +98,34 @@ const CriarUsuario = () => {
     } else {
       setUsername(nome.trim())
     }
-  }, [nome, tipo])
+  }, [nome, tipo])*/
 
   //Ordenando as lojas por ordem alfabética
-  const handleUnidadeChange = (e) => {
+  /*const handleUnidadeChange = (e) => {
     const selectedOption = e.target.selectedOptions[0]
     const descricao = selectedOption.getAttribute('data-descricao')
 
     setUnidade(descricao)
     console.log('State atualizado - Loja:', descricao);
-  }
+  }*/
+
+  //Atualiza a lista de usuarios quando a resposta da API muda
+  useEffect(() => {
+    if (usuarios && !usuarios.error && Array.isArray(usuarios)) {
+      const usuariosOrdenados = usuarios.sort((a, b) => a.nome.localeCompare(b.nome))
+      setUsuariosCadastrados(usuariosOrdenados)
+    }
+  }, [usuarios])
+
+  const colunas = [
+    { key: 'nome', label: 'NOME' },
+    { key: 'username', label: 'NOME DE USUARIO' },
+    { key: 'unidade', label: 'LOJA' },
+    { key: 'tipo', label: 'TIPO DE USUARIO' }
+  ]
 
   //Enviando os dados para o beck end
-  const handleSubmit = async (e) => {
+  /*const handleSubmit = async (e) => {
     e.preventDefault()
 
     // Verificando se as senhas são iguais
@@ -109,7 +134,7 @@ const CriarUsuario = () => {
       return
     }
 
-    let dadosUsuario = { nome, unidade, password, tipo, username, audit:user?.nome }
+    let dadosUsuario = { nome, unidade, password, tipo, username, audit: user?.nome }
     console.log('Dados informados: ', dadosUsuario)
 
     const usuario = toUpperFields(dadosUsuario, ['nome', 'unidade', 'tipo', 'username'])
@@ -128,12 +153,12 @@ const CriarUsuario = () => {
         console.log(usuario)
         window.alert("Usuario criado. \nAnote o nome do usuário: " + username)
         resetForm()
-        console.log("Usuario criado")
+        window.scrollTo({ top: 0, behavior: 'smooth' })
       } catch {
         window.alert("Não foi possivel cadastrar o usuario. Entre em contato com o suporte.")
       }
     }
-  }
+  }*/
 
 
   return (
@@ -161,9 +186,9 @@ const CriarUsuario = () => {
         <Box>
           <div className='panel-heading'>
             <i className='ti ti-user' id="ti-black"></i>
-            <p>CADASTRO DE USUARIO <br /> Informe os dados</p>
+            <p>USUARIOS CADASTRADOS <br /> Abaixo se encontram todos os usuarios cadastrado no sistema Auto Control</p>
           </div>
-          <Form onSubmit={handleSubmit}>
+          {/* <Form onSubmit={handleSubmit}>
             <div className="col-12 col-md-4">
               <Input label={"Nome:"} type={"text"} maxLength={"150"} style={{ width: '300px' }} nameInput={"nome"}
                 value={nome} onChange={(e) => setNome(e.target.value)} onBlur={handleBlur} required />
@@ -213,8 +238,15 @@ const CriarUsuario = () => {
                 CADASTRAR
               </Button>
             </div>
-          </Form>
+          </Form>*/}
+          <br />
+          <div>
+            <Table data={usuariosCadastrados} columns={colunas} className={"table table-striped table-bordered table-data dataTable no-footer"} role="grid" id="estoque" />
+          </div>
+          <br />
           <hr />
+          <div className="table-responsive" ref={tabelaRef}>
+          </div>
           <br />
           <EditarUsuario />
         </Box>

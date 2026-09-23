@@ -4,7 +4,7 @@ import * as XLSX from "xlsx";
 import { useGetData } from '../../../services/useGetData';
 import { formatDateInfo } from "../../../hooks/formatDate";
 import { calculateDaysInStock } from "../../../hooks/useCalc";
-import {useAuth} from "../../../hooks/useAuth"
+import { useAuth } from "../../../hooks/useAuth"
 import "../../estoque/GestaoEstoque.css";
 import Box from '../../../components/box/Box'
 import Table from "../../../components/table/Table";
@@ -33,13 +33,8 @@ const EstoqueLojista = () => {
         if (veiculos && !veiculos.erro && Array.isArray(veiculos)) {
             console.log('Dados recebidos da API: ', veiculos);
 
-            // Organiza os veículos por loja (ordem alfabética)
-            const lojasOrdenadas = [...veiculos].sort((a, b) =>
-                (a?.unidade || '').localeCompare(b?.unidade || '')
-            );
-
             //Calcula dias em estoque
-            const dadosComDias = lojasOrdenadas.map((veiculo) => ({
+            const dadosComDias = veiculos.map((veiculo) => ({
                 ...veiculo,
                 dias_estoque: calculateDaysInStock(veiculo.data_registro),
             }));
@@ -52,7 +47,6 @@ const EstoqueLojista = () => {
                 const lower = searchTerm.toLowerCase();
                 filtrados = filtrados.filter(v =>
                     v.placa?.toLowerCase().includes(lower) ||
-                    v.unidade?.toLowerCase().includes(lower) ||
                     v.marca?.toLowerCase().includes(lower) ||
                     v.modelo?.toLowerCase().includes(lower) ||
                     v.cor?.toLowerCase().includes(lower) ||
@@ -60,6 +54,10 @@ const EstoqueLojista = () => {
                     v.combustivel?.toLowerCase().includes(lower)
                 );
             }
+
+            filtrados.sort((a, b) => {
+                return new Date(b.data_registro) - new Date(a.data_registro);
+            });
 
             if (filterDate !== '') {
                 filtrados = filtrados.filter(v => {
@@ -76,15 +74,13 @@ const EstoqueLojista = () => {
 
     //Passando as colunas com as suas respectivas chaves
     const colunas = [
-        { key: 'unidade', label: 'LOJA' },
         { key: 'data_registro', label: 'DATA CADASTRO', format: (value) => formatDateInfo(value) /*Formatando a data para 00/00/00 */ },
+        { key: 'placa', label: 'PLACA' },
         { key: 'marca', label: 'MARCA' },
         { key: 'modelo', label: 'MODELO' },
         { key: 'cor', label: 'COR' },
         { key: 'ano_fabricacao', label: 'ANO FABRICAÇÃO' },
         { key: 'ano_modelo', label: 'ANO MODELO' },
-        { key: 'placa', label: 'PLACA' },
-        { key: 'renavan', label: 'RENAVAN' },
         { key: 'dias_estoque', label: 'DIAS EM ESTOQUE', format: (value) => value !== undefined ? `${value} dia(s)` : 'N/A' /*in */ },
         { key: 'combustivel', label: 'COMBUSTÍVEL' },
         { key: 'cambio', label: 'CÂMBIO' },
@@ -129,7 +125,7 @@ const EstoqueLojista = () => {
         const worksheet = XLSX.utils.json_to_sheet(formattedData)
         const workbook = XLSX.utils.book_new()
         XLSX.utils.book_append_sheet(workbook, worksheet, "Data")
-        XLSX.writeFile(workbook, "Relatorio de Baixas.xlsx")
+        XLSX.writeFile(workbook, `Relatorio de Estoque - ${usuarioAtivo}.xlsx`) 
     };
 
 

@@ -1,4 +1,3 @@
-import React from 'react'
 import ContainerSecundario from '../../components/container/ContainerSecundario'
 import Card from '../../components/card/Card'
 import "../../components/card/Card.css"
@@ -9,7 +8,7 @@ import "../../assets/css/themify-icons.css"
 const Lojista = () => {
   return (
     <ContainerSecundario>
-      <div className='container d-flex flex-column ' id="path" >
+      <div className='container d-flex ' id="path" >
         <div className="d-flex align-items-start ">
           <div className="p-2">
             <a className="link_a" href="/home">Gestão</a>
@@ -52,6 +51,13 @@ const Lojista = () => {
             <Card classBody={"card_home"} classLink={"/estoque_lojista"} classNameIcon={"ti ti-write card-ti"} classFooter={"nome_footer"} text_title={"ESTOQUE"}
               text_footer={"Consultar o estoque de veículos da loja"} />
           </div>
+        </div>
+      </div>
+      <div className="container d-flex justify-content-center card-container-2">
+        <div className="card col-md-4 " id="bloco" >
+          <Card classBody={"card_home"} classLink={"/cadastro_veiculo_lojista"} classNameIcon={"ti ti-check-box card-ti"} classFooter={"nome_footer"}
+            text_title={"CADASTRAR VEÍCULO"}
+            text_footer={<> Cadastrar um veiculo<br /> buscando dados na Base BIN do Detran </>} />
         </div>
       </div>
     </ContainerSecundario>

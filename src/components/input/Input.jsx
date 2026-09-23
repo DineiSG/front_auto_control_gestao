@@ -30,7 +30,7 @@ function Input({ nameInput, style, maxLength, label, type, value, onChange, onCl
 
   const inputElement = (
     <input
-      
+
       aria-required="true"
       type={type}
       value={value}

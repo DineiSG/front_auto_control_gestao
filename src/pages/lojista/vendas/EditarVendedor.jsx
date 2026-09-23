@@ -5,21 +5,18 @@ import Input from '../../../components/input/Input';
 import Button from '../../../components/button/Button';
 import { useState, useRef, useEffect } from 'react';
 import { useGetData } from '../../../services/useGetData';
-import { useDeleteId } from "../../../services/useDeleteId";
 import { formatTel } from "../../../hooks/useMask";
 import { useAuth } from "../../../hooks/useAuth"
+import { useUpdateData } from "../../../services/useUpdateData";
 
 const EditarVendedor = () => {
+
+    // Base URL da API
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
     const [buscaVendedor, setBuscaVendedor] = useState('');
     // estado local com todos os campos
     const [dadosVendedor, setDadosVendedor] = useState({ id: '', nome: '', email: '', telefone: '', unidade: '' });
-
-    // Limpa os campos do formulario após a exclusao
-    const resetForm = () => {
-        setDadosVendedor({ id: '', nome: '', email: '', telefone: '', unidade: '' });
-        ultimoVendedor.current = ''
-    }
 
     const { user } = useAuth()
     const usuarioAtivo = user?.nome.split('.').toString()
@@ -30,22 +27,38 @@ const EditarVendedor = () => {
         buscaVendedor ? `/vendedor/nome/${encodeURIComponent(buscaVendedor)}` : null
     );
 
-    const { deleteData } = useDeleteId(`/vendedor`);
+    const { updateData } = useUpdateData(`/vendedor/${dadosVendedor.id}`)
 
     // para evitar buscas repetidas na API
     const ultimoVendedor = useRef('');
 
     // dispara busca quando sai do campo (blur)
-    const handleBlur = () => {
-        const term = dadosVendedor.nome.trim();
-        if (term) {
-            if (term !== ultimoVendedor.current) {
-                ultimoVendedor.current = term;
-                setBuscaVendedor(term); // dispara fetch
+    const handleBlur = async () => {
+
+        try {
+
+            const lojaVendedor = await fetch(`${API_BASE_URL}/vendedor/nome/${dadosVendedor.nome}`);
+
+            const dados = await lojaVendedor.json()
+            console.log(`Dados do vendedor: ${dados}`)
+            if (dados.unidade !== usuarioAtivo) {
+                window.alert("este vendedor nao esta cadastrado nessa unidade. Operação nao permitida.")
+                window.location.reload()
             }
-        } else {
-            setDadosVendedor({ id: '', nome: '', email: '', telefone: '', unidade: '' });
+
+            const term = dadosVendedor.nome.trim();
+            if (term) {
+                if (term !== ultimoVendedor.current) {
+                    ultimoVendedor.current = term;
+                    setBuscaVendedor(term); // dispara fetch
+                }
+            } else {
+                setDadosVendedor({ id: '', nome: '', email: '', telefone: '', unidade: '', status: '' });
+            }
+        } catch {
+            window.alert("Nao foi possivel consultar os dados do vendedor solicitado. Entre em contato com o suporte.")
         }
+
     };
 
     // popula estado local quando chegam dados da API
@@ -56,7 +69,8 @@ const EditarVendedor = () => {
                 nome: dados.nome ?? '',
                 email: dados.email ?? '',
                 telefone: dados.telefone ?? '',
-                unidade: dados.unidade ?? ''
+                unidade: dados.unidade ?? '',
+                status:dados.status?? ''
             });
         } else if (dados && dados.erro) {
             console.log('Vendedor não encontrado');
@@ -70,7 +84,7 @@ const EditarVendedor = () => {
     };
 
 
-    const handleDelete = async (e) => {
+    const handleStatus = async (e) => {
         e.preventDefault()
 
         if (!dadosVendedor.id) {
@@ -78,10 +92,9 @@ const EditarVendedor = () => {
             return;
         }
 
-        //Verificando se a loja em que o vendedor está cadastrado é a mesma em que o usuario está logado
-        if (dadosVendedor?.unidade !== usuarioAtivo) {
-            alert(`O vendedor trabalha na loja "${dadosVendedor.unidade}", mas você está logado na loja "${usuarioAtivo}". Operação não permitida.`);
-            return;
+        const statusVendedor={
+            id:dadosVendedor.id,
+            status:"INATIVO"
         }
 
         const confirmar = window.confirm("Confirma a exclusão do vendedor " + dadosVendedor.nome + "?")
@@ -89,21 +102,22 @@ const EditarVendedor = () => {
             return
         } else {
             try {
-                await deleteData(dadosVendedor.id)
+                await updateData(statusVendedor, dadosVendedor.id)
                 window.alert("Vendedor excluído com sucesso")
-                resetForm()
+                window.location.reload()
             } catch {
                 window.alert("Não foi possível excluir o vendedor.\nEntre em contato com o suporte.")
             }
         }
     }
+
     return (
         <div>
             <div className='panel-heading'>
-                <i className='ti ti-home' id="ti-black"></i>
-                <p>CONSULTAR OU EXCLUIR VENDEDOR <br /> Informe o nome do vendedor</p>
+                <i className='ti ti-close' id="ti-black"></i>
+                <p>EXCLUIR VENDEDOR <br /> Informe o nome do vendedor</p>
             </div>
-            <Form onSubmit={handleDelete}>
+            <Form onSubmit={handleStatus}>
                 <div className="col-12 col-md-4">
                     {/* campo de busca/controlado */}
                     <Input label="Nome:" type="text" style={{ width: '200px' }} nameInput="descricao" value={dadosVendedor.nome}
@@ -121,7 +135,7 @@ const EditarVendedor = () => {
                 </div>
                 <div className="col-12 col-md-12">
                     <div className="d-flex flex-row-reverse">
-                        <Button type="submit" variant='danger' onClick={handleDelete}>
+                        <Button type="submit" variant='danger' onClick={handleStatus}>
                             {loading && (
                                 <div className="d-flex flex-row-start" role="status" > </div>
                             )}

@@ -12,7 +12,6 @@ import { usePostData } from '../../../services/usePostData';
 import { calcValorFinanceiro } from '../../../hooks/useCalc';
 import { formatTimestamp } from '../../../hooks/formatDate';
 import { useGetExtern } from '../../../services/useGetExtern';
-import { Link } from 'react-router-dom';
 import { useAuth } from "../../../hooks/useAuth"
 
 
@@ -38,7 +37,8 @@ const RegistrarVenda = () => {
   const [buscaPlaca, setBuscaPlaca] = useState("")
   const [dadosVeiculo, setDadosVeiculo] = useState({ placa: '', marca: '', modelo: '', cor: '', renavam: '', unidade: '' })
   const [dadosCEP, setDadosCEP] = useState({ cep: '', rua: '', cidade: '', bairro: '', uf: '' })
-  const [vendedor, setVendedor] = useState({ nome: '', unidade: '' })
+  const [vendedor, setVendedor] = useState('')
+  const [idVendedor, setIdVendedor] = useState('')
 
 
   //Limpa o formulario apos o envio
@@ -60,16 +60,16 @@ const RegistrarVenda = () => {
   console.log('Usuário ativo: ', usuarioAtivo)
 
   // buscando os dados no bd
-  const { data: veiculo, } = useGetData(buscaPlaca ? `/veiculos/placa/${placa}` : null)
+  const { data: veiculo } = useGetData(buscaPlaca ? `/veiculos/placa/${placa}` : null)
 
-  const { loading, data: dadosPostais } = useGetExtern(cep ? `https://brasilapi.com.br/api/cep/v1/${cep}` : null)
+  const { data: dadosPostais } = useGetExtern(cep ? `https://brasilapi.com.br/api/cep/v2/${cep}` : null)
 
-  const { createData } = usePostData('/vendas');
+  const { createData, loading } = usePostData('/vendas');
 
   // Só busca o vendendor se soubermos a loja:
-  const { data: dadosVendedor } = useGetData(
-    usuarioAtivo ? `/vendedor/unidade/${encodeURIComponent(usuarioAtivo)}` : null
-  );
+  const { data: vendedoresLoja } = useGetData(usuarioAtivo ? `/vendedor/unidade/${encodeURIComponent(usuarioAtivo)}` : null);
+
+
 
 
   // Ref para manter a referência atualizada da última placa buscada
@@ -77,21 +77,36 @@ const RegistrarVenda = () => {
 
   // Função chamada quando o input da placa perde o foco
   const handleBlur = async () => {
+
     const placaM = placa.trim().toUpperCase();
+    console.log(`Placa buscada: ${placaM}`);
 
     if (placaM.length !== 7) return;
+
     if (placaM === ultimaPlacaBuscada.current) return;
 
     ultimaPlacaBuscada.current = placaM;
 
     // Verificaçao e busca de dados de veiculo
     try {
+
+      const lojaVeiculo = await fetch(`${API_BASE_URL}/veiculos/placa/${placaM}`);
+
+      const dados = await lojaVeiculo.json()
+      console.log(`Dados do veículo: ${dados}`)
+
+      if (dados.unidade !== usuarioAtivo) {
+        window.alert("O veiculo correspondente a essa placa nao pertence a essa unidade. Operação nao permitida.")
+        window.location.reload()
+      }
+
       // 1 Verifica se a placa existe em vendas
       const resVenda = await fetch(`${API_BASE_URL}/vendas/placa/${placaM}`);
 
       if (resVenda.status === 200) {
         // Já vendida → limpar e bloquear
         window.alert('Ja consta uma venda registrada para esta placa. Para confirmar os dados, acesse Consultar Venda.');
+
         setDadosVeiculo({ placa: '', marca: '', modelo: '', cor: '', renavam: '', unidade: '' });
         setBuscaPlaca(placaM);
         // Opcional: exibir mensagem ao usuário
@@ -128,27 +143,11 @@ const RegistrarVenda = () => {
     }
   };
 
-  //Calcula o valor financiado
-  useEffect(() => {
-    const resultado = calcValorFinanceiro(valorVenda, valorEntrada);
-    setValorFinanciamento(resultado);
-  }, [valorVenda, valorEntrada])
-
-  //Valida se a venda e à vista. Caso nao seja, os inputs de entrada e valor financiado sao liberados
-  const handleVendaChange = (e) => {
-    setTipoVenda(e.target.value)
-    if (e.target.value === 'aVista') {
-      setCondicoes(false)
-      setInstituicao("A Vista")
-    } else {
-      setCondicoes(true)
-    }
-  }
-
   // Preencher campos quando os dados solicitados chegarem
   useEffect(() => {
+
     if (veiculo && !veiculo.erro) {
-      //console.log('Dados do veículo recebidos:', veiculo); // Debug
+      // Debug
       setDadosVeiculo(prev => ({
         ...prev,
         marca: veiculo.marca || '',
@@ -178,17 +177,35 @@ const RegistrarVenda = () => {
     }
 
     //Obtendo os dados do vendedor
-    if (dadosVendedor && !dadosVendedor.erro) {
-      console.log('Dados do vendedor recebidos: ', dadosVendedor)
+    if (vendedoresLoja && !vendedoresLoja.erro) {
+      console.log('Dados do vendedor recebidos: ', vendedoresLoja)
       setVendedor(prev => ({
         ...prev,
-        id: dadosVendedor.id,
-        nome: dadosVendedor.nome,
-        unidade: dadosVendedor.unidade
+        id: vendedoresLoja.id,
+        nome: vendedoresLoja.nome,
+        unidade: vendedoresLoja.unidade
       }))
     }
 
-  }, [veiculo, dadosPostais, dadosVendedor]);
+
+  }, [veiculo, dadosPostais, vendedoresLoja]);
+
+  //Calcula o valor financiado
+  useEffect(() => {
+    const resultado = calcValorFinanceiro(valorVenda, valorEntrada);
+    setValorFinanciamento(resultado);
+  }, [valorVenda, valorEntrada])
+
+  //Valida se a venda e à vista. Caso nao seja, os inputs de entrada e valor financiado sao liberados
+  const handleVendaChange = (e) => {
+    setTipoVenda(e.target.value)
+    if (e.target.value === 'aVista') {
+      setCondicoes(false)
+      setInstituicao("A Vista")
+    } else {
+      setCondicoes(true)
+    }
+  }
 
   // Função para converter campos em CAIXA ALTA
   const toUpperFields = (obj, fields = []) => {
@@ -205,19 +222,13 @@ const RegistrarVenda = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    //Verificando se a loja em que o veículo está cadastrado é a mesma em que o usuario está logado
-    if (veiculo?.unidade !== usuarioAtivo) {
-      alert(`O veículo pertence à loja "${veiculo.unidade}", mas você está na loja "${usuarioAtivo}". Operação não permitida.`);
-      return;
-    }
-
     const dataRegistro = formatTimestamp(new Date())
 
     let dados = {
       placa, id: veiculo.id, marca: veiculo.marca, modelo: veiculo.modelo, cor: veiculo.cor, unidade: veiculo.unidade,
       renavam: veiculo.renavan, comprador, vendedor, nascimento, rg, cpf, telefone, email, cep: dadosPostais.cep, rua: dadosCEP.rua,
-      endereco, bairro: dadosPostais.neighborhood, cidade: dadosPostais.city, uf: dadosPostais.state,
-      valorVenda, valorFipe, valorFinanciamento, valorEntrada, tipoVenda, instituicao, dataRegistro, observacoes, audit:user?.nome
+      endereco, bairro: dadosPostais.neighborhood, cidade: dadosPostais.city, uf: dadosPostais.state, id_vendedor:idVendedor,
+      valorVenda, valorFipe, valorFinanciamento, valorEntrada, tipoVenda, instituicao, dataRegistro, observacoes, audit: user?.nome
     }
 
     // Padroniza para caixa alta
@@ -253,9 +264,10 @@ const RegistrarVenda = () => {
 
   // Função para lidar com a mudança de unidade
   const handleVendedorChange = (e) => {
-    const selectedOption = e.target.selectedOptions[0]
-    const nome = selectedOption.getAttribute('data-descricao')
-    setVendedor(nome)
+    const optionSelecionada = e.target.options[e.target.selectedIndex];
+    setVendedor(optionSelecionada.value);
+    setIdVendedor(optionSelecionada.dataset.id || '');
+
   }
 
   return (
@@ -367,12 +379,14 @@ const RegistrarVenda = () => {
               <label className="label" id="select-label"><span>Vendedor:</span></label>
               <select type='text' name='loja' value={vendedor} onChange={handleVendedorChange} className="select-item" style={{ width: '250px' }} required >
                 <option value="" >SELECIONE UM VENDEDOR</option>
-                {dadosVendedor.map((vendedores) => (
-                  <option key={vendedores.nome} value={vendedores.nome} data-descricao={vendedores.nome}>
+                {vendedoresLoja.map((vendedores) => (
+                  <option key={vendedores.id} value={vendedores.nome} data-id={vendedores.id}>
                     {vendedores.nome}
                   </option>
                 ))}
               </select>
+            </div>
+            <div className="col-12 col-md-6">
             </div>
             <br />
             <div className='negociacao'>
@@ -433,9 +447,7 @@ const RegistrarVenda = () => {
             </div>
           </Form>
         </Box>
-
       </div>
-
     </ContainerSecundario>
   )
 }

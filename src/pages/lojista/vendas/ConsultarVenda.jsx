@@ -12,6 +12,7 @@ import { formatDateInfo } from '../../../hooks/formatDate';
 import Button from '../../../components/button/Button';
 import { formatTel, formatCEP, formatCPF, formatDate, formatValue } from "../../../hooks/useMask"
 import { calcValorFinanceiro } from '../../../hooks/useCalc';
+import { useAuth } from "../../../hooks/useAuth"
 
 const ConsultarVenda = () => {
 
@@ -39,6 +40,14 @@ const ConsultarVenda = () => {
         setDadosVeiculo(prev => ({ ...prev, valorFinanciamento: resultado }));
     }, [dadosVeiculo.valorVenda, dadosVeiculo.valorEntrada])
 
+    // Base URL da API
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+    //Usuario autenticado
+    const { user } = useAuth()
+    const usuarioAtivo = user?.nome.split('.').toString()
+    console.log('Usuário ativo: ', usuarioAtivo)
+
     // buscando os dados no bd
     const { data: veiculo } = useGetData(buscaPlaca ? `/vendas/placa/${placa}` : null)
 
@@ -51,25 +60,41 @@ const ConsultarVenda = () => {
     const ultimaPlacaBuscada = useRef('');
 
     // Função chamada quando o input da placa perde o foco
-    const handleBlur = () => {
+    const handleBlur = async () => {
 
         const placaM = placa
 
-        if (placaM.length === 7) {
-            // Só busca se a placa for diferente da última buscada
-            if (placaM !== ultimaPlacaBuscada.current) {
-                console.log('Buscando placa:', placaM); // Debug
-                ultimaPlacaBuscada.current = placaM;
-                setBuscaPlaca(placaM);
-            }
-            setEditavel(true);
-        } else {
-            setDadosVeiculo({
-                placa: '', marca: '', modelo: '', cor: '', renavan: '', unidade: '', vendedor: '',
-                comprador: '', telefone: '', email: '', cep: '', endereco: '', bairro: '', cidade: '', uf: '', nascimento: '', cpf: '', rg: '',
-                valorFipe: '', valorVenda: '', valorEntrada: '', valorFinanciamento: '', observacoes: '', tipoVenda: '', instituicao: '', rua: ''
-            });
+        const vendaLoja = await fetch(`${API_BASE_URL}/vendas/placa/${placaM}`);
+
+        const dados = await vendaLoja.json()
+        console.log(`Dados do veículo: ${dados}`)
+
+        if (dados.unidade !== usuarioAtivo) {
+            window.alert("O veiculo correspondente a essa placa nao foi vendido nessa unidade. Operação nao permitida.")
+            window.location.reload()
         }
+
+        try {
+            if (placaM.length === 7) {
+                // Só busca se a placa for diferente da última buscada
+                if (placaM !== ultimaPlacaBuscada.current) {
+                    console.log('Buscando placa:', placaM); // Debug
+                    ultimaPlacaBuscada.current = placaM;
+                    setBuscaPlaca(placaM);
+                }
+                setEditavel(true);
+            } else {
+                setDadosVeiculo({
+                    placa: '', marca: '', modelo: '', cor: '', renavan: '', unidade: '', vendedor: '',
+                    comprador: '', telefone: '', email: '', cep: '', endereco: '', bairro: '', cidade: '', uf: '', nascimento: '', cpf: '', rg: '',
+                    valorFipe: '', valorVenda: '', valorEntrada: '', valorFinanciamento: '', observacoes: '', tipoVenda: '', instituicao: '', rua: ''
+                });
+            }
+
+        } catch {
+            window.alert("Não foi possivel obter os dados da venda. Entre em contato com o suporte.")
+        }
+
     };
 
     // Preencher campos quando os dados solicitados chegarem
@@ -169,8 +194,7 @@ const ConsultarVenda = () => {
                 console.log('Dados editados com sucesso, ', resultado)
                 window.alert('Dados editados com sucesso')
                 resetForm()
-
-
+                window.scrollTo({ top: 0, behavior: 'smooth' })
             } catch (err) {
                 console.log(err)
                 window.alert("Falha ao editar o Registro de Venda.\nEntre em contato com o suporte.")
@@ -199,7 +223,7 @@ const ConsultarVenda = () => {
                 console.log('Registro excluido com sucesso, ', resultado)
                 window.alert('Registro de Venda excluido com sucesso')
                 resetForm()
-
+                window.scrollTo({ top: 0, behavior: 'smooth' })
             } catch (err) {
                 console.log(err)
                 window.alert("Não foi possivel excluir o Registro de Venda.\nFavor entrar em contato com o suporte.")

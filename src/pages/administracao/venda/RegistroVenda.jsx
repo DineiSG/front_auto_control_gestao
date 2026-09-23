@@ -58,7 +58,7 @@ const RegistrarVenda = () => {
 
   // buscando os dados no bd
   const { data: veiculo, } = useGetData(buscaPlaca ? `/veiculos/placa/${placa}` : null)
-  const { loading, data: dadosPostais } = useGetExtern(cep ? `https://brasilapi.com.br/api/cep/v1/${cep}` : null)
+  const { loading, data: dadosPostais } = useGetExtern(cep ? `https://brasilapi.com.br/api/cep/v2/${cep}` : null)
 
   const { createData } = usePostData('/vendas');
 

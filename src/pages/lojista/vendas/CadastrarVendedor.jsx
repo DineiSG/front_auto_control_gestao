@@ -5,30 +5,54 @@ import Box from "../../../components/box/Box"
 import ContainerSecundario from "../../../components/container/ContainerSecundario"
 import Input from '../../../components/input/Input';
 import Button from '../../../components/button/Button';
+import Table from "../../../components/table/Table";
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { usePostData } from '../../../services/usePostData';
 import { formatTimestamp } from '../../../hooks/formatDate';
-import { formatTel } from "../../../hooks/useMask"
+import { formatTel, formatCPF } from "../../../hooks/useMask";
 import { useAuth } from "../../../hooks/useAuth"
+import { useGetData } from "../../../services/useGetData";
 import EditarVendedor from "./EditarVendedor";
 
 const CadastrarVendedor = () => {
 
+    const [vendedorUnidade, setVendedorUnidade] = useState([])
     const [telefone, setTelefone] = useState('')
     const [email, setEmail] = useState('')
     const [nome, setNome] = useState('')
+    const [cpf, setCpf] = useState('')
+    const tabelaRef = useRef(null);
+
+    const { user } = useAuth()
+    const usuarioAtivo = user?.nome.split('.').toString()
+    console.log('Usuário ativo: ', usuarioAtivo)
 
     //Limpa os campos do formulario apos o envio
     const resetForm = () => {
         setTelefone(''), setEmail(''), setNome('')
     }
-
+    // Envianos dados para serem salvos na tabela vendedor
     const { createData } = usePostData('/vendedor')
 
-    const { user } = useAuth()
-    const usuarioAtivo = user?.nome.split('.').toString()
-    console.log('Usuário ativo: ', usuarioAtivo)
+    // Busca os vendedores cadastrados na unidade do lojista ativo
+
+    const { data: vendedores } = useGetData(`/vendedor/unidade/${usuarioAtivo}`)
+
+    // Atualiza a lista de vendedores quando a resposta da API muda
+    useEffect(() => {
+
+        if (vendedores && !vendedores.error && Array.isArray(vendedores)) {
+            // Ordena os vendedores por ordem alfabética pelo nome
+            const vendedoresOrdenados = vendedores.sort((a, b) => a.nome.localeCompare(b.nome))
+
+            const vendedoresAtivos = vendedoresOrdenados.filter(
+                vendedor => vendedor.status !== 'INATIVO'
+            );
+
+            setVendedorUnidade(vendedoresAtivos)
+        }
+    }, [vendedores])
 
     // Função para converter campos em CAIXA ALTA
     const toUpperFields = (obj, fields = []) => {
@@ -41,6 +65,19 @@ const CadastrarVendedor = () => {
         return copy
     }
 
+    //Passando as colunas com as suas respectivas chaves
+
+    const colunas = [
+
+        { key: 'nome', label: 'NOME' },
+        { key: 'email', label: 'EMAIL' },
+        { key: 'telefone', label: 'TELEFONE' },
+        { key: 'unidade', label: 'LOJA' }
+
+    ]
+
+
+
     // Função para lidar com o envio do formulário
     const handleSubmit = async (e) => {
         e.preventDefault()
@@ -49,11 +86,12 @@ const CadastrarVendedor = () => {
 
         // Envia nome da loja no campo 'unidade'
         let dados = {
-            unidade:usuarioAtivo,
+            unidade: usuarioAtivo,
             nome,
             email,
             data_registro,
-            telefone
+            telefone,
+            cpf
         }
 
         console.log('Dados a serem enviados: ', dados)
@@ -64,23 +102,13 @@ const CadastrarVendedor = () => {
         const confirmar = window.confirm("Confirma o cadastro do vendedor?");
         if (!confirmar) {
             return
-        } else if (window.confirm && nome === "" ||email === "" || telefone === "") {
+        } else if (window.confirm && nome === "" || email === "" || telefone === "") {
             window.alert("É obrigatorio preencher todos os campos do formulário.")
         } else {
-            try {
-                await createData(dados)
-                //console.log('Veiculo cadastrado com sucesso, ', resultado)
-                window.alert('Vendedor cadastrado com sucesso')
-                resetForm()
-            } catch (err) {
-                console.error('Falha ao cadastrar o vendedor: ', err)
-                window.alert('Falha ao registrar o vendedor.\nEntre em contato com o suporte')
-            }
+            await createData(dados)
+            window.alert('Vendedor cadastrado com sucesso')
+            resetForm()
         }
-
-
-
-
     }
 
     return (
@@ -117,11 +145,15 @@ const CadastrarVendedor = () => {
                                 value={nome} onChange={(e) => setNome(e.target.value)} required />
 
                         </div>
+                        <div className="col-6 col-md-6">
+                            <Input label={"CPF:"} type={"text"} style={{ width: '150px' }} maxLength={14}
+                                nameInput={"modelo"} value={cpf} onChange={(e) => setCpf(formatCPF(e.target.value))} placeholder={"XXX.XXX.XXX-XX"} required />
+                        </div>
                         <div className="col-12 col-md-4">
                             <Input label={"Email:"} type={"text"} style={{ width: '250px' }} nameInput={"modelo"}
                                 value={email} onChange={(e) => setEmail(e.target.value)} required />
                         </div>
-                        <div className="col-12 col-md-3">
+                        <div className="col-12 col-md-4">
                             <Input label={"Telefone:"} type={"text"} style={{ width: '150px' }} maxLength={14} nameInput={"marca"}
                                 value={telefone} onChange={(e) => setTelefone(formatTel(e.target.value))} required />
                         </div>
@@ -130,8 +162,14 @@ const CadastrarVendedor = () => {
                         </div>
                     </Form>
                     <br />
+                    <div className="table-responsive" ref={tabelaRef}>
+                        <div>
+                            <Table data={vendedorUnidade} columns={colunas} className={"table table-striped table-bordered table-data dataTable no-footer"} role="grid" id="estoque" />
+                        </div>
+                    </div>
+                    <br />
                     <hr />
-                    <EditarVendedor/>
+                    <EditarVendedor />
                 </Box>
             </div>
         </ContainerSecundario>

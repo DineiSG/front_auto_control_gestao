@@ -113,7 +113,7 @@ const RelatorioEstoque = () => {
         const worksheet = XLSX.utils.json_to_sheet(formattedData)
         const workbook = XLSX.utils.book_new()
         XLSX.utils.book_append_sheet(workbook, worksheet, "Data")
-        XLSX.writeFile(workbook, "Relatorio de Baixas.xlsx")
+        XLSX.writeFile(workbook, "Relatorio de Estoque.xlsx")
     };
 
 
@@ -155,7 +155,7 @@ const RelatorioEstoque = () => {
                             <div className="p-2 ">
                             </div>
                             <div className="d-flex align-items-center gap-3">
-                                {status !== "ok" && (<p className={status === "error" ? "text-danger" : "text-muted", "mb-0"} >{message} </p>)}
+                                {status !== "ok" && (<p className={status === "error" ? "text-danger" : "text-muted"} >{message} </p>)}
                                 <div className="d-flex flex-column ">
                                     <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} tooltipText="Data inicial"
                                         tooltipPlacement="top" />

@@ -112,13 +112,19 @@ function Sidebar() {
               <Link to="/cadastrar_vendedor" style={{ textDecoration: "none" }} ><ButtonSidebar iconClass={"ti ti-user "} classNameLink={"item_menu"} text={"Cadastrar Vendedor"} /></Link>
             </li>
             <li className="botoes">
+              <Link to="/devolucao_transferencia" style={{ textDecoration: "none" }} ><ButtonSidebar iconClass={"ti ti-share"} classNameLink={"item_menu"} text={"Devolução ou Transferencia"} /></Link>
+            </li>
+            <li className="botoes">
               <Link to="/solicitar_liberacao" style={{ textDecoration: "none" }} ><ButtonSidebar iconClass={"ti ti-new-window "} classNameLink={"item_menu"} text={"Solicitar Liberação"} /></Link>
             </li>
             <li className="botoes">
               <Link to="/relatorio_venda" style={{ textDecoration: "none" }} ><ButtonSidebar iconClass={"ti ti-receipt "} classNameLink={"item_menu"} text={"Relatório de Vendas"} /></Link>
             </li>
             <li className="botoes">
-              <Link to="/estoque_lojista" style={{ textDecoration: "none" }} ><ButtonSidebar iconClass={"ti ti-write "} classNameLink={"item_menu"} text={"Estoque"} /></Link>
+              <Link to="/cadastro_veiculo_lojista" style={{ textDecoration: "none" }} ><ButtonSidebar iconClass={"ti ti-car "} classNameLink={"item_menu"} text={"Cadastrar Veículo"} /></Link>
+            </li>
+            <li className="botoes">
+              <Link to="/estoque_lojista" style={{ textDecoration: "none" }} ><ButtonSidebar iconClass={"ti ti-write "} classNameLink={"item_menu"} text={"Consultar Estoque"} /></Link>
             </li>
           </>
         )}

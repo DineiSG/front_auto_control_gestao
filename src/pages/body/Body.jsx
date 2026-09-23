@@ -43,9 +43,11 @@ import ProtectedRoute from "../../hooks/protectedRoute";
 import CadastroVeiculoCompra from "../estoque/gestao/CadastroVeiculoCompra";
 import EstoqueLojista from "../lojista/estoque/EstoqueLojista"
 import RelatorioVenda from "../lojista/vendas/RelatorioVenda";
+import CadastroVeiculoLojista from "../lojista/estoque/CadastroVeiculoLojista";
 import RegistroVenda from "../administracao/venda/RegistroVenda";
 import ConsultaVenda from "../administracao/venda/ConsultaVenda";
 import VendasLojista from "../administracao/venda/VendasLojista";
+import RegistrarDevolTransf from "../lojista/estoque/RegistrarDevolTransf";
 
 
 function Body() {
@@ -111,6 +113,8 @@ function Body() {
             <Route path="/consultar_venda" element={<ProtectedRoute><ConsultarVenda /></ProtectedRoute>} />
             <Route path="/estoque_lojista" element={<ProtectedRoute><EstoqueLojista /></ProtectedRoute>} />
             <Route path="/relatorio_venda" element={<ProtectedRoute><RelatorioVenda /></ProtectedRoute>} />
+            <Route path="/cadastro_veiculo_lojista" element={<ProtectedRoute><CadastroVeiculoLojista /></ProtectedRoute>} />
+            <Route path="/devolucao_transferencia" element={<ProtectedRoute><RegistrarDevolTransf/></ProtectedRoute>}/>
 
             {/* Modulo Administração */}
             <Route path="/administracao" element={<ProtectedRoute><Administracao /></ProtectedRoute>} />

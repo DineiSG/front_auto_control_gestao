@@ -2,14 +2,23 @@ import React, { useEffect, useState } from "react";
 import ModalBase from "./ModalBase";
 import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
+//import { useAuth } from "../../../hooks/useAuth"
 
 const ModalCam = () => {
     const [modalAberto, setModalAberto] = useState(false);
     const [mensagens, setMensagens] = useState([]);
 
+    //const { user } = useAuth()
+
+    /*if (user?.role === "ADMINISTRADOR" || "SUPORTE" || "COLABORADOR"){
+        
+    }*/
+    
+
     const API_ALERT = import.meta.env.VITE_API_WS
 
     useEffect(() => {
+        
         const socket = new SockJS(`${API_ALERT}`);
         const client = new Client({
             webSocketFactory: () => socket,

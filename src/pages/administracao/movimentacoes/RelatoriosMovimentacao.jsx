@@ -14,11 +14,12 @@ import Input from "../../../components/input/Input";
 import Select from "../../../components/select/Select";
 import Button from "../../../components/button/Button";
 import ContainerSecundario from "../../../components/container/ContainerSecundario";
+import RelatorioSaidas from "./RelatorioSaidas";
 
 const RelatoriosMovimentacao = () => {
 
     const [filteredBaixas, setFilteredBaixas] = useState([]);
-    const [filteredLiberacoes, setFilteredLiberacoes] = useState([]); 
+    const [filteredLiberacoes, setFilteredLiberacoes] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [select, setSelect] = useState(false);
     const [pageSize, setPageSize] = useState(10);
@@ -176,15 +177,18 @@ const RelatoriosMovimentacao = () => {
                                     <option value='selecione'>Selecione uma opção</option>
                                     <option value='baixas'>Relatório de Baixas</option>
                                     <option value='liberacoes'>Relatório de Liberação</option>
+                                    <option value='saidas'>Solicitações de Saida</option>
                                 </select>
                             </div>
                         </div>
                     </div>
+                    <br />
+
                     {select === 'baixas' && (
                         <>
                             <div className="d-flex flex-column align-items-end" >
                                 <div className="d-flex align-items-center gap-3">
-                                    {status !== "ok" && (<p className={status === "error" ? "text-danger" : "text-muted", "mb-0"} >{message} </p>)}
+                                    {status !== "ok" && (<p className={status === "error" ? "text-danger" : "text-muted"} >{message} </p>)}
                                     <div className="d-flex flex-column ">
                                         <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} tooltipText="Data inicial"
                                             tooltipPlacement="top" />
@@ -262,7 +266,7 @@ const RelatoriosMovimentacao = () => {
                         <>
                             <div className="d-flex flex-column align-items-end" >
                                 <div className="d-flex align-items-center gap-3">
-                                    {status !== "ok" && (<p className={status === "error" ? "text-danger" : "text-muted", "mb-0"} >{message} </p>)}
+                                    {status !== "ok" && (<p className={status === "error" ? "text-danger" : "text-muted"} >{message} </p>)}
                                     <div className="d-flex flex-column ">
                                         <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} tooltipText="Buscar por um veículo em uma data específica"
                                             tooltipPlacement="top" />
@@ -291,7 +295,8 @@ const RelatoriosMovimentacao = () => {
                             <br />
                             <div className="table-responsive" ref={tabelaRef}>
                                 <div>
-                                    <Table data={hasResults ? paginatedDataLiberacao : []} columns={colunas} className={"table table-striped table-bordered table-data dataTable no-footer"} role="grid" id="estoque" />
+                                    <Table data={hasResults ? paginatedDataLiberacao : []} columns={colunas} 
+                                    className={"table table-striped table-bordered table-data dataTable no-footer"} role="grid" id="estoque" />
                                 </div>
                             </div>
                             <div className="d-flex justify-content-between" id="pagination" >
@@ -335,7 +340,9 @@ const RelatoriosMovimentacao = () => {
                             </div>
                         </>
                     )}
-
+                    {select === 'saidas' && (
+                        <RelatorioSaidas />
+                    )}
                 </Box>
             </div>
         </ContainerSecundario>

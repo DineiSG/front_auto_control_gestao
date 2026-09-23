@@ -34,13 +34,8 @@ const RelatorioVenda = () => {
     if (veiculos && !veiculos.erro && Array.isArray(veiculos)) {
       console.log('Dados recebidos da API: ', veiculos);
 
-      // Organiza os veículos por loja (ordem alfabética)
-      const lojasOrdenadas = [...veiculos].sort((a, b) =>
-        (a?.unidade || '').localeCompare(b?.unidade || '')
-      );
-
       //Calcula dias em estoque
-      const dadosComDias = lojasOrdenadas.map((veiculo) => ({
+      const dadosComDias = veiculos.map((veiculo) => ({
         ...veiculo,
         dias_estoque: calculateDaysInStock(veiculo.data_registro),
       }));
@@ -52,7 +47,7 @@ const RelatorioVenda = () => {
       if (searchTerm.trim() !== '') {
         const lower = searchTerm.toLowerCase();
         filtrados = filtrados.filter(v =>
-          v.comprador?.toLowerCase().includes(lower) ||
+          v.placa?.toLowerCase().includes(lower) ||
           v.vendedor?.toLowerCase().includes(lower) ||
           v.marca?.toLowerCase().includes(lower) ||
           v.modelo?.toLowerCase().includes(lower) ||
@@ -60,6 +55,10 @@ const RelatorioVenda = () => {
           v.cor?.toLowerCase().includes(lower)
         );
       }
+
+      filtrados.sort((a, b) => {
+        return new Date(b.data_registro) - new Date(a.data_registro);
+      });
 
       if (filterDate !== '') {
         filtrados = filtrados.filter(v => {
@@ -76,15 +75,16 @@ const RelatorioVenda = () => {
 
   //Passando as colunas com as suas respectivas chaves
   const colunas = [
-    { key: 'comprador', label: 'COMPRADOR' },
     { key: 'dataRegistro', label: 'DATA COMPRA', format: (value) => formatDateInfo(value) /*Formatando a data para 00/00/00 */ },
+    { key: 'placa', label: 'PLACA' },
     { key: 'marca', label: 'MARCA' },
     { key: 'modelo', label: 'MODELO' },
     { key: 'cor', label: 'COR' },
     { key: 'valorVenda', label: 'VALOR VENDA (R$)' },
     { key: 'tipoVenda', label: 'TIPO VENDA' },
-    { key: 'instituicao', label: 'INSTITUIÇÃO FINANCEIRA'},
-    { key: 'vendedor', label: 'VENDEDOR'}
+    { key: 'valorFinanciamento', label: 'VALOR FINANCIAMENTO (R$)' },
+    { key: 'instituicao', label: 'INSTITUIÇÃO FINANCEIRA' },
+    { key: 'vendedor', label: 'VENDEDOR' }
 
   ]
 
@@ -106,8 +106,8 @@ const RelatorioVenda = () => {
   //Funçao que gera o excel da tabela
   const gerarExcel = () => {
     const formattedData = filteredVehicles.map(filtrados => ({
-      Comprador: filtrados.comprador,
       Data_Compra: formatDateInfo(filtrados.dataRegistro),
+      Placa: filtrados.placa,
       Marca: filtrados.marca,
       Modelo: filtrados.modelo,
       Cor: filtrados.cor,
@@ -121,7 +121,7 @@ const RelatorioVenda = () => {
     const worksheet = XLSX.utils.json_to_sheet(formattedData)
     const workbook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(workbook, worksheet, "Data")
-    XLSX.writeFile(workbook, "RELATÓRIO DE VENDAS " + usuarioAtivo + ".xlsx")
+    XLSX.writeFile(workbook, "Relatório de vendas - " + usuarioAtivo + ".xlsx")
   };
 
   return (

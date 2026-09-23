@@ -131,6 +131,11 @@ input {
 
 }
 
+.insert_text{
+	border: 1px solid #dbd9d9;
+	border-radius: 2px;
+}
+
 #input-all,
 #select-all {
 	border-radius: 2px;
@@ -198,10 +203,11 @@ input {
 	background-color: #26ace2;
 	color: white;
 	font-weight: 600;
+	width: auto !important;
 }
 
 .button.primary:hover {
-	background-color: #26ace2;
+	background-color: #0783b4;
 }
 
 .button.secondary {
@@ -217,10 +223,11 @@ input {
 	background-color: #dc3545;
 	font-family: 'Saira';
 	color: white;
+	width: auto !important;
 }
 
 .button.danger:hover {
-	background-color: #bd2130;
+	background-color: #850a16;
 }
 
 .button.disabled {
@@ -231,6 +238,7 @@ input {
 	font-family: 'Saira';
 	background-color: #2f7950;
 	color:white
+	
 }
 
 .table {
