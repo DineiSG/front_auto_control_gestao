@@ -257,7 +257,7 @@ const ConsultarVenda = () => {
                 <Box onSubmit>
 
                     <div className='panel-heading'>
-                        <i className='ti ti-car' id="ti-black" ></i>
+                        <i className='ti ti-layout-tab' id="ti-black" ></i>
                         <p>DADOS DO VEÍCULO</p>
                     </div>
                     <div className='panel-heading'>
@@ -288,39 +288,39 @@ const ConsultarVenda = () => {
                         <p>DADOS DO COMPRADOR</p>
                     </div>
                     <Form>
-                        <div className="col-6 col-md-5">
+                        <div className="col-12 col-md-5">
                             <Input label={"Nome Completo:"} type={"text"} style={{ width: '250px' }} nameInput={"comprador"} value={dadosVeiculo.comprador} readOnly={!editavel} onChange={(e) =>
                                 setDadosVeiculo(prev => ({ ...prev, comprador: e.target.value }))} />
                         </div>
-                        <div className="col-6 col-md-4">
+                        <div className="col-12 col-md-4">
                             <Input label={"Data de Nascimento:"} style={{ width: '110px' }} value={dadosVeiculo.nascimento} required readOnly={!editavel} onChange={handleDateChange} />
                         </div>
-                        <div className="col-6 col-md-3">
+                        <div className="col-12 col-md-3">
                             <Input label={"CPF:"} type={"text"} style={{ width: '150px' }} maxLength={14} nameInput={"cpf"} value={dadosVeiculo.cpf} required onChange={handleCpfChange} />
                         </div>
-                        <div className="col-6 col-md-3">
+                        <div className="col-12 col-md-3">
                             <Input label={"RG:"} type={"text"} style={{ width: '150px' }} maxLength={14} nameInput={"rg"} value={dadosVeiculo.rg} required readOnly={!editavel} onChange={(e) =>
                                 setDadosVeiculo(prev => ({ ...prev, rg: e.target.value }))} />
                         </div>
-                        <div className="col-6 col-md-3">
+                        <div className="col-12 col-md-3">
                             <Input label={"Telefone:"} type={"text"} style={{ width: '150px' }} maxLength={14} nameInput={"telefone"} value={dadosVeiculo.telefone} readOnly={!editavel} onChange={handlePhoneChange} />
                         </div>
-                        <div className="col-6 col-md-3">
+                        <div className="col-12 col-md-3">
                             <Input label={"Email:"} type={"text"} style={{ width: '200px' }} nameInput={"email"} value={dadosVeiculo.email} required readOnly={!editavel} onChange={(e) =>
                                 setDadosVeiculo(prev => ({ ...prev, email: e.target.value }))} />
                         </div>
-                        <div className="col-6 col-md-4">
+                        <div className="col-12 col-md-4">
                             <Input label={"CEP:"} type={"text"} style={{ width: '100px' }} maxLength={9} nameInput={"cep"} value={dadosVeiculo.cep} required readOnly={!editavel} onChange={handleCepChange} />
                         </div>
-                        <div className="col-6 col-md-4">
+                        <div className="col-12 col-md-4">
                             <Input label={"Logradouro:"} type={"text"} style={{ width: '250px' }} nameInput={"logradouro"} value={dadosVeiculo.rua} readOnly={!editavel} onChange={(e) =>
                                 setDadosVeiculo(prev => ({ ...prev, rua: e.target.value }))} />
                         </div>
-                        <div className="col-6 col-md-4">
+                        <div className="col-12 col-md-4">
                             <Input label={"Complemento:"} type={"text"} style={{ width: '200px' }} nameInput={"complemento"} value={dadosVeiculo.endereco} required readOnly={!editavel} onChange={(e) =>
                                 setDadosVeiculo(prev => ({ ...prev, endereco: e.target.value }))} />
                         </div>
-                        <div className="col-6 col-md-4">
+                        <div className="col-12 col-md-4">
                             <Input label={"Bairro:"} type={"text"} style={{ width: '200px' }} nameInput={"bairro"} value={dadosVeiculo.bairro} readOnly={!editavel} onChange={(e) =>
                                 setDadosVeiculo(prev => ({ ...prev, bairro: e.target.value }))} />
                         </div>
@@ -368,17 +368,17 @@ const ConsultarVenda = () => {
                             <Input label={"Observações:"} type={"text"} style={{ width: '300px' }} nameInput={"observacoes"} value={dadosVeiculo.observacoes} required readOnly={!editavel} onChange={(e) =>
                                 setDadosVeiculo(prev => ({ ...prev, observacoes: e.target.value }))} />
                         </div>
-                        <div className="col-12 col-md-6">
+                        
+                        <div className="col-12 col-md-6" >
                             <div className="d-flex flex-row-start">
-                                <Button onClick={handleDelete} variant='danger' >EXCLUIR</Button>
+                                <Button id="botao-acao" onClick={handleDelete} variant='danger' >EXCLUIR</Button>
                             </div>
                         </div>
                         <div className="col-12 col-md-6">
                             <div className="d-flex flex-row-reverse">
-                                <Button onClick={handleSubmit} variant='primary' >SALVAR</Button>
+                                <Button id="botao-acao" onClick={handleSubmit} variant='primary' >SALVAR</Button>
                             </div>
                         </div>
-
                     </Form>
                 </Box>
 

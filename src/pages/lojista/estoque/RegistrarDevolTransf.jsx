@@ -71,13 +71,13 @@ const RegistrarDevolTransf = () => {
             const resVenda = await fetch(`${API_BASE_URL}/solicitacoes/placa/${placaM}`);
 
             if (resVenda.status === 200) {
-                
+
                 window.alert('Ja consta uma solicitacao registrada para esta placa.');
                 window.location.reload()
-  
+
             } else if (resVenda.status === 404) {
                 setBuscaPlaca(placaM);
-                
+
             }
 
         } catch (erro) {
@@ -170,45 +170,45 @@ const RegistrarDevolTransf = () => {
                         <i className=' ti ti-angle-right ' id='card-path' />
                     </div>
                     <div className="p-2">
-                        <p className='atual'>Registrar Devolução ou Transferencia </p>
+                        <p className='atual'>Devolução ou Transferencia </p>
                     </div>
                 </div>
             </div>
             <div className="container d-flex justify-content-center card-container">
                 <Box>
-                                    <div className='panel-heading'>
-                    <i className='ti ti-car' id="ti-black" ></i>
-                    <p>REGISTRAR A DEVOLUÇÃO OU TRANSFERENCIA DE UM VEÍCULO <br /> Informe a placa do veículo para obter os dados</p>
-                </div>
-                <Form>
-                    <div className="col-12 col-md-2">
-                        <Input label={"Placa:"} type={"text"} maxLength={"7"} style={{ width: '80px' }} nameInput={"placa"}
-                            value={placa} onChange={(e) => setPlaca(e.target.value)} onBlur={handleBlur} required />
+                    <div className='panel-heading'>
+                        <i className='ti ti-share' id="ti-black" ></i>
+                        <p>REGISTRAR A DEVOLUÇÃO OU TRANSFERENCIA DE UM VEÍCULO <br /> Informe a placa do veículo para obter os dados</p>
                     </div>
-                    <div className="col-12 col-md-3">
-                        <Input label={"Marca:"} type={"text"} style={{ width: '150px' }} nameInput={"marca"} value={dadosVeiculo.marca} readOnly />
-                    </div>
-                    <div className="col-12 col-md-3">
-                        <Input label={"Modelo:"} type={"text"} style={{ width: '150px' }} nameInput={"modelo"} value={dadosVeiculo.modelo} readOnly />
-                    </div>
-                    <div className="col-12 col-md-4">
-                        <Input label={"Cor:"} type={"text"} style={{ width: '150px' }} nameInput={"cor"} value={dadosVeiculo.cor} readOnly />
-                    </div>
-                    <div className="col-6 col-md-12">
-                        <TextArea label={"Descrição do Registro:"} type={"text"} style={{ width: '800px' }} nameInput={"descricao"}
-                            value={observacao} onChange={(e) => setObservacao(e.target.value)} placeholder="Descreva aqui o motivo da devolução ou transferência do veiculo" required />
-                    </div>
-                    <div className="col-12 col-md-6">
-                        <div className="col-6 d-flex flex-row-start">
-                            {loading && (
-                                <div className="spinner-grow spinner-grow-sm flex-row-start" style={{ marginRight: '15px' }} role="status" > </div>
-                            )}
-                            <div className="d-flex flex-row-start">
-                                <Button onClick={handleSubmit} variant='primary' >ENVIAR</Button>
+                    <Form>
+                        <div className="col-12 col-md-2">
+                            <Input label={"Placa:"} type={"text"} maxLength={"7"} style={{ width: '80px' }} nameInput={"placa"}
+                                value={placa} onChange={(e) => setPlaca(e.target.value)} onBlur={handleBlur} required />
+                        </div>
+                        <div className="col-12 col-md-3">
+                            <Input label={"Marca:"} type={"text"} style={{ width: '150px' }} nameInput={"marca"} value={dadosVeiculo.marca} readOnly />
+                        </div>
+                        <div className="col-12 col-md-3">
+                            <Input label={"Modelo:"} type={"text"} style={{ width: '150px' }} nameInput={"modelo"} value={dadosVeiculo.modelo} readOnly />
+                        </div>
+                        <div className="col-12 col-md-4">
+                            <Input label={"Cor:"} type={"text"} style={{ width: '150px' }} nameInput={"cor"} value={dadosVeiculo.cor} readOnly />
+                        </div>
+                        <div className="col-6 col-md-12">
+                            <TextArea label={"Descrição do Registro:"} type={"text"} style={{ width: '250px' }} nameInput={"descricao"}
+                                value={observacao} onChange={(e) => setObservacao(e.target.value)} placeholder="Descreva aqui o motivo da devolução ou transferência do veiculo" required />
+                        </div>
+                        <div className="col-12 col-md-6">
+                            <div className="col-6 d-flex flex-row-start">
+                                {loading && (
+                                    <div className="spinner-grow spinner-grow-sm flex-row-start" style={{ marginRight: '15px' }} role="status" > </div>
+                                )}
+                                <div className="d-flex flex-row-start">
+                                    <Button onClick={handleSubmit} variant='primary' >ENVIAR</Button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </Form>
+                    </Form>
                 </Box>
 
             </div>

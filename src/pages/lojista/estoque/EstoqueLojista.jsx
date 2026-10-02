@@ -19,7 +19,6 @@ const EstoqueLojista = () => {
     const [pageSize, setPageSize] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
     const tabelaRef = useRef(null);
-
     const { user } = useAuth()
     const usuarioAtivo = user?.nome.split('.').toString()
     console.log('Usuário ativo: ', usuarioAtivo)
@@ -125,7 +124,7 @@ const EstoqueLojista = () => {
         const worksheet = XLSX.utils.json_to_sheet(formattedData)
         const workbook = XLSX.utils.book_new()
         XLSX.utils.book_append_sheet(workbook, worksheet, "Data")
-        XLSX.writeFile(workbook, `Relatorio de Estoque - ${usuarioAtivo}.xlsx`) 
+        XLSX.writeFile(workbook, `Relatorio de Estoque - ${usuarioAtivo}.xlsx`)
     };
 
 
@@ -152,55 +151,53 @@ const EstoqueLojista = () => {
             </div>
             <div className="container d-flex justify-content-center card-container">
                 <Box>
-                    <div className='d-flex justify-content-between panel-heading'>
-                        <div className=' panel-heading '>
-                            <div className="p-1 ">
-                                <i className='ti ti-car' id="ti-black" ></i>
-                            </div>
-                            <div className="p-2">
-                                <p>VERIFICAR ESTOQUE DE VEÍCULOS</p>
-                            </div>
+                    <div className='panel-heading'>
+                        <div className="p-1 ">
+                            <i className='ti ti-car' id="ti-black" ></i>
                         </div>
-                        <div className="d-flex flex-row-reverse" >
-                            <div className="d-flex justify-content-start">
-                                <div className="p-2 ">
-                                    <Input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} id='criterios-pesquisa' tooltipPlacement="top" tooltipText={"Busque pela placa, marca, modelo ou cor."} />
-                                </div>
-                                <div className="p-2 ">
-                                    <Input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} tooltipPlacement="top" tooltipText={"Busque pela data de registro do veículo."} />
-                                </div>
-                                <div className="p-1 ">
-                                    <Select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} options={options} className={"quantidade"} />
-                                </div>
+                        <div className="p-2 col-12">
+                            <p>VERIFICAR ESTOQUE DE VEÍCULOS</p>
+                        </div>
+                    </div>
+                    <div className="d-flex flex-row-reverse">
+                        <div className="d-flex justify-content-start"  id="filtro" >
+                            <div className="p-2 ">
+                                <Input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} id='criterios-pesquisa' tooltipPlacement="top" tooltipText={"Busque pela placa, marca, modelo ou cor."} />
+                            </div>
+                            <div className="p-2 ">
+                                <Input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} tooltipPlacement="top" tooltipText={"Busque pela data de registro do veículo."} />
+                            </div>
+                            <div className="p-2 ">
+                                <Select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} options={options} className={"quantidade"} />
                             </div>
                         </div>
                     </div>
-                    <div className="table-responsive" ref={tabelaRef}>
-                        <div>
+                    <br />
+                    <div className="table-responsive " ref={tabelaRef}>
+                        <div className="overflow-x-scroll">
                             <Table data={paginatedData} columns={colunas} className={"table table-striped table-bordered table-data dataTable no-footer"} role="grid" id="estoque" />
                         </div>
                     </div>
                     <div className="d-flex justify-content-between" id="pagination" >
-                        <div className="p-2 ">
-                            <div className="d-flex justify-content-start">
+                        <div className="p-2 btn_excel">
+                            <div className="d-flex justify-content-start " >
                                 <Button onClick={gerarExcel} className="bg-blue-500 text-white px-4 py-2 rounded">
                                     GERAR EXCEL
                                 </Button>
                             </div>
                         </div>
-                        <div className="p-4 ">
+                        <div className="p-4 registros_tela">
                             <p>
                                 <span>
                                     Mostrando página {currentPage} de {totalPages} | Total de registros: {filteredVehicles.length}
                                 </span>
                             </p>
                         </div>
-
-                        <div className="d-flex justify-content-end" >
+                        <div className="d-flex justify-content-end" id="paginacao">
                             <div className="d-flex justify-content-between">
                                 <div className="p-2 ">
                                     <Button onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} variant={currentPage === 1 ? 'disabled' : 'primary'} className={"px-3 py-1 bg-gray-300 rounded"} >
-                                        <i className=' ti ti-angle-left px-3 py-1 bg-gray-300 rounded' id='card-path' />ANTERIOR
+                                        <i className=' ti ti-angle-left px-3 py-1 bg-gray-300 rounded' id='card-path' /><span className="txt_btn">ANTERIOR</span>
                                     </Button>
                                 </div>
                                 <div className="p-4 ">
@@ -210,10 +207,9 @@ const EstoqueLojista = () => {
                                         </span>
                                     </p>
                                 </div>
-
                                 <div className="p-2 ">
                                     <Button onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages} className={"px-3 py-1 bg-gray-300 rounded"} >
-                                        PRÓXIMA <i className=' ti ti-angle-right px-3 py-1 bg-gray-300 rounded' />
+                                        <span className="txt_btn">PRÓXIMA</span> <i className=' ti ti-angle-right px-3 py-1 bg-gray-300 rounded'  />
                                     </Button>
                                 </div>
                             </div>

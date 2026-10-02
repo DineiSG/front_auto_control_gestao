@@ -162,10 +162,8 @@ const CadastrarVendedor = () => {
                         </div>
                     </Form>
                     <br />
-                    <div className="table-responsive" ref={tabelaRef}>
-                        <div>
-                            <Table data={vendedorUnidade} columns={colunas} className={"table table-striped table-bordered table-data dataTable no-footer"} role="grid" id="estoque" />
-                        </div>
+                    <div className="table-responsive" id="tabela_dados" ref={tabelaRef}>
+                        <Table data={vendedorUnidade} columns={colunas} className={"table table-striped table-bordered no-footer"} role="grid" id="estoque" />
                     </div>
                     <br />
                     <hr />

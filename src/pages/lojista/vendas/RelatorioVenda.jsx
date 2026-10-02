@@ -147,56 +147,49 @@ const RelatorioVenda = () => {
       </div>
       <div className="container d-flex justify-content-center card-container">
         <Box>
-          <div className='d-flex justify-content-between panel-heading'>
-            <div className=' panel-heading '>
-              <div className="p-1 ">
-                <i className='ti ti-money' id="ti-black" ></i>
+          <div className=' panel-heading '>
+            <i className='ti ti-receipt' id="ti-black" ></i>
+            <p>RELATÓRIO DE VENDAS DE VEICULOS DA LOJA</p>
+          </div>
+          <div className="d-flex flex-row-reverse">
+            <div className="d-flex justify-content-start" id="filtro" >
+              <div className="p-2 ">
+                <Input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} id='criterios-pesquisa' tooltipPlacement="top" tooltipText={"Busque pela placa, marca, modelo ou cor."} />
               </div>
-              <div className="p-2">
-                <p>RELATÓRIO DE VENDAS DE VEICULOS DA LOJA</p>
+              <div className="p-2 ">
+                <Input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} tooltipPlacement="top" tooltipText={"Busque pela data de registro do veículo."} />
               </div>
-            </div>
-            <div className="d-flex flex-row-reverse" >
-              <div className="d-flex justify-content-start">
-                <div className="p-2 ">
-                  <Input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} id='criterios-pesquisa' tooltipPlacement="top"
-                    tooltipText={"Busque pela marca, modelo, cor, vendedor ou instituição financeira."} />
-                </div>
-                <div className="p-2 ">
-                  <Input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} tooltipPlacement="top" tooltipText={"Busque pela data de registro da venda do veículo."} />
-                </div>
-                <div className="p-1 ">
-                  <Select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} options={options} className={"quantidade"} />
-                </div>
+              <div className="p-2 ">
+                <Select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} options={options} className={"quantidade"} />
               </div>
             </div>
           </div>
+          <br />
           <div className="table-responsive" ref={tabelaRef}>
             <div>
               <Table data={paginatedData} columns={colunas} className={"table table-striped table-bordered table-data dataTable no-footer"} role="grid" id="estoque" />
             </div>
           </div>
           <div className="d-flex justify-content-between" id="pagination" >
-            <div className="p-2 ">
-              <div className="d-flex justify-content-start">
+            <div className="p-2 btn_excel">
+              <div className="d-flex justify-content-start " >
                 <Button onClick={gerarExcel} className="bg-blue-500 text-white px-4 py-2 rounded">
                   GERAR EXCEL
                 </Button>
               </div>
             </div>
-            <div className="p-4 ">
+            <div className="p-4 registros_tela">
               <p>
                 <span>
                   Mostrando página {currentPage} de {totalPages} | Total de registros: {filteredVehicles.length}
                 </span>
               </p>
             </div>
-
-            <div className="d-flex justify-content-end" >
+            <div className="d-flex justify-content-end" id="paginacao">
               <div className="d-flex justify-content-between">
                 <div className="p-2 ">
                   <Button onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} variant={currentPage === 1 ? 'disabled' : 'primary'} className={"px-3 py-1 bg-gray-300 rounded"} >
-                    <i className=' ti ti-angle-left px-3 py-1 bg-gray-300 rounded' id='card-path' />ANTERIOR
+                    <i className=' ti ti-angle-left px-3 py-1 bg-gray-300 rounded' id='card-path' /><span className="txt_btn">ANTERIOR</span>
                   </Button>
                 </div>
                 <div className="p-4 ">
@@ -206,10 +199,9 @@ const RelatorioVenda = () => {
                     </span>
                   </p>
                 </div>
-
                 <div className="p-2 ">
                   <Button onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages} className={"px-3 py-1 bg-gray-300 rounded"} >
-                    PRÓXIMA <i className=' ti ti-angle-right px-3 py-1 bg-gray-300 rounded' />
+                    <span className="txt_btn">PRÓXIMA</span> <i className=' ti ti-angle-right px-3 py-1 bg-gray-300 rounded' />
                   </Button>
                 </div>
               </div>

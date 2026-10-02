@@ -24,18 +24,14 @@ p {
 	display: inherit;
 	padding: 5px 20px;
 	margin: 10px 0px;
-	position:fixed;
+	position: fixed;
 	background: #F0F1F3;
 	font-family: 'Saira';
 	font-size: 12px;
-	
+
 }
 
-@media screen and (max-width: 1300px) {
-	#path {
-		display: none !important;
-	}
-}
+
 
 .link_a {
 	color: #8304b6;
@@ -55,6 +51,7 @@ p {
 #options {
 	display: inline-flexbox
 }
+
 #date_select {
 	padding: 8px 20px 4px;
 	line-height: 48px;
@@ -65,14 +62,14 @@ p {
 }
 
 .box-base {
-	box-shadow: 0 1px 3px 0px rgba(0, 0, 0, 0.2);
+	box-shadow: 0 1px 3px 1px rgba(0, 0, 0, 0.2);
 	border-radius: 2px;
 	background-color: #fff;
 	padding-left: 16px;
 	padding-right: 16px;
 	padding-bottom: 15px;
 	margin-bottom: 50px;
-	margin-top:-35px;
+	margin-top: -35px;
 	vertical-align: baseline;
 
 }
@@ -85,7 +82,7 @@ p {
 	font-family: 'Saira';
 	font-size: 15px;
 	font-weight: 500;
-	
+
 }
 
 .sub-panel-heading {
@@ -128,10 +125,11 @@ select {
 input {
 	border: 1px solid #dbd9d9;
 	border-radius: 2px;
+	height: 28px;
 
 }
 
-.insert_text{
+.insert_text {
 	border: 1px solid #dbd9d9;
 	border-radius: 2px;
 }
@@ -141,6 +139,7 @@ input {
 	border-radius: 2px;
 	border: none;
 	font-family: 'Saira';
+
 }
 
 #select-all :focus {
@@ -156,7 +155,7 @@ input {
 	color: #333;
 	font-size: 25px;
 	margin-right: 15px;
-	
+
 }
 
 #formulario {
@@ -165,13 +164,11 @@ input {
 }
 
 #alerta {
-
 	text-align: center;
 }
 
 #graficos {
 	font-family: 'Saira';
-
 
 }
 
@@ -193,7 +190,7 @@ input {
 	line-height: 1.45;
 }
 
-#button_login{
+#button_login {
 	font-family: 'Saira';
 }
 
@@ -203,11 +200,11 @@ input {
 	background-color: #26ace2;
 	color: white;
 	font-weight: 600;
-	width: auto !important;
+	width: 150px !important;
 }
 
 .button.primary:hover {
-	background-color: #0783b4;
+	background-color: #2f7950;
 }
 
 .button.secondary {
@@ -220,25 +217,26 @@ input {
 }
 
 .button.danger {
-	background-color: #dc3545;
+	background-color: #c70518;
 	font-family: 'Saira';
 	color: white;
-	width: auto !important;
+	width: 150px !important;
 }
 
 .button.danger:hover {
-	background-color: #850a16;
+	background-color: #050505;
 }
 
 .button.disabled {
 	background-color: #cccccc;
 	cursor: not-allowed;
 }
-.button.sign_page{
+
+.button.sign_page {
 	font-family: 'Saira';
 	background-color: #2f7950;
-	color:white
-	
+	color: white;
+	width: 150px !important;
 }
 
 .table {
@@ -253,18 +251,21 @@ input {
 	vertical-align: baseline;
 }
 
-.table-responsive{
+.table-responsive {
 	overflow-x: auto;
 	display: block;
 }
 
-#btn_link{
+#btn_link {
 	text-decoration: none !important;
 	color: white;
 	font-weight: 600;
 	font-family: 'Saira';
 }
 
+.info {
+	border: none !important;
+}
 
 
 @media print {
@@ -292,4 +293,88 @@ input {
 		left: 0;
 		width: 100%;
 	}
+}
+
+
+
+@media (max-width: 360px) {
+	#input-all {
+		width: auto !important;
+		display: grid;
+		font-size: 12px;
+	}
+
+	#logo {
+		margin-top: 50%;
+		width: 250px;
+		height: 150px;
+	}
+
+	.panel-heading {
+		font-size: 12px;
+		display: grid;
+	}
+
+	.sub-panel-heading {
+		font-size: 12px;
+		display: grid;
+		padding-left: 2%;
+	}
+
+	#filtro {
+		flex-direction: column !important;
+		margin-right: 20%;
+	}
+
+	.quantidade {
+		margin-left: 20%;
+	}
+
+	#pagination {
+		flex-direction: column !important;
+		text-rendering: auto;
+		margin-right: 6%
+	}
+
+	.registros_tela,
+	.btn_excel,
+	.txt_btn {
+		display: none !important;
+	}
+
+	.button.danger,
+	.button.primary,
+	.button {
+		width: 80px !important;
+		display: block;
+		margin-right: 70%;
+
+	}
+
+	#tabela_dados {
+		overflow-x: auto;
+	}
+
+	#ti-black {
+		font-size: 40px;
+		margin-top: 15px;
+	}
+
+
+}
+
+
+@media screen and (max-width: 852px) {
+	#path {
+		margin-top: -75px;
+		padding: auto;
+	}
+
+	.box-base {
+		display: block;
+		width: 100%;
+
+	}
+
+
 }

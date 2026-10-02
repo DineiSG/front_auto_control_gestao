@@ -1,11 +1,9 @@
 import { useState } from 'react'
-import ContainerPrincipal from '../../components/container/ContainerPrincipal'
-import { Link } from 'react-router-dom'
-import { Button } from 'react-bootstrap'
+import Button from '../../components/button/Button'
 import Input from '../../components/input/Input'
 import { useControlAuth } from '../../services/useControlAuth'
 import { useAuth } from '../../hooks/useAuth'
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 const Login = () => {
     const [showSenha, setShowSenha] = useState(false)
@@ -39,36 +37,31 @@ const Login = () => {
     }
 
     return (
-        <div>
-            <ContainerPrincipal >
-                <div className='col-md3 d-flex flex-column align-items-center align-self-center justify-content-center'
-                    style={{ backgroundColor: "#680d8b", marginTop: "40px", borderRadius: "2px", padding: "50px" }}>
-                    <div className="d-flex align-items-center mb-1">
-                        <img src='./LogoAutoControl.png' alt="Auto Control" width={470} height={300} />
-                    </div>
-                    <form className='d-flex flex-column align-items-center justify-content-center' id='input_login'>
-                        <Input id="input_login" type="text" style={{ width: '300px' }} nameInput="usuario" name="login" placeholder="Login"
-                            value={username} onChange={(e) => setUsername(e.target.value)} />
-                        <br />
-                        <Input className={login} type={showSenha ? "text" : "password"} style={{ width: "300px" }} nameInput="senha" name="senha" placeholder="Senha"
-                            value={password} onChange={(e) => setPassword(e.target.value)} />
-                        <br />
-                        <button type="button" onClick={() => setShowSenha(!showSenha)} style={{ background: "none", border: "none", cursor: "pointer" }}
-                            title="Visualizar senha" >
-                            {showSenha ? (<img width="30" height="30" src="https://img.icons8.com/carbon-copy/30/hide.png" alt="hide" />
-                            ) : (
-                                <img width="30" height="30" src="https://img.icons8.com/external-icongeek26-outline-icongeek26/64/external-Eye-content-edition-icongeek26-outline-icongeek26.png" alt="show" />
-                            )}
-                        </button>
-                        <br />
+        <div className='col-12 d-flex flex-column align-items-center min-vh-100'>
+            <div className="d-flex align-items-center">
+                <img className='col-12' id='logo' src='./LogoAutoControl.png' alt="Auto Control" width={470} height={300} />
+            </div>
+            <form className='d-flex flex-column align-items-center justify-content-center was-validated'>
+                <Input id="validationTooltipUsername input_login"  type="text"  nameInput="usuario" name="login" placeholder="Login" 
+                    value={username} onChange={(e) => setUsername(e.target.value)} required />
+                <br />
+                <Input className={login} type={showSenha ? "text" : "password"} nameInput="senha" name="senha" placeholder="Senha"
+                    value={password} onChange={(e) => setPassword(e.target.value)} required/>
+                <br />
+                <button type="button" onClick={() => setShowSenha(!showSenha)} style={{ background: "none", border: "none", cursor: "pointer"}}
+                    title="Visualizar senha" >
+                    {showSenha ? (<img width="30" height="30" src="https://img.icons8.com/carbon-copy/30/hide.png" alt="hide" />
+                    ) : (
+                        <img width="30" height="30" src="https://img.icons8.com/external-icongeek26-outline-icongeek26/64/external-Eye-content-edition-icongeek26-outline-icongeek26.png" alt="show" />
+                    )}
+                </button>
+                <br />
 
-                    </form>
-                    <div className="d-flex align-items-center mb-3" id="button_login" >
-                        <Button className='button.primary' as={Link} to="/home" type="submit" onClick={handleSubmit}>ACESSAR</Button >
-                    </div>
-                </div>
-            </ContainerPrincipal>
-        </div >
+            </form>
+            <div className="d-flex align-items-center mb-3" id='button_login' >
+                <Button variant='primary' as={Link} to="/home" type="submit" onClick={handleSubmit}>ACESSAR</Button >
+            </div>
+        </div>
     )
 }
 

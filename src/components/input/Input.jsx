@@ -47,7 +47,7 @@ function Input({ nameInput, style, maxLength, label, type, value, onChange, onCl
   );
   //Controla o tolltip
   return (
-    <div className="form-control" id="input-all">
+    <div className="" id="input-all" >
       <label className="label">
         <span className="label-text">{label}</span>
       </label>

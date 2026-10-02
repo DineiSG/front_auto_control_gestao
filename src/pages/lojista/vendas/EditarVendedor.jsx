@@ -139,7 +139,7 @@ const EditarVendedor = () => {
                             {loading && (
                                 <div className="d-flex flex-row-start" role="status" > </div>
                             )}
-                            EXCLUIR VENDEDOR
+                            EXCLUIR
                         </Button>
                     </div>
                 </div>

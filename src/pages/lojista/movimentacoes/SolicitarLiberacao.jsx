@@ -3,6 +3,8 @@ import Box from '../../../components/box/Box';
 import Input from '../../../components/input/Input';
 import Form from '../../../components/form/Form';
 import Button from '../../../components/button/Button';
+import ModalContent from "../../../components/modal/ModalContent";
+
 
 import "../../../assets/css/thead.css";
 import "../../../assets/css/themify-icons.css"
@@ -14,6 +16,7 @@ import { usePostData } from '../../../services/usePostData';
 import { useDeleteId } from '../../../services/useDeleteId';
 import { useAuth } from '../../../hooks/useAuth'
 
+
 const SolicitarLiberacao = () => {
     const [placa, setPlaca] = useState('')
     const [placaDelete, setPlacaDelete] = useState('')
@@ -24,6 +27,11 @@ const SolicitarLiberacao = () => {
     const [selectedMotivo, setSelectedMotivo] = useState('')
     const [confirmaCpf, setConfirmaCpf] = useState('')
     const [mostrarSelect, setMostrarSelect] = useState(false)
+
+    const [modalAberto, setModalAberto] = useState(false);
+    const [mensagemModal, setMensagemModal] = useState('')
+    const [confirmar, setConfirmar] = useState(false)
+
     const [deleteDados, setDeleteDados] = useState({
         id: '', placa: '', marca: '', modelo: '', cor: '', observacoes: '', renavan: '',
         unidade: '', motivo: '', dataRegistro: '', data_cadastro: ''
@@ -209,7 +217,8 @@ const SolicitarLiberacao = () => {
 
         if (dadosVendedor.cpf !== confirmaCpf) {
 
-            window.alert("O cpf informado nao correspode ao do vendedor selecionado. Operação nao permitida.")
+            setMensagemModal("O cpf informado nao correspode ao do vendedor selecionado. Operação nao permitida.")
+            setModalAberto(true)
             return
         }
 
@@ -270,7 +279,8 @@ const SolicitarLiberacao = () => {
         let idVeiculo = liberacao.id
 
         console.log('ID a ser deletado: ', idVeiculo)
-        const confirmar = window.confirm("Confirmar o cancelamento da solicitação de liberação do veículo?");
+
+        setMensagemModal("Confirma o cancelamento da solicitação de liberação do veículo?");
 
         if (confirmar === true) {
 
@@ -356,8 +366,8 @@ const SolicitarLiberacao = () => {
                                 </div>
                                 <div className='col-12 col-md-6' id='select-all'>
                                     <label className="label" id="select-label"><span>Solicitante:</span></label>
-                                    <select type='text' name='loja' value={solicitante} onChange={handleVendedorChange} className="select-item" style={{ width: '350px' }} required >
-                                        <option value="" >SELECIONE UM VENDEDOR CADASTRADO</option>
+                                    <select type='text' name='loja' value={solicitante} onChange={handleVendedorChange} className="select-item" style={{ width: '250px' }} required >
+                                        <option value="" >SELECIONE UM VENDEDOR</option>
                                         {dadosVendedor.map((vendedores) => (
                                             <option key={vendedores.nome} value={vendedores.nome} data-descricao={vendedores.nome}>
                                                 {vendedores.nome}
@@ -379,6 +389,9 @@ const SolicitarLiberacao = () => {
                         <div className="d-flex flex-row-reverse">
                             <Button onClick={handleSubmit} variant='primary' >ENVIAR</Button>
                         </div>
+                        <ModalContent isOpen={modalAberto} onClose={() => setModalAberto(false)} title="" size="fullscreen" >
+                            {mensagemModal}
+                        </ModalContent>
                     </Form>
                     <hr />
                     <div className='panel-heading'>
@@ -400,8 +413,12 @@ const SolicitarLiberacao = () => {
                             <Input label={"Observacao:"} type={"text"} style={{ width: '150px' }} nameInput={"observacaoMovimentacao"} value={deleteDados.observacaoMovimentacao} readOnly />
                         </div>
                         <div className="d-flex flex-row-reverse">
-                            <Button onClick={handleDelete} variant='danger' >CANCELAR LIBERAÇÃO</Button>
+                            <Button onClick={handleDelete} variant='danger' >CANCELAR </Button>
                         </div>
+                        <ModalContent isOpen={modalAberto} onClose={() => setModalAberto(false)} title="" size="fullscreen" >
+                            {mensagemModal}
+                            <Button onClick={() => setConfirmar(true)} variant='primary' >SIM</Button>
+                        </ModalContent>
                     </Form>
                 </Box>
             </div>

@@ -17,13 +17,13 @@ function ContainerSecundario({ children }) {
             effectRun.current = true; // marca como já executado
             Velocity(contentRef.current,
                 { translateY: [0, 50], opacity: [1, 0] },
-                { duration: 3000, delay: 0, easing: "easeOutExpo" }
+                { duration: 1000, delay: 0, easing: "easeOutExpo" }
             );
         }
     }, []);
 
     return (
-        <div className="container-fluid container_secundario min-vh-100 d-flex flex-column p-0 container-secundario" ref={contentRef}>
+        <div className="container-fluid container_secundario min-vh-100 d-flex flex-column p-0" ref={contentRef}>
             {children}
         </div>
     )

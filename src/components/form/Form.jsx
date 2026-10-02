@@ -1,9 +1,6 @@
-import React from "react";
-import Button from "../button/Button";
-
 function Form({ children, onSubmit }) {
   return (
-    <form onSubmit={onSubmit} className="row g-3" id='formulario'>
+    <form onSubmit={onSubmit} className="row g-3 col-12" id='formulario'>
       {children}
 
     </form>

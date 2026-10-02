@@ -75,15 +75,15 @@ function Body() {
   return (
     <ContainerPrincipal className="container-principal">
       {!shouldHideNavbar && (
-        <header className="navbar navbar-expand-lg d-flex align-items-center " id="barra_navegacao">
+        <header className="navbar navbar-expand-lg d-flex align-items-center col-12 " id="barra_navegacao">
 
-          <div className="container-fluid">
+          <div className="container-fluid col-12">
 
             {/*Responsável pelo icone que aciona a barra lateral */}
             <button className="navbar-brand icon-bg p-0" onClick={toggleSidebar} >
               <img src="./LogoAutoControl.png" width={90} height={50} alt="" />
             </button>
-            <div className="w-100 text-center" style={{ marginTop: "15px", color: "white" }} >
+            <div className=" text-center" style={{ marginTop: "15px", color: "white" }} >
               {/*Alterando para exibir apenas o primeiro nome do usuario.*/}
               <p>Bem Vindo(a), {user?.nome.split('.')[0] || 'Usuário'}</p>
             </div>
@@ -144,7 +144,6 @@ function Body() {
           </Routes>
 
         </ContainerSecundario>
-        <footer className="footer"></footer>
       </div>
     </ContainerPrincipal >
 
