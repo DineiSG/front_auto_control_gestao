@@ -67,7 +67,7 @@ function Body() {
     setShowSidebar(!showSidebar);
   }
 
-  const hideSidebar = "/"
+  const hideSidebar = ["/", "/contrato"];
 
   const shouldHideSidebar = hideSidebar.includes(location.pathname);
 

@@ -1,272 +1,200 @@
-#corpo_contrato{
-    padding-right: 250px;
-    padding-left: 250px;
-}
-.body2 {
-    margin-bottom: 5%;
-    padding-top: 5%;
-    
-    
-}
-.superior{
-    height: 30px;
-    margin-top: 80px;
-    
+#corpo_contrato {
+    padding-right: 100px;
+    padding-left: 100px;
+    font-family: Arial, sans-serif;
+    color: #000;
 }
 
-.logo {
-    position:relative;
-    margin-top: -18%;
-    margin-right: 100%;
-}
-.placa{
-    position: relative;
-    left:85%;
-    background-color: rgb(223, 223, 223);
-    width:120px;
-    height: 50px;
-    border-top:solid 13px blue;
-    border-left: 2px solid rgba(155, 155, 154, 0.897);
-    border-bottom:2px solid rgba(155, 155, 154, 0.897);
-    border-right: 2px solid rgba(155, 155, 154, 0.897);;
-    font-weight: bold;
-    text-align: center;
-    border-radius:3px;
-}
-.num_contrato{
-    width:120px;
-    margin-left: 85%;
-    font-weight: bold;
-    font-size: 18px;
-    height: 10px;
-    text-align: center;
-}
-.qr{
-    position:relative;
-    margin-left: 45%;
-    margin-top:-15%;
-    margin-bottom: 5%;
-}
-
-.contrato{
-    width: 50px;
-    border:none;
-    outline: none;
-    font-weight: bold;
-}
-
-.title {
-    font-weight: bold;
-    font-style: normal;
-    position: relative;
-    font-size: 20px;
-    display: inline;
-    
-}
-.descricao{
-    position: relative;
-    font-style: normal;
-}
-
-.compra {
+.superior-layout {
     display: flex;
-    align-items: baseline;
-    text-align: center;
-    justify-content: center;
-    margin-top:-5%
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-top: 20px;
+    border-bottom: 2px solid #ccc;
+    padding-bottom: 15px;
 }
 
-.vendedor {
-    display: flex;
-    align-items: baseline;
-    text-align: center;
-    margin-top: 3%;
-    margin-bottom: 50px;
-    justify-content: center;
-    display: inline-block;
+.logo-container .logo {
+    width: 180px;
+    height: auto;
 }
 
-.dados_veiculo{
-    height:auto;
-    overflow-wrap: break-word;
-    width: 100%;
-    border:none;
-    font-size: 12px;
+.qr-container {
     text-align: center;
-}
-.busca{
-    border:1px solid;
-    width: 100px;
-    margin-top: 3%;
-    margin-right:100%
-}
-
-.tb_title{
-    width: 100%;
-    text-align: center;
-}
-
-.tabela{
-    width: 100%;
-}
-
-.veiculo{
-    width: 100%;
-    margin-top: 3%;
-    border: 1px solid;
-}
-.fin_data{
-    font-weight: bold;
-    border-top: 1px solid;
-    border-left: 1px solid;
-    border-right: 1px solid;
-    margin-bottom: auto;
-    text-align: center;
-}
-.info_venda{
-    text-align: center;
-    margin-top: 10%;
-    border: 1px solid;
-    padding: 5px;
-    font-size: 12px;
-    color: black;
-}
-.valor{
-    border:none;
-    text-align: center;
-}
-
-.veic_data {
-    border: none;
-    outline: none;
-    width: 100%; 
-    text-align: center;
-    font-size: 12px;
-}
-.info{
-    border: 1px solid;
-}
-.dados_venda{
-    text-align:left;
-    width: 100%;
-}
-
-.termos{
-    margin-top: -1%;
-    font-size: 12px;
-}
-
-.condicoes{
-    font-weight:bold;
-    text-align: center;
-    font-style: normal;
-    font-size: 15px;
-}
-.clausula{
-    font-size: 12px;
-}
-.claus_title{
-    font-size: 15px;
-}
-
-.assinatura{
-    position: relative;
-    display: inline;
-}
-.linha{
-    border:none;
-    border-bottom:1px solid black;
-    margin-left: 35%;
-    outline: none;
-    width: 200px;
-}
-.assinar{
-    margin-left: 37%;
-}
-.informacoes{
-    border:solid 3px;
-    height: 45px;
-    width: 150px;
-    text-align: center;
-    padding: 5px;
-    margin-left: 78%;
-    margin-top: -10%;
     font-size: 10px;
 }
-.periodo{
-    font-size: 12px;
+
+.qr-img {
+    width: 90px;
+    height: 90px;
 }
 
-/*Contrato_2*/
-
-.compra2 {
-    display: flex;
-    align-items: baseline;
-    text-align: left;
-    justify-content: center;
-    margin-top:-5%
+.qr-legenda {
+    display: block;
+    max-width: 140px;
+    font-size: 9px;
+    margin-top: 4px;
 }
 
-.vendedor {
-    display: flex;
-    align-items: baseline;
-    margin-top: 3%;
-    margin-bottom: 50px;
-    text-align: left;
-    display: inline-block;
-}
-
-.condicoes_2{
-    font-weight:bold;
+.info-topo-box {
+    border: 2px solid #000;
+    border-radius: 6px;
     text-align: center;
-    font-style: normal;
-    font-size: 15px;
-}
-.clausula{
-    font-size: 12px;
-}
-.claus_title{
-    font-size: 15px;
+    width: 180px;
+    padding: 6px;
+    background: #fff;
 }
 
-.assinatura2{
-    text-align: end;
-    
+.linha-topo {
+    font-weight: bold;
+    font-size: 14px;
+    border-bottom: 1px solid #000;
+    padding-bottom: 4px;
+    margin-bottom: 4px;
 }
-.linha2{
-    border:none;
-    border-bottom:1px solid black;
+
+.linha-topo-data {
+    font-size: 12px;
+}
+
+.descricao {
+    text-align: center;
+    margin: 20px 0;
+    font-size: 13px;
+}
+
+.secao-tabela {
+    margin-bottom: 15px;
+}
+
+.secao-titulo, .secao-titulo-fin, .tb_title {
+    background-color: #f1f1f1;
+    border: 1px solid #000;
+    padding: 5px 8px;
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+    margin: 0;
+}
+
+.tabela-dados {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid #000;
+    font-size: 12px;
+}
+
+.tabela-dados td {
+    border: 1px solid #000;
+    padding: 6px 8px;
+}
+
+.input-inline-placa {
+    border: none;
+    outline: none;
+    font-weight: bold;
+    font-size: 12px;
+    background: transparent;
+}
+
+.termos {
+    font-size: 11px;
+    margin-top: 20px;
+    line-height: 1.4;
+}
+
+.condicoes_2 {
+    text-align: center;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.linha2 {
+    border: none;
+    border-bottom: 1px solid black;
     outline: none;
     width: 300px;
 }
-.assinar2{
-    text-align: end;
-}
-.corpo_contrato2 {
-    margin-top: 18%;
-}
 
+.assinar2 {
+    font-size: 12px;
+    margin-top: 4px;
+}
 
 @media print {
-    .dados_veiculo{
-        height: 38px;
-        
+    /* Oculta a barra lateral e elementos desnecessários */
+    .sidebar, 
+    .barra-lateral, 
+    aside {
+        display: none !important;
     }
+
+    /* Reseta margens e padding globais da página de impressão */
+    body, html {
+        background-color: white !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        font-size: 11px !important; /* Reduz levemente a fonte geral para caber em 1 página */
+        height: 100% !important;
+    }
+
+    /* Define a página A4 e margens bem estreitas */
     @page {
-        size: auto;
-        margin: 10mm; /* Ajusta a margem para garantir proporção */
+        size: A4 portrait;
+        margin: 5mm; /* Margem reduzida para aproveitar todo o espaço útil */
     }
 
-
-
-    #printable,
-    #printable * {
-        visibility: visible;
+    /* Remove espaçamentos laterais grandes do corpo do contrato */
+    #corpo_contrato {
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
     }
 
     #printable {
         position: absolute;
-        left: 150px;
-        top: 0px;
+        left: 5%;
+        top: 3%;
+        width: 100%;
+    }
+
+    /* Compacta os elementos internos para garantir que caibam em 1 folha */
+    .superior-layout {
+        margin-top: 3px !important;
+        padding-bottom: 5px !important;
+        margin-bottom: 10px !important;
+    }
+
+    .corpo_contrato2 {
+        margin-top: 5px !important;
+    }
+
+    .body2 {
+        margin-bottom: 0 !important;
+        padding-top: 0 !important;
+    }
+
+    .secao-tabela {
+        margin-bottom: 8px !important; /* Reduz espaço entre as tabelas */
+    }
+
+    .tabela-dados td {
+        padding: 3px 6px !important; /* Deixa as células mais compactas */
+        font-size: 10px !important;
+    }
+
+    .termos {
+        font-size: 9.5px !important; /* Compacta os termos da promoção */
+        margin-top: 10px !important;
+        line-height: 1.2 !important;
+    }
+
+    .termos p, .termos li {
+        margin-bottom: 3px !important;
+    }
+
+    /* Força a área de assinatura a ficar compacta e no final da página */
+    .assinatura2 {
+        margin-top: 15px !important;
     }
 }
