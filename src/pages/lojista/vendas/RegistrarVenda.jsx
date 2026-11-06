@@ -6,6 +6,7 @@ import Input from '../../../components/input/Input';
 import Form from '../../../components/form/Form';
 import Button from '../../../components/button/Button';
 import TextArea from '../../../components/text_area/TextArea';
+import ModalBootstrap from '../../../components/modal/ModalBootstrap';
 import { formatCPF, formatCEP, formatDate, formatTel, formatValue } from "../../../hooks/useMask"
 import { useState, useEffect, useRef } from "react";
 import { useGetData } from '../../../services/useGetData';
@@ -40,7 +41,15 @@ const RegistrarVenda = () => {
   const [dadosCEP, setDadosCEP] = useState({ cep: '', rua: '', cidade: '', bairro: '', uf: '' })
   const [vendedor, setVendedor] = useState('')
   const [idVendedor, setIdVendedor] = useState('')
+  // Estado para controlar o modal
+  const [modal, setModal] = useState({
+    aberto: false,
+    titulo: "Atenção",
+    mensagem: "",
+    tipo: "mensagem",
+    acao: null,
 
+  });
 
   //Limpa o formulario apos o envio
   const resetForm = () => {
@@ -70,9 +79,6 @@ const RegistrarVenda = () => {
   // Só busca o vendendor se soubermos a loja:
   const { data: vendedoresLoja } = useGetData(usuarioAtivo ? `/vendedor/unidade/${encodeURIComponent(usuarioAtivo)}` : null);
 
-
-
-
   // Ref para manter a referência atualizada da última placa buscada
   const ultimaPlacaBuscada = useRef('');
 
@@ -96,23 +102,49 @@ const RegistrarVenda = () => {
       const dados = await lojaVeiculo.json()
       console.log(`Dados do veículo: ${dados}`)
 
+      const alertaUnidade = (titulo, mensagem, aoFechar = null) => {
+        //Mostra o modal com uma mensagem de alerta caso o veiculo nao pertença a unidade do usuario ativo
+        setModal({
+          aberto: true,
+          titulo,
+          mensagem,
+          tipo: "mensagem",
+          acao: "",
+          aoFechar
+        });
+      }
+
       if (dados.unidade !== usuarioAtivo) {
-        window.alert("O veiculo correspondente a essa placa nao pertence a essa unidade. Operação nao permitida.")
-        window.location.reload()
+
+        alertaUnidade("Atenção",
+          "A unidade do veículo não corresponde à unidade do usuário ativo. Operação não permitida",
+          resetForm)
       }
 
       // 1 Verifica se a placa existe em vendas
       const resVenda = await fetch(`${API_BASE_URL}/vendas/placa/${placaM}`);
 
+      const alertaRegVenda = (titulo, mensagem, aoFechar = null) => {
+
+        setModal({
+          aberto: true,
+          titulo,
+          mensagem,
+          tipo: "mensagem",
+          acao: "",
+          aoFechar
+        });
+      }
+
       if (resVenda.status === 200) {
         // Já vendida → limpar e bloquear
-        window.alert('Ja consta uma venda registrada para esta placa. Para confirmar os dados, acesse Consultar Venda.');
+        alertaRegVenda("Atenção", "Esta placa já está registrada como vendida. Para confirmar os dados, acesse Consultar Venda.", resetForm)
 
         setDadosVeiculo({ placa: '', marca: '', modelo: '', cor: '', renavam: '', unidade: '' });
         setBuscaPlaca(placaM);
         // Opcional: exibir mensagem ao usuário
         return;
-      } else if (resVenda.status !== 404) {
+      } else if (resVenda.status === 404) {
         throw new Error(`Erro na API de vendas: ${resVenda.status}`);
       }
 
@@ -223,6 +255,17 @@ const RegistrarVenda = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
+    setModal({
+      aberto: true,
+      titulo: "Confirmação de Solicitação",
+      mensagem: "Confirmar a solicitação de liberação do veículo?",
+      tipo: "confirmacao",
+      acao: confirmarRegistro
+    });
+  }
+
+  const confirmarRegistro = async () => {
+
     const dataRegistro = formatTimestamp(new Date())
 
     let dados = {
@@ -237,31 +280,61 @@ const RegistrarVenda = () => {
       'instituicao', 'tipoVenda', 'observacoes'
     ])
 
-    const confirmou = window.confirm("Confirma o registro da venda?")
-    if (!confirmou) {
-      window.alert('Registro de venda cancelado')
-      return
-    }
-
-    console.log('Dados a serem enviados: ', dados)
 
     // Validação simples dos campos obrigatórios
-    if (!window.confirm.ok && comprador === "" || cpf === "" || rg === "" || telefone === "" || email === "" || cep === "" || endereco === "" || valorFipe === "" ||
+    if (comprador === "" || cpf === "" || rg === "" || telefone === "" || email === "" || cep === "" || endereco === "" || valorFipe === "" ||
       valorVenda === "" || tipoVenda === "") {
-      window.alert("Por favor, verifique o formulario novamente e preencha todos os campos")
+
+      const validacaoCampos = (titulo, mensagem, aoFechar = null) => {
+        setModal({
+          aberto: true,
+          titulo,
+          mensagem,
+          tipo: "mensagem",
+          acao: "",
+          aoFechar
+        });
+      }
+      validacaoCampos("Atenção!", "Por favor, verifique o formulario novamente e preencha todos os campos.")
+
     } else {
       try {
-        const resultado = await createData(dados)
-        console.log('Venda cadastrada com sucesso, ', resultado)
-        window.alert('Venda registrada com sucesso')
-        resetForm() //Chama a função que limpa o formulario
+
+        await createData(dados)
+
+        const registroOk = (titulo, mensagem, aoFechar = null) => {
+          setModal({
+            aberto: true,
+            titulo,
+            mensagem,
+            tipo: "mensagem",
+            acao: "",
+            aoFechar
+          });
+        }
+
+        registroOk("Sucesso", 'Registro de venda realizado com sucesso.', resetForm)
         window.scrollTo({ top: 0, behavior: 'smooth' });//Retorna a pagina para o topo
-      } catch (err) {
-        window.alert("Não foi possivel realizar o Registro de Venda.\nFavor entrar em contato com o suporte.")
-        console.error('Falha ao registrar a venda: ', err)
+
+      } catch {
+
+        const registroFalha = (titulo, mensagem, aoFechar = null) => {
+          setModal({
+            aberto: true,
+            titulo,
+            mensagem,
+            tipo: "mensagem",
+            acao: "",
+            aoFechar
+          })
+        }
+        
+        registroFalha("Atenção!", "Não foi possivel realizar o Registro de Venda.\nFavor entrar em contato com o suporte.", resetForm)
+        
       }
     }
   }
+
 
   // Função para lidar com a mudança de unidade
   const handleVendedorChange = (e) => {
@@ -270,6 +343,13 @@ const RegistrarVenda = () => {
     setIdVendedor(optionSelecionada.dataset.id || '');
 
   }
+
+  const fecharModal = () => {
+    setModal(prev => ({
+      ...prev,
+      aberto: false
+    }));
+  };
 
   return (
     <div>
@@ -451,6 +531,9 @@ const RegistrarVenda = () => {
             </div>
 
           </Box>
+          <>
+            <ModalBootstrap modal={modal} fecharModal={fecharModal} id="modal" />
+          </>
         </div>
       </ContainerSecundario>
     </div>

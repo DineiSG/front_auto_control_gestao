@@ -3,8 +3,7 @@ import Box from '../../../components/box/Box';
 import Input from '../../../components/input/Input';
 import Form from '../../../components/form/Form';
 import Button from '../../../components/button/Button';
-import ModalContent from "../../../components/modal/ModalContent";
-
+import ModalBootstrap from '../../../components/modal/ModalBootstrap';
 
 import "../../../assets/css/thead.css";
 import "../../../assets/css/themify-icons.css"
@@ -28,10 +27,14 @@ const SolicitarLiberacao = () => {
     const [confirmaCpf, setConfirmaCpf] = useState('')
     const [mostrarSelect, setMostrarSelect] = useState(false)
 
-    const [modalAberto, setModalAberto] = useState(false);
-    const [mensagemModal, setMensagemModal] = useState('')
-    const [confirmar, setConfirmar] = useState(false)
-
+    // Estado para controlar o modal
+    const [modal, setModal] = useState({
+        aberto: false,
+        titulo: "Atenção",
+        mensagem: "",
+        tipo: "mensagem",
+        acao: null
+    });
     const [deleteDados, setDeleteDados] = useState({
         id: '', placa: '', marca: '', modelo: '', cor: '', observacoes: '', renavan: '',
         unidade: '', motivo: '', dataRegistro: '', data_cadastro: ''
@@ -41,6 +44,7 @@ const SolicitarLiberacao = () => {
         unidade: '', motivo: '', dataRegistro: '', data_cadastro: ''
     })
 
+    //Função para resetar o formulario após o envio ou cancelamento da liberação
     const resetForm = () => {
         setPlaca('')
         setPlacaDelete('')
@@ -48,8 +52,7 @@ const SolicitarLiberacao = () => {
         setConfirmaCpf('')
         setMostrarSelect(false)
         setDeleteDados({
-            id: '', placa: '', marca: '', modelo: '', cor: '', observacoes: '', renavan: '',
-            unidade: '', motivo: '', dataRegistro: '', data_cadastro: '', ano_fabricacao: '', ano_modelo: ''
+            id: '', placa: '', tipoMovimentacao: '', responsavelMovimentacaoNome: '', observacaoMovimentacao: ''
         })
         setDadosVeiculo({
             id: '', placa: '', marca: '', modelo: '', cor: '', observacoes: '', renavan: '',
@@ -58,9 +61,13 @@ const SolicitarLiberacao = () => {
 
     }
 
+    // Obtendo o usuario ativo do contexto de autenticação
     const { user } = useAuth()
     const usuarioAtivo = user?.nome.split('.').toString()
     console.log('Usuário ativo: ', usuarioAtivo)
+
+    // Base URL da API para consulta direta sem passar pelo contexto de hooks
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
     // buscando os dados do veiculo na tabela veiculo
     const { data: veiculo } = useGetData(buscaPlaca ? `/veiculos/placa/${placa}` : null)
@@ -70,18 +77,12 @@ const SolicitarLiberacao = () => {
 
     //Busca os dados da liberação na tabela liberação
     const { data: liberacao } = useGetData(buscaPlacaDelete ? `/wow/movimentacoes/placa/${placaDelete}` : null)
-    console.log('Dados da liberação: ', liberacao)
 
     // Enviando dados da liberação
     const { createData } = usePostData('/wow/movimentacoes')
 
-
     // Apagando uma liberação
     const { deleteData } = useDeleteId(`/wow/movimentacoes`)
-
-
-    // Base URL da API
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
     // Ref para manter a referência atualizada da última placa buscada
     const ultimaPlacaBuscada = useRef('');
@@ -100,21 +101,47 @@ const SolicitarLiberacao = () => {
             const dados = await lojaVeiculo.json()
             console.log(`Dados do veículo: ${dados}`)
 
-            if (dados.unidade !== usuarioAtivo) {
-                window.alert("O veiculo correspondente a essa placa nao pertence a essa unidade. Operação nao permitida.")
-                window.location.reload()
+            const mostrarMensagem = () => {
+                //Mostra o modal com uma mensagem de alerta caso o veiculo nao pertença a unidade do usuario ativo
+                setModal({
+                    aberto: true,
+                    titulo: "",
+                    mensagem: "O veiculo correspondente a essa placa nao pertence a essa unidade. Operação nao permitida.",
+                    tipo: "",
+                    acao: ""
+                });
             }
+
+            if (dados.unidade !== usuarioAtivo) {
+
+                mostrarMensagem()
+                resetForm()
+
+            }
+
             try {
 
                 // Verifica se a placa existe em liberações de acordo com o retorno da busca no beck-end
                 const resPlaca = await fetch(`${API_BASE_URL}/wow/movimentacoes/placa/${placaM}`);
 
+                const mostrarMensagem = () => {
+                    //Mostra o modal com uma mensagem de alerta caso já exista uma liberação para a placa informada.
+                    setModal({
+                        aberto: true,
+                        titulo: "",
+                        mensagem: 'Ja consta uma liberação solicitada para esta placa. Caso deseje solicitar uma nova liberação, cancele a antiga.',
+                        tipo: "",
+                        acao: ""
+                    });
+                }
+
                 //caso exista, emite o alerta para o usuario
                 if (resPlaca.status === 200) {
 
-                    window.alert('Ja consta uma liberação solicitada para esta placa. Caso deseje solicitar uma nova liberação, cancele a antiga.');
+                    mostrarMensagem()
                     setMostrarSelect(false);
                     resetForm();
+
                 } else if (resPlaca.status === 404) {
 
                     // Caso nao exista, Só busca se a placa for diferente da última buscada
@@ -136,18 +163,30 @@ const SolicitarLiberacao = () => {
     const handleBlurDelete = async () => {
 
         const placaDeleteM = placaDelete.trim().toUpperCase();
-
-        const cancelarSaida = await fetch(`${API_BASE_URL}/wow/movimentacoes/placa/${placaDeleteM}`);
-
-        const dados = await cancelarSaida.json()
-        console.log(`Dados do veículo: ${dados}`)
-
-        if (dados.unidade !== usuarioAtivo) {
-            window.alert("O veiculo correspondente a essa solicitação nao pertence a essa unidade. Operação nao permitida.")
-            window.location.reload()
-        }
-
         if (placaDeleteM.length === 7) {
+            const cancelarSaida = await fetch(`${API_BASE_URL}/wow/movimentacoes/placa/${placaDeleteM}`);
+
+            const mostrarMensagem = () => {
+
+                setModal({
+                    aberto: true,
+                    titulo: "",
+                    mensagem: "O veiculo correspondente a essa placa nao pertence a essa unidade. Operação nao permitida.",
+                    tipo: "",
+                    acao: ""
+                });
+            }
+
+            const dados = await cancelarSaida.json()
+            console.log(`Dados do veículo: ${dados}`)
+
+
+            if (dados.unidade !== usuarioAtivo) {
+                mostrarMensagem()
+                resetForm()
+            }
+
+
             // Só busca se a placa for diferente da última buscada
             if (placaDeleteM !== ultimaPlacaBuscada.current) {
                 //console.log('Buscando placa para exclusão:', placaDeleteM); // Debug
@@ -211,91 +250,164 @@ const SolicitarLiberacao = () => {
     const handleSubmit = async (e) => {
         e.preventDefault()
 
-        const validarCpf = await fetch(`${API_BASE_URL}/vendedor/nome/${solicitante}`);
-        const dadosVendedor = await validarCpf.json()
-        console.log(`Dados do veículo: ${dadosVendedor}`)
+        setModal({
+            aberto: true,
+            titulo: "Confirmação de Solicitação",
+            mensagem: "Confirmar a solicitação de liberação do veículo?",
+            tipo: "confirmacao",
+            acao: confirmarSolicitacao
+        });
 
-        if (dadosVendedor.cpf !== confirmaCpf) {
+    }
 
-            setMensagemModal("O cpf informado nao correspode ao do vendedor selecionado. Operação nao permitida.")
-            setModalAberto(true)
-            return
-        }
+    const confirmarSolicitacao = async () => {
 
         let dados = {
             placa, id: veiculo.id, usr_cad: veiculo.audit, chassi: veiculo.chassi, marca: dadosVeiculo.marca, modelo: dadosVeiculo.modelo, cor: dadosVeiculo.cor, renavan: dadosVeiculo.renavan,
             unidade: dadosVeiculo.unidade, data_cadastro: dadosVeiculo.data_cadastro, responsavelMovimentacaoNome: solicitante, solicitante, observacoes,
             motivo: selectedMotivo, observacaoMovimentacao: observacoes, tipoMovimentacao: selectedMotivo,
             ano_fabricacao: veiculo.ano_fabricacao, ano_modelo: dadosVeiculo.ano_modelo, audit: user?.nome
-
         }
 
         dados = toUpperFields(dados, ['placa', 'marca', 'modelo', 'cor', 'unidade', 'tipoMovimentacao', 'motivo', 'responsavelMovimentacaoNome', 'observacaoMovimentacao', 'solicitante', 'observacoes'])
-        // Padroniza para caixa alta
-        console.log('Dados a serem enviados: ', dados)
 
-        //Verificando se existe um registro de Venda, Transferencia ou Devolução. Caso nao haja, a operação nao e permitida
-        if (selectedMotivo === 'VENDA' || selectedMotivo === 'DEVOLUCAO' || selectedMotivo === 'TRANSFERENCIA') {
+        const validarCpf = await fetch(`${API_BASE_URL}/vendedor/nome/${solicitante}`);
+        const dadosVendedor = await validarCpf.json()
+        console.log(`Dados do veículo: ${dadosVendedor}`)
 
-            const resMovimentacao = await fetch(`${API_BASE_URL}/solicitacoes/placa/${placa}`);
 
-            if (resMovimentacao.status !== 200) {
+        if (dadosVendedor.cpf !== confirmaCpf) {
 
-                window.alert(`Não há registro de ${selectedMotivo} no sistema para o esse veículo. Registre a ${selectedMotivo} antes de solicitar a liberação.`);
-                window.location.reload()
-                return
+            const mostrarMensagem = () => {
+                setModal({
+                    aberto: true,
+                    titulo: "",
+                    mensagem: "O cpf informado nao correspode ao do vendedor selecionado. Operação nao permitida.",
+                    tipo: "",
+                    acao: ""
+                });
             }
 
-        }
+            mostrarMensagem()
+            resetForm()
+        } else {
 
-        const confirmar = window.confirm("Confirmar a solicitação de liberação do veículo? ");
-        if (confirmar === true) {
             try {
 
-                const resultado = await createData(dados)
-                /* Enviar mensagem via WhatsApp
-                const mensagem = `Prezados, favor realizar a liberação do seguinte veiculo:\nLoja: ${veiculo.unidade}\nMarca: ${veiculo.marca}\nModelo: ${veiculo.modelo}
-                 \nCor: ${veiculo.cor}\nPlaca: ${placa}\nMotivo: ${selectedMotivo}\nObservação: ${observacoes}\nDesde já agradeço.`
-                const urlWhatsApp = `https://wa.me/?text=${encodeURIComponent(mensagem)}`;
-                window.open(urlWhatsApp, '_blank')*/
+                if (selectedMotivo === 'VENDA' || selectedMotivo === 'DEVOLUCAO' || selectedMotivo === 'TRANSFERENCIA') {
 
-                console.log('Liberação solicitada., ', resultado)
-                window.alert('Liberação solicitada.')
+                    const resMovimentacao = await fetch(`${API_BASE_URL}/solicitacoes/placa/${placa}`);
+
+                    const mostrarMensagem = () => {
+                        setModal({
+                            aberto: true,
+                            titulo: "",
+                            mensagem: `Não há registro de ${selectedMotivo} no sistema para o esse veículo. Registre a ${selectedMotivo} antes de solicitar a liberação.`,
+                            tipo: "",
+                            acao: ""
+                        });
+                    }
+
+                    if (resMovimentacao.status !== 200) {
+
+                        mostrarMensagem()
+                        resetForm()
+
+                    } else {
+                        await createData(dados)
+                        /* Enviar mensagem via WhatsApp
+                        const mensagem = `Prezados, favor realizar a liberação do seguinte veiculo:\nLoja: ${veiculo.unidade}\nMarca: ${veiculo.marca}\nModelo: ${veiculo.modelo}
+                         \nCor: ${veiculo.cor}\nPlaca: ${placa}\nMotivo: ${selectedMotivo}\nObservação: ${observacoes}\nDesde já agradeço.`
+                        const urlWhatsApp = `https://wa.me/?text=${encodeURIComponent(mensagem)}`;
+                        window.open(urlWhatsApp, '_blank')*/
+
+                        const mostrarMensagem = () => {
+                            setModal({
+                                aberto: true,
+                                titulo: "",
+                                mensagem: `Solicitação de liberação registrada.`,
+                                tipo: "",
+                                acao: ""
+                            });
+                        }
+
+                        mostrarMensagem()
+                        resetForm()
+                        window.scrollTo({ top: 0, behavior: 'smooth' })
+                    }
+                }
+            } catch {
+
+                const mostrarMensagem = () => {
+                    setModal({
+                        aberto: true,
+                        titulo: "",
+                        mensagem: `Falha ao realizar a liberação.\nEntre em contato com o suporte.`,
+                        tipo: "",
+                        acao: ""
+                    });
+                }
+                mostrarMensagem()
                 resetForm()
-                window.scrollTo({ top: 0, behavior: 'smooth' })
-            } catch (err) {
-                console.error('Falha ao registrar a liberação: ', err)
-                window.alert('Falha ao realizar a liberação.\nEntre em contato com o suporte')
             }
         }
-
     }
 
-    // Funçao para deletar a liberação
-    // Essa função é chamada quando o usuário deseja cancelar a liberação de um veículo
+
+    //Função para lidar com o cancelamento de uma solicitação de liberação
     const handleDelete = async (e) => {
         e.preventDefault()
 
+        setModal({
+            aberto: true,
+            titulo: "Confirmação de Cancelamento",
+            mensagem: "Confirma o cancelamento da solicitação de liberação do veículo?",
+            tipo: "confirmacao",
+            acao: confirmarCancelamento
+        });
+
+    }
+
+    const confirmarCancelamento = async () => {
+
         let idVeiculo = liberacao.id
 
-        console.log('ID a ser deletado: ', idVeiculo)
+        try {
+            const mostrarMensagem = async () => {
 
-        setMensagemModal("Confirma o cancelamento da solicitação de liberação do veículo?");
+                await deleteData(idVeiculo)
 
-        if (confirmar === true) {
-
-            try {
-                const resultado = await deleteData(idVeiculo)
-                console.log('Liberação cancelada.', resultado)
-                window.alert('Liberação cancelada.')
-                resetForm()
-                window.scrollTo({ top: 0, behavior: 'smooth' })
-            } catch (err) {
-                console.error('Falha ao cancelar a liberação do veiculo: ', err)
-                window.alert("Não foi possivel cancelar a solicitação de liberação.\nEntre em contato com o suporte.")
+                setModal({
+                    aberto: true,
+                    titulo: "",
+                    mensagem: "Liberação cancelada.",
+                    tipo: "",
+                    acao: ""
+                });
             }
+
+            mostrarMensagem()
+            fecharModal()
+            resetForm()
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+        } catch (err) {
+
+            const mostrarMensagem = () => {
+                setModal({
+                    aberto: true,
+                    titulo: "",
+                    mensagem: "Não foi possivel cancelar a solicitação de liberação.\nEntre em contato com o suporte.",
+                    tipo: "",
+                    acao: ""
+                });
+            }
+            console.error('Falha ao cancelar a liberação do veiculo: ', err)
+            mostrarMensagem()
+            fecharModal()
+            resetForm()
         }
     }
+
 
     // Função para lidar com a seleçao de vendedor
     const handleVendedorChange = (e) => {
@@ -303,6 +415,13 @@ const SolicitarLiberacao = () => {
         const nome = selectedOption.getAttribute('data-descricao')
         setSolicitante(nome)
     }
+
+    const fecharModal = () => {
+        setModal(prev => ({
+            ...prev,
+            aberto: false
+        }));
+    };
 
     return (
         <ContainerSecundario>
@@ -389,9 +508,6 @@ const SolicitarLiberacao = () => {
                         <div className="d-flex flex-row-reverse">
                             <Button onClick={handleSubmit} variant='primary' >ENVIAR</Button>
                         </div>
-                        <ModalContent isOpen={modalAberto} onClose={() => setModalAberto(false)} title="" size="fullscreen" >
-                            {mensagemModal}
-                        </ModalContent>
                     </Form>
                     <hr />
                     <div className='panel-heading'>
@@ -401,7 +517,8 @@ const SolicitarLiberacao = () => {
                     <Form>
                         <div className="col-12 col-md-2">
                             <Input label={"Placa:"} type={"text"} maxLength={"7"} style={{ width: '85px' }} nameInput={"placa"}
-                                value={placaDelete} onChange={(e) => setPlacaDelete(e.target.value)} onBlur={handleBlurDelete} required />
+                                value={placaDelete} onChange={(e) => setPlacaDelete(e.target.value)}
+                                onBlur={handleBlurDelete} required />
                         </div>
                         <div className="col-12 col-md-3">
                             <Input label={"Motivo:"} type={"text"} style={{ width: '150px' }} nameInput={"tipoMovimentacao"} value={deleteDados.tipoMovimentacao} readOnly />
@@ -415,14 +532,12 @@ const SolicitarLiberacao = () => {
                         <div className="d-flex flex-row-reverse">
                             <Button onClick={handleDelete} variant='danger' >CANCELAR </Button>
                         </div>
-                        <ModalContent isOpen={modalAberto} onClose={() => setModalAberto(false)} title="" size="fullscreen" >
-                            {mensagemModal}
-                            <Button onClick={() => setConfirmar(true)} variant='primary' >SIM</Button>
-                        </ModalContent>
                     </Form>
                 </Box>
+                <>
+                    <ModalBootstrap modal={modal} fecharModal={fecharModal} id="modal" />
+                </>
             </div>
-
         </ContainerSecundario>
     )
 }

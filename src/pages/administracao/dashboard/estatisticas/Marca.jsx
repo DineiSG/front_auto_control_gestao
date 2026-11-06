@@ -26,11 +26,23 @@ const Marca = () => {
   const gerarPDF = () => {
     const element = graphRef.current;
     const opt = {
-      margin: 0.5,
-      filename: 'Marca.pdf',
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+      margin: [0.8, 0.5, 0.8, 0.5], //[superior, esquerda, inferior, direita]
+      filename: 'Estoque Loja.pdf',
+      image: {
+        type: 'jpeg',
+        quality: 1.0
+      },
+      html2canvas: {
+        scale: 3,
+        useCORS: true,
+        backgroundColor: '#ffffff'
+      },
+      jsPDF: {
+
+        unit: 'in',
+        format: 'a4',
+        orientation: 'landscape'
+      }
     };
 
     html2pdf().set(opt).from(element).save();
@@ -39,14 +51,19 @@ const Marca = () => {
 
   return (
     <div className="d-flex flex-column align-items-center w-100">
-      <div className="panel-heading w-100  align-items-center gap-2" style={{ maxWidth: "1000px" }}>
-        <i className='ti ti-bar-chart-alt' id="ti-black" style={{ marginRight: "5px" }} />
-        <p style={{ paddingTop: "25px" }}>VEICULOS POR MARCA</p>
-      </div>
       <div ref={graphRef}>
-
-        <div style={{ width: "1000px", height: "400px" }}>
-          <Bar data={chartData} options={chartOptions} />
+        <img src="./aspa.png" alt="Logomarca da empresa" className="relatorio-logo" />
+        <br />
+        <br />
+        <div className="conteudo-relatorio">
+          <div className="panel-heading w-100  align-items-center gap-2" style={{ maxWidth: "1000px" }}>
+            <i className='ti ti-bar-chart-alt' id="ti-black" style={{ marginRight: "5px" }} />
+            <h4 style={{ paddingTop: "25px" }}>VEÍCULOS POR MARCA</h4>
+          </div>
+          <br />
+          <div style={{ width: "1000px", height: "400px" }}>
+            <Bar data={chartData} options={chartOptions} />
+          </div>
         </div>
       </div>
       <div className="d-flex justify-content-end w-100 px-3" style={{ maxWidth: "1000px" }}>

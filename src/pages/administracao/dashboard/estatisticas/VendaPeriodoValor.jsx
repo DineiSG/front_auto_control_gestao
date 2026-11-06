@@ -6,8 +6,11 @@ import Input from "../../../../components/input/Input"
 import { useGetArray } from "../../../../services/useGetArray"
 import useGroupedChart from "../../../../hooks/useGroupedChart"; // seu hook atual
 import { useFilterPeriodo } from "../../../../hooks/useFilterPeriodo"; // o hook criado acima
+import { formatDateInfo } from "../../../../hooks/formatDate";
 import ModalContent from "../../../../components/modal/ModalContent";
-import * as XLSX from 'xlsx';
+//import * as XLSX from 'xlsx';
+import useExportExcel from "../../../../hooks/useExportExcel";
+import { prepararRelatorio } from "../../../../hooks/preparaRelatorioVendas";
 
 const VendaPeriodoValor = () => {
     const [dadosTabela, setDadosTabela] = useState([]);
@@ -16,6 +19,8 @@ const VendaPeriodoValor = () => {
     // Busca todas as vendas
     const { data: vendas = [] } = useGetArray("/vendas");
 
+    // Importando o hook que gera a planilha excel
+    const { generateExcel, isExporting, error } = useExportExcel();
 
     // Hook de período (defina aqui a chave da data na sua venda: "dataVenda", "createdAt", etc.)
     const { startDate, endDate, setStartDate, setEndDate, filteredData, status, message, hasResults, } = useFilterPeriodo({
@@ -138,9 +143,6 @@ const VendaPeriodoValor = () => {
         return `${pct}%`;
     };
 
-
-
-
     // Função para calcular totais gerais por loja e porcentagens em relação ao total geral
     const calcularTotaisGerais = (dados) => {
         if (!dados || dados.length === 0) {
@@ -157,7 +159,6 @@ const VendaPeriodoValor = () => {
                     totaisPorLoja[coluna] = (totaisPorLoja[coluna] || 0) + valor;
                 }
             });
-
             totalGeral += linha.Total || 0;
         });
 
@@ -172,86 +173,171 @@ const VendaPeriodoValor = () => {
         return { totaisComPorcentagem, totalGeral };
     };
 
-
-    const generateExcel = () => {
-        if (!Array.isArray(dadosTabela) || dadosTabela.length === 0) {
-            console.warn("Nenhum dado para exportar.");
-            return;
-        }
-
-        // Obter todas as lojas únicas (mesma lógica usada na renderização)
-        const todasLojas = [...new Set(
-            dadosTabela.flatMap(linha =>
-                Object.keys(linha).filter(col => col !== 'modelo' && col !== 'Total')
-            )
-        )];
-
-        // Formatar os dados dos modelos
-        const formattedData = dadosTabela.map((linha) => {
-            const formattedRow = { Modelo: linha.modelo };
-
-            // Para cada loja, adicionar valor e porcentagem
-            todasLojas.forEach(loja => {
-                const dado = linha[loja] || { valor: 0, porcentagem: "0.00" };
-                formattedRow[`${loja} (R$)`] = parseFloat(dado.valor).toFixed(2);
-                formattedRow[`${loja} (%)`] = dado.porcentagem;
-            });
-
-            formattedRow["Total (R$)"] = parseFloat(linha.Total).toFixed(2);
-            return formattedRow;
-        });
-
-        // Linha de TOTAL GERAL
-        const totaisGeraisRow = { Modelo: "TOTAL GERAL" };
-
-        todasLojas.forEach(loja => {
-            const dado = totaisComPorcentagem[loja] || { valor: 0, porcentagem: "0.00" };
-            totaisGeraisRow[`${loja} (R$)`] = parseFloat(dado.valor).toFixed(2);
-            totaisGeraisRow[`${loja} (%)`] = dado.porcentagem;
-        });
-
-        totaisGeraisRow["Total (R$)"] = parseFloat(totalGeral).toFixed(2);
-        formattedData.push(totaisGeraisRow);
-
-        // Definir ordem das colunas: Modelo, [Loja1 (R$), Loja1 (%), ...], Total (R$)
-        const columnOrder = [
-            "Modelo",
-            ...todasLojas.flatMap(loja => [`${loja} (R$)`, `${loja} (%)`]),
-            "Total (R$)"
-        ];
-
-        // Criar planilha
-        const worksheet = XLSX.utils.json_to_sheet(formattedData, { header: columnOrder });
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Vendas por Modelo e Loja");
-
-        // Salvar arquivo
-        XLSX.writeFile(workbook, "Relatorio_Vendas_por_Modelo_e_Loja.xlsx");
-    };
-
-
-
-
-    // Função que gera o PDF do gráfico
-    const gerarPDF = () => {
-        const element = graphRef.current;
-        const opt = {
-            margin: 0.5,
-            filename: "Vendas Período.pdf",
-            image: { type: "jpeg", quality: 0.98 },
-            html2canvas: { scale: 2 },
-            jsPDF: { unit: "in", format: "a4", orientation: "landscape" },
-        };
-        html2pdf().set(opt).from(element).save();
-    };
-
-    // Obter todas as lojas únicas para o cabeçalho
+    //##########################################################
+    
+    // Preparando os dados para a planilha em excel
     const todasLojas = useMemo(() => {
         return [...new Set(dadosTabela.flatMap(linha =>
             Object.keys(linha).filter(col => col !== 'modelo' && col !== 'Total')
         ))];
     }, [dadosTabela]);
 
+    console.log(dadosTabela[0])
+
+    const dadosPreparados = dadosTabela.map((item) => {
+        const linha = {
+            modelo: item.modelo,
+            total: item.Total,
+        };
+
+        todasLojas.forEach((loja, indice) => {
+            linha[`loja_${indice}_valor`] = item[loja]?.valor ?? 0;
+            linha[`loja_${indice}_percentual`] =
+                Number(item[loja]?.porcentagem ?? 0) / 100;
+        });
+
+        return linha;
+
+    });
+
+    // 2. Cria a linha TOTAL GERAL
+    const linhaTotalGeral = {
+        modelo: "TOTAL GERAL",
+        total: 0,
+    };
+
+    todasLojas.forEach((loja, indice) => {
+        const chaveValor = `loja_${indice}_valor`;
+        const chavePercentual = `loja_${indice}_percentual`;
+
+        const totalLoja = dadosPreparados.reduce(
+            (soma, item) => soma + Number(item[chaveValor] ?? 0),
+            0
+        );
+
+        linhaTotalGeral[chaveValor] = totalLoja;
+        linhaTotalGeral[chavePercentual] = 0;
+        linhaTotalGeral.total += totalLoja;
+    });
+
+    // 3. Calcula os percentuais da linha TOTAL GERAL
+    todasLojas.forEach((loja, indice) => {
+        const chaveValor = `loja_${indice}_valor`;
+        const chavePercentual = `loja_${indice}_percentual`;
+
+        linhaTotalGeral[chavePercentual] =
+            linhaTotalGeral.total > 0
+                ? linhaTotalGeral[chaveValor] / linhaTotalGeral.total
+                : 0;
+    });
+
+    // 4. Junta os registros e o TOTAL GERAL
+    const dadosComTotalGeral = [
+        ...dadosPreparados,
+        linhaTotalGeral,
+    ];
+
+    // Busca o período selecionado
+    const dataInicial = formatDateInfo(startDate)
+    const dataFinal = formatDateInfo(endDate)
+
+
+    const configuracaoColunas = {
+        tituloModelo: "MODELO",
+        tituloValorTotal: "TOTAL",
+        sufixoValor: " (R$)",
+        sufixoPercentual: " (%)",
+    };
+
+    const colunas = [
+        {
+            chave: "modelo",
+            titulo: configuracaoColunas.tituloModelo,
+            largura: 25,
+        },
+
+        ...todasLojas.flatMap((loja, indice) => [
+            {
+                chave: `loja_${indice}_valor`,
+                titulo: `${loja}${configuracaoColunas.sufixoValor}`,
+                tipo: "moeda",
+                largura: 20,
+                corFundo: "E3C0F7"
+            },
+            {
+                chave: `loja_${indice}_percentual`,
+                titulo: `${loja}${configuracaoColunas.sufixoPercentual}`,
+                tipo: "percentual",
+                largura: 20,
+            },
+        ]),
+
+        {
+            chave: "total",
+            titulo: configuracaoColunas.tituloValorTotal,
+            tipo: "moeda",
+            largura: 20,
+        },
+    ];
+
+    // No momento da exportação:
+    const exportar = async () => {
+        const {
+            colunas: colunasExcel,
+            dados: dadosExcel,
+
+        } = prepararRelatorio({
+            dados: dadosComTotalGeral,
+            colunas,
+            transformarDados: (dados) => dados,
+        });
+
+        await generateExcel({
+            titulo: "Relatório de Vendas por Loja",
+            subtitulo: "Por valores",
+            periodo: {
+                inicio: dataInicial,
+                fim: dataFinal,
+            },
+            nomeArquivo: "relatorio_vendas.xlsx",
+            nomePlanilha: "Vendas",
+            logoUrl: "/aspa.png",
+            marcaDaguaUrl: null,
+            mostrarTotais: false,
+            chaveRotuloTotal: "modelo",
+            colunas: colunasExcel,
+            dados: dadosExcel,
+        });
+    };
+
+    //##################################################################
+    // Função que gera o PDF do gráfico
+    const gerarPDF = () => {
+        const element = graphRef.current
+
+        const opt = {
+            margin: [0.5, 0.5, 0.8, 0.5],//[superior, esquerda, inferior, direita]
+            filename: "Vendas Periodo - em valores",
+            image: {
+                type: 'jpeg',
+                quality: 1.0
+            },
+            html2canvas: {
+                scale: 3,
+                useCORS: true,
+                backgroundColor: '#ffffff'
+            },
+            jsPDF: {
+
+                unit: 'in',
+                format: 'a4',
+                orientation: 'landscape'
+            }
+        };
+        html2pdf().set(opt).from(element).save();
+    };
+
+    //##################################################################
     // Calcular totais gerais sempre que dadosTabela muda
     const { totaisComPorcentagem, totalGeral } = useMemo(() => {
         return calcularTotaisGerais(dadosTabela);
@@ -267,10 +353,12 @@ const VendaPeriodoValor = () => {
     return (
         <div className="d-flex flex-column align-items-center w-100">
             {/* Cabeçalho */}
-            <div className="panel-heading w-100  align-items-center gap-2" style={{ maxWidth: "1000px" }}>
-                <i className="ti ti-money" id="ti-black"></i>
-                <p style={{ paddingTop: "15px" }}>VENDAS EM UM PERÍODO (Valor total por loja)</p>
-            </div>
+            {!hasResults && (
+                <div className="panel-heading w-100  align-items-center gap-2" style={{ maxWidth: "1000px" }}>
+                    <i className="ti ti-money" id="ti-black"></i>
+                    <h4 style={{ paddingTop: "15px" }}>VENDAS EM UM PERÍODO (Valor total por loja)</h4>
+                </div>
+            )}
 
             {/* Filtros de período */}
             <div className="d-flex align-items-center gap-2 my-3" id="date_select">
@@ -292,8 +380,20 @@ const VendaPeriodoValor = () => {
             {hasResults && (
                 <>
                     <div ref={graphRef}>
-                        <div style={{ width: "1000px", height: "400px" }}>
-                            <Bar data={chartData} options={chartOptions} />
+                        <img src="./aspa.png" alt="Logomarca da empresa" className="relatorio-logo" />
+                        <br />
+                        <br />
+                        <div className="conteudo-relatorio">
+                            <div className="panel-heading w-100  align-items-center gap-2" style={{ maxWidth: "1000px" }}>
+                                <i className="ti ti-money" id="ti-black"></i>
+                                <h4 style={{ paddingTop: "15px" }}>VENDAS EM UM PERÍODO (Valor total por loja)</h4>
+                            </div>
+                            <br />
+                            <p>Periodo: de <strong>{formatDateInfo(startDate)} </strong>a <strong>{formatDateInfo(endDate)}</strong></p>
+                            <br />
+                            <div style={{ width: "1000px", height: "400px" }}>
+                                <Bar data={chartData} options={chartOptions} />
+                            </div>
                         </div>
                     </div>
                     <div className="d-flex justify-content-end w-100 px-3" style={{ maxWidth: "1000px" }}>
@@ -308,7 +408,25 @@ const VendaPeriodoValor = () => {
                     </Button>
                     {/* Tabela com barra de rolagem horizontal */}
                     <ModalContent isOpen={modalAberto} onClose={() => setModalAberto(false)} title="" size="fullscreen" >
-                        <h2>Tabela de Valores</h2>
+                        <img src="./aspa.png" alt="Logomarca da empresa" className="relatorio-logo" />
+                        <br />
+                        <br />
+                        <div className="conteudo-relatorio">
+                        </div>
+                        <h2>Tabela de Valores - Vendas Por Modelo</h2>
+                        <div className="d-flex flex-column align-items-end" id="date_select">
+                            <div className=" d-flex justify-content-between gap-3" >
+                                {/* Input de Data Início */}
+                                <div className="d-flex flex-column">
+                                    <Input label={"Data Inicial"} type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                                </div>
+
+                                {/* Input de Data Fim */}
+                                <div className="d-flex flex-column">
+                                    <Input label={"Data Final"} type="date" value={endDate} min={startDate || undefined} onChange={(e) => setEndDate(e.target.value)} />
+                                </div>
+                            </div>
+                        </div>
                         <div className="w-100 d-flex justify-content-center mt-4" style={{ overflowX: "auto" }}>
                             <div className="table-responsive" >
                                 {dadosTabela.length > 0 ? (
@@ -364,10 +482,12 @@ const VendaPeriodoValor = () => {
                             </div>
                         </div>
                         <br />
+                        <br />
                         <div className="d-flex justify-content-start w-100 " style={{ maxWidth: "1000px" }}>
-                            <Button onClick={generateExcel} className="bg-green-500 text-white px-4 py-2 rounded mt-3">
-                                GERAR EXCEL
+                            <Button onClick={exportar} disabled={isExporting} className="bg-green-500 text-white px-4 py-2 rounded mt-3">
+                                {isExporting ? "EXPORTANDO" : "GERAR EXCEL"}
                             </Button>
+                            {error && <p role="alert">{error}</p>}
                         </div>
                         <br />
                         <br />

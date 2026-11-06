@@ -1,12 +1,12 @@
 import "../../../assets/css/thead.css";
 import "../../../assets/css/themify-icons.css"
 import "../Administracao.css";
-import * as XLSX from "xlsx";
 
 import { useState, useEffect, useRef } from "react";
 import { useGetArray } from "../../../services/useGetArray";
 import { formatDateInfo } from "../../../hooks/formatDate";
 import { useFilterPeriodo } from "../../../hooks/useFilterPeriodo";
+
 
 import Box from '../../../components/box/Box'
 import Table from "../../../components/table/Table";
@@ -15,6 +15,7 @@ import Select from "../../../components/select/Select";
 import Button from "../../../components/button/Button";
 import ContainerSecundario from "../../../components/container/ContainerSecundario";
 import RelatorioSaidas from "./RelatorioSaidas";
+import useExportExcel from "../../../hooks/useExportExcel"
 
 const RelatoriosMovimentacao = () => {
 
@@ -27,9 +28,12 @@ const RelatoriosMovimentacao = () => {
     const [dataFont, setDataFont] = useState('')
     const tabelaRef = useRef(null);
 
-    //Recebendo os veículos da tabela
-    const { data: baixas = [] } = useGetArray(`/baixas`);
+    // Hook personalizado para exportar para Excel
+    const { generateExcel, isExporting } = useExportExcel();
 
+    //Recebendo os veículos da tabela baixas
+    const { data: baixas = [] } = useGetArray(`/baixas`);
+    //Recebendo os registros da tabela liberaçoes
     const { data: liberacoes } = useGetArray(`/liberacoes`);
 
     const handleSelectChange = (e) => {
@@ -63,7 +67,6 @@ const RelatoriosMovimentacao = () => {
             );
         }
 
-
         // Ordena do mais recente para o mais antigo
         filtrados.sort((a, b) => {
             return new Date(b.dataRegistro) - new Date(a.dataRegistro);
@@ -83,7 +86,8 @@ const RelatoriosMovimentacao = () => {
         { key: 'cor', label: 'COR' },
         { key: 'placa', label: 'PLACA' },
         { key: 'motivo', label: 'MOTIVO' },
-        { key: 'solicitante', label: 'SOLICITANTE' }
+        { key: 'solicitante', label: 'SOLICITANTE' },
+        { key: 'observacoes', label: 'OBSERVAÇÕES' }
         //{ key: 'renavan', label: 'RENAVAM' },
         //{ key: 'dias_estoque', label: 'DIAS EM ESTOQUE', format: (value) => value !== undefined ? `${value} dia(s)` : 'N/A' /*in */ },
 
@@ -109,32 +113,40 @@ const RelatoriosMovimentacao = () => {
         { value: 1000, label: 'TODOS' },
     ];
 
+    //############# Preparação para exportação do Excel ###############
+
+    //Formatando as datas 
+    const dataInicial = formatDateInfo(startDate)
+    const dataFinal = formatDateInfo(endDate)
+
     //Função que gera o Excel da tabela
-    const gerarExcel = () => {
-        let dataToExport = [];
-        if (select === 'baixas') {
-            dataToExport = filteredBaixas;
-        } else if (select === 'liberacoes') {
-            dataToExport = filteredLiberacoes;
+    const exportarExcel = async () => {
+        try {
+            await generateExcel({
+                titulo: `Relatório de ${select === 'baixas' ? 'Baixas' : 'Liberações'}`,
+                subtitulo: `Relatório correspondente ao período de ${dataInicial} a ${dataFinal}`,
+                nomeArquivo: `Relatório de ${select === 'baixas' ? 'Baixas' : 'Liberações'} .xlsx`,
+                nomePlanilha: `Relatório de ${select === 'baixas' ? 'Baixas' : 'Liberações'}`,
+                logoUrl: "/aspa.png",
+
+                dados: select === 'baixas' ? filteredBaixas : filteredLiberacoes,
+
+                colunas: [
+                    { chave: 'unidade', titulo: 'LOJA', largura: 25 },
+                    { chave: `dataRegistro`, titulo: `DATA DE REGISTRO`, largura: 25, tipo: 'data' },
+                    { chave: 'placa', titulo: 'PLACA', largura: 25 },
+                    { chave: 'marca', titulo: 'MARCA', largura: 25 },
+                    { chave: 'modelo', titulo: 'MODELO', largura: 25 },
+                    { chave: 'cor', titulo: 'COR', largura: 25 },
+                    { chave: 'motivo', titulo: 'MOTIVO', largura: 25 },
+                    { chave: 'solicitante', titulo: 'SOLICITANTE', largura: 25 },
+                    { chave: 'observacoes', titulo: 'OBSERVAÇÕES', largura: 25 }
+                ]
+            })
+        } catch (error) {
+            console.error("Falha na exportação:", error);
         }
-
-        const formattedData = dataToExport.map(filtrados => ({
-            Loja: filtrados.unidade,
-            Data_Registro: formatDateInfo(filtrados.dataRegistro), // aplica sua função de formatação
-            Marca: filtrados.marca,
-            Modelo: filtrados.modelo,
-            Cor: filtrados.cor,
-            Placa: filtrados.placa,
-            Solicitante: filtrados.solicitante,
-            Motivo: filtrados.motivo
-        }));
-
-        const worksheet = XLSX.utils.json_to_sheet(formattedData);
-
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Data");
-        XLSX.writeFile(workbook, `Relatorio de ${select === 'baixas' ? 'Baixas' : 'Liberacoes'}.xlsx`);
-    };
+    }
 
 
 
@@ -187,7 +199,7 @@ const RelatoriosMovimentacao = () => {
                     {select === 'baixas' && (
                         <>
                             <div className="d-flex flex-column align-items-end" >
-                                <div className="d-flex align-items-center gap-3">
+                                <div className="d-flex align-items-center gap-5">
                                     {status !== "ok" && (<p className={status === "error" ? "text-danger" : "text-muted"} >{message} </p>)}
                                     <div className="d-flex flex-column ">
                                         <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} tooltipText="Data inicial"
@@ -197,11 +209,13 @@ const RelatoriosMovimentacao = () => {
                                         <Input type="date" value={endDate} min={startDate || undefined} onChange={(e) => setEndDate(e.target.value)} tooltipText="Data final"
                                             tooltipPlacement="top" />
                                     </div>
-                                    <div className="p-2">
-                                        <div className="p-1 ">
-                                            <Select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} options={options} className={"quantidade"} />
-                                        </div>
-                                    </div>
+                                    {hasResults ? (
+                                        <div className="p-2">
+                                            <div className="p-1 ">
+                                                <Select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} options={options} className={"quantidade"} />
+                                            </div>
+                                        </div>) : null}
+
                                 </div>
                                 <div className=" d-flex justify-content-between" >
                                     {hasResults ? (
@@ -220,52 +234,52 @@ const RelatoriosMovimentacao = () => {
                                     <Table data={hasResults ? paginatedData : []} columns={colunas} className={"table table-striped table-bordered table-data dataTable no-footer"} role="grid" id="estoque" />
                                 </div>
                             </div>
-
-                            <div className="d-flex justify-content-between" id="pagination" >
-                                <div className="p-2 ">
-                                    <div className="d-flex justify-content-start">
-                                        <Button onClick={gerarExcel} className="bg-blue-500 text-white px-4 py-2 rounded">
-                                            GERAR EXCEL
-                                        </Button>
-                                    </div>
-                                </div>
-                                <div className="p-4 ">
-                                    <p>
-                                        <span>
-                                            Mostrando página {currentPage} de {totalPages} | Total de registros: {filteredBaixas.length}
-                                        </span>
-                                    </p>
-                                </div>
-
-                                <div className="d-flex justify-content-end" >
-                                    <div className="d-flex justify-content-between">
-                                        <div className="p-2 ">
-                                            <Button onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} variant={currentPage === 1 ? 'disabled' : 'primary'} className={"px-3 py-1 bg-gray-300 rounded"} >
-                                                <i className=' ti ti-angle-left px-3 py-1 bg-gray-300 rounded' id='card-path' />ANTERIOR
-                                            </Button>
-                                        </div>
-                                        <div className="p-4 ">
-                                            <p>
-                                                <span>
-                                                    {currentPage}
-                                                </span>
-                                            </p>
-                                        </div>
-
-                                        <div className="p-2 ">
-                                            <Button onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages} className={"px-3 py-1 bg-gray-300 rounded"} >
-                                                PRÓXIMA <i className=' ti ti-angle-right px-3 py-1 bg-gray-300 rounded' />
+                            {hasResults ? (
+                                <div className="d-flex justify-content-between" id="pagination" >
+                                    <div className="p-2 ">
+                                        <div className="d-flex justify-content-start">
+                                            <Button onClick={exportarExcel} disabled={isExporting} className="bg-green-500 text-white px-4 py-2 rounded mt-3">
+                                                {isExporting ? "EXPORTANDO" : "GERAR EXCEL"}
                                             </Button>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
+                                    <div className="p-4 ">
+                                        <p>
+                                            <span>
+                                                Mostrando página {currentPage} de {totalPages} | Total de registros: {filteredBaixas.length}
+                                            </span>
+                                        </p>
+                                    </div>
+
+                                    <div className="d-flex justify-content-end" >
+                                        <div className="d-flex justify-content-between">
+                                            <div className="p-2 ">
+                                                <Button onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} variant={currentPage === 1 ? 'disabled' : 'primary'} className={"px-3 py-1 bg-gray-300 rounded"} >
+                                                    <i className=' ti ti-angle-left px-3 py-1 bg-gray-300 rounded' id='card-path' />ANTERIOR
+                                                </Button>
+                                            </div>
+                                            <div className="p-4 ">
+                                                <p>
+                                                    <span>
+                                                        {currentPage}
+                                                    </span>
+                                                </p>
+                                            </div>
+
+                                            <div className="p-2 ">
+                                                <Button onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages} className={"px-3 py-1 bg-gray-300 rounded"} >
+                                                    PRÓXIMA <i className=' ti ti-angle-right px-3 py-1 bg-gray-300 rounded' />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>) : null}
                         </>
                     )}
                     {select === 'liberacoes' && (
                         <>
                             <div className="d-flex flex-column align-items-end" >
-                                <div className="d-flex align-items-center gap-3">
+                                <div className="d-flex align-items-center gap-5">
                                     {status !== "ok" && (<p className={status === "error" ? "text-danger" : "text-muted"} >{message} </p>)}
                                     <div className="d-flex flex-column ">
                                         <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} tooltipText="Buscar por um veículo em uma data específica"
@@ -275,11 +289,12 @@ const RelatoriosMovimentacao = () => {
                                         <Input type="date" value={endDate} min={startDate || undefined} onChange={(e) => setEndDate(e.target.value)} tooltipText="Buscar por um veículo em uma data específica"
                                             tooltipPlacement="top" />
                                     </div>
-                                    <div className="p-2">
-                                        <div className="p-1 ">
-                                            <Select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} options={options} className={"quantidade"} />
-                                        </div>
-                                    </div>
+                                    {hasResults ? (
+                                        <div className="p-2">
+                                            <div className="p-1 ">
+                                                <Select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} options={options} className={"quantidade"} />
+                                            </div>
+                                        </div>) : null}
                                 </div>
                                 <div className=" d-flex justify-content-between" >
                                     {hasResults ? (
@@ -295,49 +310,50 @@ const RelatoriosMovimentacao = () => {
                             <br />
                             <div className="table-responsive" ref={tabelaRef}>
                                 <div>
-                                    <Table data={hasResults ? paginatedDataLiberacao : []} columns={colunas} 
-                                    className={"table table-striped table-bordered table-data dataTable no-footer"} role="grid" id="estoque" />
+                                    <Table data={hasResults ? paginatedDataLiberacao : []} columns={colunas}
+                                        className={"table table-striped table-bordered table-data dataTable no-footer"} role="grid" id="estoque" />
                                 </div>
                             </div>
-                            <div className="d-flex justify-content-between" id="pagination" >
-                                <div className="p-2 ">
-                                    <div className="d-flex justify-content-start">
-                                        <Button onClick={gerarExcel} className="bg-blue-500 text-white px-4 py-2 rounded">
-                                            GERAR EXCEL
-                                        </Button>
-                                    </div>
-                                </div>
-                                <div className="p-4 ">
-                                    <p>
-                                        <span>
-                                            Mostrando página {currentPage} de {totalPagesLiberacao} | Total de registros: {filteredLiberacoes.length}
-                                        </span>
-                                    </p>
-                                </div>
-
-                                <div className="d-flex justify-content-end" >
-                                    <div className="d-flex justify-content-between">
-                                        <div className="p-2 ">
-                                            <Button onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} variant={currentPage === 1 ? 'disabled' : 'primary'} className={"px-3 py-1 bg-gray-300 rounded"} >
-                                                <i className=' ti ti-angle-left px-3 py-1 bg-gray-300 rounded' id='card-path' />ANTERIOR
-                                            </Button>
-                                        </div>
-                                        <div className="p-4 ">
-                                            <p>
-                                                <span>
-                                                    {currentPage}
-                                                </span>
-                                            </p>
-                                        </div>
-
-                                        <div className="p-2 ">
-                                            <Button onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages} className={"px-3 py-1 bg-gray-300 rounded"} >
-                                                PRÓXIMA <i className=' ti ti-angle-right px-3 py-1 bg-gray-300 rounded' />
+                            {hasResults ? (
+                                <div className="d-flex justify-content-between" id="pagination" >
+                                    <div className="p-2 ">
+                                        <div className="d-flex justify-content-start">
+                                            <Button onClick={exportarExcel} disabled={isExporting} className="bg-green-500 text-white px-4 py-2 rounded mt-3">
+                                                {isExporting ? "EXPORTANDO" : "GERAR EXCEL"}
                                             </Button>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
+                                    <div className="p-4 ">
+                                        <p>
+                                            <span>
+                                                Mostrando página {currentPage} de {totalPagesLiberacao} | Total de registros: {filteredLiberacoes.length}
+                                            </span>
+                                        </p>
+                                    </div>
+
+                                    <div className="d-flex justify-content-end" >
+                                        <div className="d-flex justify-content-between">
+                                            <div className="p-2 ">
+                                                <Button onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} variant={currentPage === 1 ? 'disabled' : 'primary'} className={"px-3 py-1 bg-gray-300 rounded"} >
+                                                    <i className=' ti ti-angle-left px-3 py-1 bg-gray-300 rounded' id='card-path' />ANTERIOR
+                                                </Button>
+                                            </div>
+                                            <div className="p-4 ">
+                                                <p>
+                                                    <span>
+                                                        {currentPage}
+                                                    </span>
+                                                </p>
+                                            </div>
+
+                                            <div className="p-2 ">
+                                                <Button onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages} className={"px-3 py-1 bg-gray-300 rounded"} >
+                                                    PRÓXIMA <i className=' ti ti-angle-right px-3 py-1 bg-gray-300 rounded' />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>) : null}
                         </>
                     )}
                     {select === 'saidas' && (

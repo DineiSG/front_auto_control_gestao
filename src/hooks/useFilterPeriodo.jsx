@@ -86,13 +86,13 @@ export function useFilterPeriodo({
     const list = Array.isArray(data) ? data : [];
     const filtered = list.filter((row) => {
       const d = parseVendaDate(row?.[dateKey]);
-      console.log({
+     /* console.log({
         registro: row?.[dateKey],
         dataConvertida: d,
         inicio: start,
         fim: end,
         passou: d >= start && d <= end
-      });
+      });*/
       if (!d) return false;
       return d >= start && d <= end;
     });

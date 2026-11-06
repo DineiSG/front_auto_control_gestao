@@ -71,7 +71,7 @@ const Dashboard = () => {
           </div>
 
           {select === 'estoque' && (
-            <div className="container d-flex justify-content-center " >
+            <div className="container d-flex justify-content-center "  >
               <Estoque />
             </div>
           )}
@@ -117,12 +117,7 @@ const Dashboard = () => {
               </div>
 
             </>
-
           )}
-
-
-
-
         </Box>
       </div >
 

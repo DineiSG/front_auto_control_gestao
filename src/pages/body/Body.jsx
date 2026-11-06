@@ -89,8 +89,9 @@ function Body() {
             </div>
 
           </div >
+          
+          {user?.role === "ADMINISTRADOR" || user?.role === "COLABORADOR"? <ModalCam/>: null}
 
-          <ModalCam />
         </header>
       )}
       <div className="menu_container">
