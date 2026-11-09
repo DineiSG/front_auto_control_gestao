@@ -6,7 +6,7 @@ import ContainerSecundario from "../../../components/container/ContainerSecundar
 import Input from '../../../components/input/Input';
 import Button from '../../../components/button/Button';
 import Table from "../../../components/table/Table";
-
+import ModalBootstrap from '../../../components/modal/ModalBootstrap';
 import { useState, useRef, useEffect } from 'react';
 import { usePostData } from '../../../services/usePostData';
 import { formatTimestamp } from '../../../hooks/formatDate';
@@ -23,6 +23,15 @@ const CadastrarVendedor = () => {
     const [nome, setNome] = useState('')
     const [cpf, setCpf] = useState('')
     const tabelaRef = useRef(null);
+    // Estado para controlar o modal
+    const [modal, setModal] = useState({
+        aberto: false,
+        titulo: "Atenção",
+        mensagem: "",
+        tipo: "mensagem",
+        acao: null,
+
+    });
 
     const { user } = useAuth()
     const usuarioAtivo = user?.nome.split('.').toString()
@@ -82,6 +91,18 @@ const CadastrarVendedor = () => {
     const handleSubmit = async (e) => {
         e.preventDefault()
 
+        setModal({
+            aberto: true,
+            titulo: "Confirmação de Cadastro",
+            mensagem: "Confirma o cadastro do vendedor?",
+            tipo: "confirmacao",
+            acao: confirmarCadastro
+        });
+
+    }
+
+    const confirmarCadastro = async () => {
+
         const data_registro = formatTimestamp(new Date())
 
         // Envia nome da loja no campo 'unidade'
@@ -98,18 +119,44 @@ const CadastrarVendedor = () => {
         // Padroniza para caixa alta
         dados = toUpperFields(dados, ['unidade', 'nome'])
 
-        // Verifica se todos os campos obrigatórios estão preenchidos
-        const confirmar = window.confirm("Confirma o cadastro do vendedor?");
-        if (!confirmar) {
-            return
-        } else if (window.confirm && nome === "" || email === "" || telefone === "") {
-            window.alert("É obrigatorio preencher todos os campos do formulário.")
+        if (window.confirm && nome === "" || email === "" || telefone === "" || cpf === "") {
+
+            const validacaoCampos = (titulo, mensagem, aoFechar = null) => {
+                setModal({
+                    aberto: true,
+                    titulo,
+                    mensagem,
+                    tipo: "mensagem",
+                    acao: "",
+                    aoFechar
+                });
+            }
+            validacaoCampos("Atenção!", "É obrigatorio preencher todos os campos do formulário.", resetForm)
+
         } else {
             await createData(dados)
-            window.alert('Vendedor cadastrado com sucesso')
-            resetForm()
+
+            const cadastroOk = (titulo, mensagem, aoFechar = null) => {
+                setModal({
+                    aberto: true,
+                    titulo,
+                    mensagem,
+                    tipo: "mensagem",
+                    acao: "",
+                    aoFechar
+                });
+            }
+            cadastroOk("Sucesso", 'Vendedor cadastrado com sucesso.', resetForm)
+
         }
     }
+
+    const fecharModal = () => {
+        setModal(prev => ({
+            ...prev,
+            aberto: false
+        }));
+    };
 
     return (
 
@@ -162,15 +209,16 @@ const CadastrarVendedor = () => {
                         </div>
                     </Form>
                     <br />
-                    <div className="table-responsive" ref={tabelaRef}>
-                        <div>
-                            <Table data={vendedorUnidade} columns={colunas} className={"table table-striped table-bordered table-data dataTable no-footer"} role="grid" id="estoque" />
-                        </div>
+                    <div className="table-responsive" id="tabela_dados" ref={tabelaRef}>
+                        <Table data={vendedorUnidade} columns={colunas} className={"table table-striped table-bordered no-footer"} role="grid" id="estoque" />
                     </div>
                     <br />
                     <hr />
                     <EditarVendedor />
                 </Box>
+                <>
+                    <ModalBootstrap modal={modal} fecharModal={fecharModal} id="modal" />
+                </>
             </div>
         </ContainerSecundario>
 

@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import ContainerSecundario from '../../../components/container/ContainerSecundario'
-import * as XLSX from "xlsx";
 import { useGetData } from '../../../services/useGetData';
 import { formatDateInfo } from "../../../hooks/formatDate";
 import { useFilterPeriodo } from "../../../hooks/useFilterPeriodo";
@@ -10,7 +9,8 @@ import Table from "../../../components/table/Table";
 import Input from "../../../components/input/Input";
 import Select from "../../../components/select/Select";
 import Button from "../../../components/button/Button";
-import { Label } from "recharts";
+import useExportExcel from "../../../hooks/useExportExcel"
+import { calculateDaysInStock } from "../../../hooks/useCalc";
 
 const RelatorioEstoque = () => {
 
@@ -20,6 +20,8 @@ const RelatorioEstoque = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const tabelaRef = useRef(null);
 
+    // Hook personalizado para exportar para Excel
+    const { generateExcel, isExporting } = useExportExcel();
 
     //Recebendo os veículos da tabela
     const { data: veiculos } = useGetData(`/veiculos`);
@@ -32,7 +34,15 @@ const RelatorioEstoque = () => {
     //Recebe o array de objetos veiculos e realiza as tratativas de busca 
     useEffect(() => {
 
-        let filtrados = [...filteredData];
+        //Calcula dias em estoque
+        const dadosComDias = filteredData.map((veiculo) => ({
+            ...veiculo,
+            dias_estoque: calculateDaysInStock(veiculo.data_registro),
+        }));
+
+
+        // Filtrar por termo e por data
+        let filtrados = [...dadosComDias];
 
         // Filtrar por termo e por data
 
@@ -57,14 +67,14 @@ const RelatorioEstoque = () => {
 
         // dados completos
         setFilteredVehicles(filtrados);     // dados filtrados
-        setCurrentPage(1);                       // reseta para primeira página ao filtrar
+        setCurrentPage(1);                  // reseta para primeira página ao filtrar
 
     }, [veiculos, searchTerm, filteredData]);
 
+    /* Renderizando a tabela com os dados filtrados e paginados */
     //Passando as colunas com as suas respectivas chaves
     const colunas = [
         { key: 'unidade', label: 'LOJA' },
-        { key: 'data_registro', label: 'DATA CADASTRO', format: (value) => formatDateInfo(value) /*Formatando a data para 00/00/00 */ },
         { key: 'placa', label: 'PLACA' },
         { key: 'marca', label: 'MARCA' },
         { key: 'modelo', label: 'MODELO' },
@@ -72,10 +82,9 @@ const RelatorioEstoque = () => {
         { key: 'ano_fabricacao', label: 'ANO FABRICAÇÃO' },
         { key: 'ano_modelo', label: 'ANO MODELO' },
         { key: 'tipoAquisicao', label: 'TIPO DE AQUISIÇÃO' },
-        /*{ key: 'dias_estoque', label: 'DIAS EM ESTOQUE', format: (value) => value !== undefined ? `${value} dia(s)` : 'N/A' /*in */
-
+        { key: 'data_registro', label: 'DATA CADASTRO', format: (value) => formatDateInfo(value) /*Formatando a data para 00/00/00 */ },
+        { key: 'dias_estoque', label: 'DIAS EM ESTOQUE', format: (value) => value !== undefined ? `${value} dia(s)` : 'N/A' },
     ]
-
 
     //Função que trata da paginação da tabela
     const startIndex = (currentPage - 1) * pageSize;
@@ -91,30 +100,42 @@ const RelatorioEstoque = () => {
         { value: 100, label: 'TODOS' },
     ];
 
-    //Funçao que gera o excel da tabela
-    const gerarExcel = () => {
-        const formattedData = filteredVehicles.map(filtrados => ({
-            Loja: filtrados.unidade,
-            Data_Cadastro: formatDateInfo(filtrados.data_registro),
-            Marca: filtrados.marca,
-            Modelo: filtrados.modelo,
-            Cor: filtrados.cor,
-            Ano_Fabricacao: filtrados.ano_fabricacao,
-            Ano_Modelo: filtrados.ano_modelo,
-            Placa: filtrados.placa,
-            Renavan: filtrados.renavan,
-            Dias_Estoque: filtrados.dias_estoque,
-            Combustível: filtrados.combustivel,
-            Câmbio: filtrados.cambio,
-            Quilometragem: filtrados.quilometragem,
-            Tipo_Aquisição: filtrados.tipoAquisicao
-        }))
+    // ####################### Preparando para exportar para EXCEL ################################
+    // Busca o período selecionado
+    const dataInicial = formatDateInfo(startDate)
+    const dataFinal = formatDateInfo(endDate)
 
-        const worksheet = XLSX.utils.json_to_sheet(formattedData)
-        const workbook = XLSX.utils.book_new()
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Data")
-        XLSX.writeFile(workbook, "Relatorio de Estoque.xlsx")
-    };
+
+    const exportarExcel = async () => {
+        try {
+            await generateExcel({
+                titulo: "Relatório de Estoque",
+                subtitulo: `Relatório correspondente ao período de ${dataInicial} a ${dataFinal}`,
+                nomeArquivo: "Relatório de Estoque.xlsx",
+                nomePlanilha: "Estoque Veiculos",
+                logoUrl: "/aspa.png",
+
+                dados: filteredVehicles,
+
+                colunas: [
+                    { chave: 'unidade', titulo: 'LOJA', largura: 25 },
+                    { chave: 'placa', titulo: 'PLACA', largura: 25 },
+                    { chave: 'marca', titulo: 'MARCA', largura: 25 },
+                    { chave: 'modelo', titulo: 'MODELO', largura: 25 },
+                    { chave: 'cor', titulo: 'COR', largura: 25 },
+                    { chave: 'ano_fabricacao', titulo: 'ANO DE FABRICAÇÃO', largura: 25 },
+                    { chave: 'ano_modelo', titulo: 'ANO MODELO', largura: 25 },
+                    { chave: 'combustivel', titulo: 'COMBUSTÍVEL', largura: 25 },
+                    { chave: 'cambio', titulo: 'CÂMBIO', largura: 25 },
+                    { chave: 'quilometragem', titulo: 'QUILOMETRAGEM', largura: 25 },
+                    { chave: `data_registro`, titulo: `DATA CADASTRO`, largura: 25, tipo: 'data' },
+                    { chave: 'dias_estoque', titulo: 'DIAS EM ESTOQUE',largura: 25, format: (value) => value !== undefined ? `${value} dia(s)` : 'N/A' /*in */ },
+                ]
+            })
+        } catch (error) {
+            console.error("Falha na exportação:", error);
+        }
+    }
 
 
     return (
@@ -154,7 +175,7 @@ const RelatorioEstoque = () => {
                         <div className=" d-flex justify-content-between" >
                             <div className="p-2 ">
                             </div>
-                            <div className="d-flex align-items-center gap-3">
+                            <div className="d-flex align-items-center gap-5">
                                 {status !== "ok" && (<p className={status === "error" ? "text-danger" : "text-muted"} >{message} </p>)}
                                 <div className="d-flex flex-column ">
                                     <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} tooltipText="Data inicial"
@@ -165,11 +186,13 @@ const RelatorioEstoque = () => {
                                         tooltipText="Data final"
                                         tooltipPlacement="top" />
                                 </div>
-                                <div className="p-2">
-                                    <div className="p-1 ">
-                                        <Select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} options={options} className={"quantidade"} />
+                                {hasResults ? (
+                                    <div className="p-2">
+                                        <div className="p-1 ">
+                                            <Select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} options={options} className={"quantidade"} />
+                                        </div>
                                     </div>
-                                </div>
+                                ) : null}
                             </div>
                         </div>
                     </div>
@@ -188,45 +211,46 @@ const RelatorioEstoque = () => {
                                 className={"table table-striped table-bordered table-data dataTable no-footer"} role="grid" id="estoque" />
                         </div>
                     </div>
-                    <div className="d-flex justify-content-between" id="pagination" >
-                        <div className="p-2 ">
-                            <div className="d-flex justify-content-start">
-                                <Button onClick={gerarExcel} className="bg-blue-500 text-white px-4 py-2 rounded">
-                                    GERAR EXCEL
-                                </Button>
-                            </div>
-                        </div>
-                        <div className="p-4 ">
-                            <p>
-                                <span>
-                                    Mostrando página {currentPage} de {totalPages} | Total de registros: {filteredVehicles.length}
-                                </span>
-                            </p>
-                        </div>
-
-                        <div className="d-flex justify-content-end" >
-                            <div className="d-flex justify-content-between">
-                                <div className="p-2 ">
-                                    <Button onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} variant={currentPage === 1 ? 'disabled' : 'primary'} className={"px-3 py-1 bg-gray-300 rounded"} >
-                                        <i className=' ti ti-angle-left px-3 py-1 bg-gray-300 rounded' id='card-path' />ANTERIOR
-                                    </Button>
-                                </div>
-                                <div className="p-4 ">
-                                    <p>
-                                        <span>
-                                            {currentPage}
-                                        </span>
-                                    </p>
-                                </div>
-
-                                <div className="p-2 ">
-                                    <Button onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages} className={"px-3 py-1 bg-gray-300 rounded"} >
-                                        PRÓXIMA <i className=' ti ti-angle-right px-3 py-1 bg-gray-300 rounded' />
+                    {hasResults ? (
+                        <div className="d-flex justify-content-between" id="pagination" >
+                            <div className="p-2 ">
+                                <div className="d-flex justify-content-start">
+                                    <Button onClick={exportarExcel} disabled={isExporting} className="bg-green-500 text-white px-4 py-2 rounded mt-3">
+                                        {isExporting ? "EXPORTANDO" : "GERAR EXCEL"}
                                     </Button>
                                 </div>
                             </div>
+                            <div className="p-4 ">
+                                <p>
+                                    <span>
+                                        Mostrando página {currentPage} de {totalPages} | Total de registros: {filteredVehicles.length}
+                                    </span>
+                                </p>
+                            </div>
+                            <div className="d-flex justify-content-end" >
+                                <div className="d-flex justify-content-between">
+                                    <div className="p-2 ">
+                                        <Button onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} variant={currentPage === 1 ? 'disabled' : 'primary'} className={"px-3 py-1 bg-gray-300 rounded"} >
+                                            <i className=' ti ti-angle-left px-3 py-1 bg-gray-300 rounded' id='card-path' />ANTERIOR
+                                        </Button>
+                                    </div>
+                                    <div className="p-4 ">
+                                        <p>
+                                            <span>
+                                                {currentPage}
+                                            </span>
+                                        </p>
+                                    </div>
+
+                                    <div className="p-2 ">
+                                        <Button onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages} className={"px-3 py-1 bg-gray-300 rounded"} >
+                                            PRÓXIMA <i className=' ti ti-angle-right px-3 py-1 bg-gray-300 rounded' />
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    ) : null}
                 </Box>
             </div>
         </ContainerSecundario>

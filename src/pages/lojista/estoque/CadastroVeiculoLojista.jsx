@@ -5,7 +5,7 @@ import Box from "../../../components/box/Box"
 import ContainerSecundario from "../../../components/container/ContainerSecundario"
 import Input from '../../../components/input/Input';
 import Button from '../../../components/button/Button';
-
+import ModalBootstrap from '../../../components/modal/ModalBootstrap';
 import { useState, useEffect, useRef } from 'react';
 import { useGetData } from '../../../services/useGetData';
 import { usePostData } from '../../../services/usePostData';
@@ -25,11 +25,19 @@ const CadastroVeiculoLojista = () => {
     const [qtd_portas, setQtdPortas] = useState('')
     const [loading, setLoading] = useState(false)
     const [erroUnidade, setErroUnidade] = useState('');
+    const [editavel, setEditavel] = useState(true)
     const [dadosVeiculo, setDadosVeiculo] = useState({
         marca: '', modelo: '', cor: '', renavam: '', ano_modelo: '', ano_fabricacao: '', unidade: '',
         quilometragem: '', combustivel: '', cambio: '', chassi: ''
     })
-    const [editavel, setEditavel] = useState(true)
+    const [modal, setModal] = useState({
+        aberto: false,
+        titulo: "Atenção",
+        mensagem: "",
+        tipo: "mensagem",
+        acao: null,
+
+    });
 
     // Contexto para o usuario logado
     const { user } = useAuth()
@@ -91,10 +99,21 @@ const CadastroVeiculoLojista = () => {
             clearTimeout(timeoutRef.current);
         }
 
+        const binOff = (titulo, mensagem, aoFechar = null) => {
+            setModal({
+                aberto: true,
+                titulo,
+                mensagem,
+                tipo: "mensagem",
+                acao: "",
+                aoFechar
+            });
+        }
+
         // Inicia novo timeout
         timeoutRef.current = setTimeout(() => {
             setLoading(false);
-            window.alert('Base BIN offline ou dados do veiculo indisponiveis.\nTente novamente ou insira as informações de forma manual.');
+            binOff('Atenção!', 'Base BIN offline ou dados do veiculo indisponiveis.\nTente novamente ou insira as informações de forma manual.');
         }, 60000);
 
     };
@@ -180,6 +199,18 @@ const CadastroVeiculoLojista = () => {
     // Ela formata a data de registro e envia os dados para o backend
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        setModal({
+            aberto: true,
+            titulo: "Confirmação de Cadastro",
+            mensagem: "Confirmar o cadastro do veiculo?",
+            tipo: "confirmacao",
+            acao: confirmarCadastro
+        });
+    }
+
+    const confirmarCadastro = async () => {
+
         const data_registro = formatTimestamp(new Date());
 
         const tipoDeAquisicao = 'COMUM'
@@ -206,39 +237,52 @@ const CadastroVeiculoLojista = () => {
 
         // normaliza os campos para maiúsculo
         dados = toUpperFields(dados, ['placa', 'marca', 'modelo', 'cor', 'unidade', 'combustivel']);
-        console.log('Dados a serem enviados:', dados); // Debug
+        //console.log('Dados a serem enviados:', dados); // Debug
 
-        const confirmar = window.confirm("Confirma o cadastro do veículo?");
-        if (!confirmar) return;
+        const validacaoCampos = (titulo, mensagem, aoFechar = null) => {
+            setModal({
+                aberto: true,
+                titulo,
+                mensagem,
+                tipo: "mensagem",
+                acao: "",
+                aoFechar
+            });
+        }
 
-        if (placa === "" ||
-            unidade === "" ||
-            cambio === "" ||
-            quilometragem === "" ||
-            dados.marca === "" ||
-            dados.modelo === "" ||
-            dados.cor === "" ||
-            dados.ano_fabricacao === "" ||
-            dados.ano_modelo === "" ||
-            dados.renavan === "" ||
-            dados.combustivel === "" ||
-            dados.chassi === "" ||
-            cambio === "" ||
-            qtd_portas === "" || "") {
-            window.alert("Por favor, verifique o formulario novamente, todos os campos precisam ser preenchidos.")
-            return
+        if (placa === "" || unidade === "" || cambio === "" || quilometragem === "" ||
+            dados.marca === "" || dados.modelo === "" || dados.cor === "" || dados.ano_fabricacao === "" ||
+            dados.ano_modelo === "" || dados.renavan === "" || dados.combustivel === "" || dados.chassi === "" ||
+            cambio === "" || qtd_portas === "" || "") {
+
+            validacaoCampos("Atenção!", "Verifique o formulario novamente e preencha todos os campos.")
+
         } else {
+
+            const validarOperacao = (titulo, mensagem, aoFechar = null) => {
+                setModal({
+                    aberto: true,
+                    titulo,
+                    mensagem,
+                    tipo: "mensagem",
+                    acao: "",
+                    aoFechar
+                });
+            }
+
             try {
                 // Verifica se a placa já existe antes de enviar os dados
                 const url = selectEstoque === 'pulmao'
-                    ? `${import.meta.env.VITE_API_BASE_URL}/pulmao/placa/${dados.placa}`
-                    : `${import.meta.env.VITE_API_BASE_URL}/veiculos/placa/${dados.placa}`;
+                    ? `${API_BASE_URL}/pulmao/placa/${dados.placa}`
+                    : `${API_BASE_URL}/veiculos/placa/${dados.placa}`;
 
                 const existente = await fetch(url).then((res) => res.ok ? res.json() : null);
 
+
+
                 if (existente) {
-                    window.alert("Já existe um veículo cadastrado com esta placa!");
-                    return;
+
+                    validarOperacao("Atenção!", "Já existe um veículo cadastrado com esta placa!", resetForm);
 
                 } else if (selectEstoque === 'pulmao') {
 
@@ -246,36 +290,35 @@ const CadastroVeiculoLojista = () => {
                     const respostaEstoqueExtra = await createEstoqueExtra(dadosUpper);
 
                     if (respostaEstoqueExtra.success) {
-                        window.alert('Veículo cadastrado no Pulmao com sucesso');
-                        resetForm() //Chama a função que limpa o formulario
-                        //window.location.reload();
+                        validarOperacao('Sucesso', 'Veículo cadastrado no estoque extra com sucesso', resetForm);
                     } else {
-
-                        window.alert('Não há vagas disponíveis para esta loja.\nCadastro não realizado.');
+                        validarOperacao("Atenção!", 'Não há vagas disponíveis para esta loja.\nCadastro não realizado.', resetForm);
                     }
 
                 } else {
 
                     // Só permite o cadastro se houver vagas disponíveis
-
                     const dadosUpper = toUpperCaseData(dados);
                     const respostaEstoquePrincipal = await createEstoquePrincipal(dadosUpper);
                     if (respostaEstoquePrincipal.success) {
-
-                        resetForm() //Chama a função que limpa o formulario
-                        window.alert('Veículo cadastrado com sucesso');
-                        //window.location.reload();
+                        validarOperacao("Sucesso", 'Veículo cadastrado com sucesso', resetForm);
                     } else {
-                        window.alert('Não há vagas disponíveis para esta loja.\nCadastro não realizado.');
+                        validarOperacao('Atenção!', 'Não há vagas disponíveis para esta loja.\nCadastro não realizado.', resetForm);
                     }
                 }
-
-            } catch (err) {
-                console.error('Falha ao registrar o veículo: ', err);
-                window.alert('Erro ao tentar registrar o veículo.\nEntre em contato com o suporte.');
+            } catch {
+                validarOperacao('Atenção!', 'Falha ao registrar o veículo, entre em contato com o suporte.', resetForm);
             }
         };
     }
+
+    //Função para fechar o modal
+    const fecharModal = () => {
+        setModal(prev => ({
+            ...prev,
+            aberto: false
+        }));
+    };
 
     return (
         <div>
@@ -381,6 +424,9 @@ const CadastroVeiculoLojista = () => {
                             </div>
                         </Form>
                     </Box>
+                    <>
+                        <ModalBootstrap modal={modal} fecharModal={fecharModal} id="modal" />
+                    </>
                 </div>
             </ContainerSecundario>
         </div>

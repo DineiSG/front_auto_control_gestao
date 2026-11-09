@@ -5,7 +5,7 @@ function Table({ data = [], columns = [], className }) {
       <thead>
         <tr>
           {columns.map((col) => (
-            <th key={col.key} className="px-4 py-2" id="head-table">
+            <th key={col.key} >
               {col.label}
             </th>
           ))}

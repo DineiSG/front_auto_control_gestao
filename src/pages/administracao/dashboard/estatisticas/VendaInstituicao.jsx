@@ -7,11 +7,16 @@ import { useGetArray } from "../../../../services/useGetArray";
 import useGroupedChart from "../../../../hooks/useGroupedChart";
 import { useFilterPeriodo } from "../../../../hooks/useFilterPeriodo";
 import ModalContent from "../../../../components/modal/ModalContent";
-import * as XLSX from 'xlsx';
+import useExportExcel from "../../../../hooks/useExportExcel";
+import { prepararRelatorio } from "../../../../hooks/preparaRelatorioVendas";
+import { formatDateInfo } from "../../../../hooks/formatDate";
 
 const VendaInstituicao = () => {
     const [dadosTabela, setDadosTabela] = useState([]);
     const [modalAberto, setModalAberto] = useState(false);
+
+    // Importando o hook que gera a planilha excel
+    const { generateExcel, isExporting, error } = useExportExcel();
 
     const { data: vendas = [] } = useGetArray("/vendas");
 
@@ -146,59 +151,6 @@ const VendaInstituicao = () => {
         dateKey: 'dataRegistro',
     });
 
-
-    // Função para gerar Excel
-    const generateExcel = () => {
-        // Verificar se há dados para exportar
-        if (!Array.isArray(dadosTabela) || dadosTabela.length === 0) {
-            console.warn("Nenhum dado para exportar.");
-            return;
-        }
-
-        // Obter todas as lojas únicas (mesma lógica usada na renderização)
-        const todasLojas = [...new Set(
-            dadosTabela.flatMap(linha =>
-                Object.keys(linha).filter(col => col !== 'unidade' && col !== 'Total')
-            )
-        )];
-
-        // Formatar os dados dos modelos
-        const formattedData = dadosTabela.map((linha) => {
-            const formattedRow = { Loja: linha.loja };
-
-            // Para cada loja, adicionar valor e porcentagem
-            todasLojas.forEach(loja => {
-                const dado = linha[loja] || { valor: 0, porcentagem: "0.00" };
-                formattedRow[`${loja} (R$)`] = parseFloat(dado.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0,00';
-                formattedRow[`${loja} (%)`] = dado.porcentagem;
-            });
-
-            formattedRow["Total (R$)"] = parseFloat(linha.Total).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            return formattedRow;
-        });
-
-        // Linha de TOTAL GERAL
-        const totaisGeraisRow = { Loja: "TOTAL GERAL" };
-
-        totaisGeraisRow["Total (R$)"] = parseFloat(totalGeral).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        formattedData.push(totaisGeraisRow);
-
-        // Definir ordem das colunas: Modelo, [Loja1 (R$), Loja1 (%), ...], Total (R$)
-        const columnOrder = [
-            "Loja",
-            ...todasLojas.flatMap(loja => [`${loja} (R$)`, `${loja} (%)`]),
-            "Total (R$)"
-        ];
-
-        // Criar planilha
-        const worksheet = XLSX.utils.json_to_sheet(formattedData, { header: columnOrder });
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Vendas por Modelo e Loja");
-
-        // Salvar arquivo
-        XLSX.writeFile(workbook, "Relatorio_Vendas_por_Instituicao.xlsx");
-    };
-
     // Referência para o gráfico (usado na geração de PDF)
     const graphRef = useRef(null);
 
@@ -214,15 +166,165 @@ const VendaInstituicao = () => {
         sortOrder: "desc"
     });
 
+    //##########################################################
+    // Preparando os dados para a planilha em excel
+    const todasInstituicoes = useMemo(() => {
+        return [...new Set(dadosTabela.flatMap(linha =>
+            Object.keys(linha).filter(col => col !== 'loja' && col !== 'Total')
+        ))];
+    }, [dadosTabela]);
+
+    console.log(dadosTabela[0])
+
+    const dadosPreparados = dadosTabela.map((item) => {
+        const linha = {
+            unidade: item.loja,
+            total: item.Total,
+        };
+
+        todasInstituicoes.forEach((loja, indice) => {
+            linha[`loja_${indice}_valor`] = item[loja]?.valor ?? 0;
+            linha[`loja_${indice}_percentual`] =
+                Number(item[loja]?.porcentagem ?? 0) / 100;
+        });
+
+        return linha;
+
+    });
+
+    // 2. Cria a linha TOTAL GERAL
+    const linhaTotalGeral = {
+        unidade: "TOTAL GERAL",
+        total: 0,
+    };
+
+    todasInstituicoes.forEach((loja, indice) => {
+        const chaveValor = `loja_${indice}_valor`;
+        const chavePercentual = `loja_${indice}_percentual`;
+
+        const totalLoja = dadosPreparados.reduce(
+            (soma, item) => soma + Number(item[chaveValor] ?? 0),
+            0
+        );
+
+        linhaTotalGeral[chaveValor] = totalLoja;
+        linhaTotalGeral[chavePercentual] = 0;
+        linhaTotalGeral.total += totalLoja;
+    });
+
+    // 3. Calcula os percentuais da linha TOTAL GERAL
+    todasInstituicoes.forEach((loja, indice) => {
+        const chaveValor = `loja_${indice}_valor`;
+        const chavePercentual = `loja_${indice}_percentual`;
+
+        linhaTotalGeral[chavePercentual] =
+            linhaTotalGeral.total > 0
+                ? linhaTotalGeral[chaveValor] / linhaTotalGeral.total
+                : 0;
+    });
+
+    // 4. Junta os registros e o TOTAL GERAL
+    const dadosComTotalGeral = [
+        ...dadosPreparados,
+        linhaTotalGeral,
+    ];
+
+    // Busca o período selecionado
+    const dataInicial = formatDateInfo(startDate)
+    const dataFinal = formatDateInfo(endDate)
+
+
+    const configuracaoColunas = {
+        tituloUnidade: "LOJA",
+        tituloValorTotal: "TOTAL",
+        sufixoValor: " (R$)",
+        sufixoPercentual: " (%)",
+    };
+
+    const colunas = [
+        {
+            chave: "unidade",
+            titulo: configuracaoColunas.tituloUnidade,
+            largura: 25,
+        },
+
+        ...todasInstituicoes.flatMap((loja, indice) => [
+            {
+                chave: `loja_${indice}_valor`,
+                titulo: `${loja}${configuracaoColunas.sufixoValor}`,
+                tipo: "moeda",
+                largura: 20,
+                corFundo: "E3C0F7"
+            },
+            {
+                chave: `loja_${indice}_percentual`,
+                titulo: `${loja}${configuracaoColunas.sufixoPercentual}`,
+                tipo: "percentual",
+                largura: 20,
+            },
+        ]),
+
+        {
+            chave: "total",
+            titulo: configuracaoColunas.tituloValorTotal,
+            tipo: "moeda",
+            largura: 20,
+        },
+    ];
+
+    // No momento da exportação:
+    const exportar = async () => {
+        const {
+            colunas: colunasExcel,
+            dados: dadosExcel,
+
+        } = prepararRelatorio({
+            dados: dadosComTotalGeral,
+            colunas,
+            transformarDados: (dados) => dados,
+        });
+
+        await generateExcel({
+            titulo: "Relatório de Financiamento por Instituição",
+            subtitulo: "Por valores",
+            periodo: {
+                inicio: dataInicial,
+                fim: dataFinal,
+            },
+            nomeArquivo: "Financiamento por Instituicão  - Valores.xlsx",
+            nomePlanilha: "Financiamento por Instituicão",
+            logoUrl: "/aspa.png",
+            marcaDaguaUrl: null,
+            mostrarTotais: false,
+            chaveRotuloTotal: "unidade",
+            colunas: colunasExcel,
+            dados: dadosExcel,
+        });
+    };
+
+
     // Função para gerar PDF do gráfico
     const gerarPDF = () => {
-        const element = graphRef.current;
+        const element = graphRef.current
+
         const opt = {
-            margin: 0.5,
-            filename: "Vendas Período.pdf",
-            image: { type: "jpeg", quality: 0.98 },
-            html2canvas: { scale: 2 },
-            jsPDF: { unit: "in", format: "a4", orientation: "landscape" },
+            margin: [0.5, 0.5, 0.8, 0.5],//[superior, esquerda, inferior, direita]
+            filename: "Financiamento por Instituicao - Valores",
+            image: {
+                type: 'jpeg',
+                quality: 1.0
+            },
+            html2canvas: {
+                scale: 3,
+                useCORS: true,
+                backgroundColor: '#ffffff'
+            },
+            jsPDF: {
+
+                unit: 'in',
+                format: 'a4',
+                orientation: 'landscape'
+            }
         };
         html2pdf().set(opt).from(element).save();
     };
@@ -230,13 +332,6 @@ const VendaInstituicao = () => {
     // Calcular totais gerais sempre que dadosTabela muda
     const { totaisComPorcentagem, totalGeral } = useMemo(() => {
         return calcularTotaisGerais(dadosTabela);
-    }, [dadosTabela]);
-
-    // Obter todas as instituições únicas para o cabeçalho
-    const todasInstituicoes = useMemo(() => {
-        return [...new Set(dadosTabela.flatMap(linha =>
-            Object.keys(linha).filter(col => col !== 'loja' && col !== 'Total')
-        ))];
     }, [dadosTabela]);
 
     // Atualiza dadosTabela sempre que filteredData muda
@@ -249,10 +344,14 @@ const VendaInstituicao = () => {
     return (
         <div className="d-flex flex-column align-items-center w-100">
             {/* Cabeçalho e seletores de data */}
-            <div className="panel-heading w-100 d-flex align-items-center gap-2" style={{ maxWidth: "1000px" }}>
-                <i className="ti ti-money" id="ti-black"></i>
-                <p>FINANCIAMENTO POR INSTITUIÇÃO FINANCEIRA (Valores de financiamento em um período)</p>
-            </div>
+
+            {!hasResults && (
+                <div className="panel-heading w-100 d-flex align-items-center gap-2" style={{ maxWidth: "1000px" }}>
+                    <i className="ti ti-money" id="ti-black"></i>
+                    <h4>FINANCIAMENTO POR INSTITUIÇÃO FINANCEIRA (Valores X Período)</h4>
+                </div>
+            )}
+
 
             <div className="d-flex align-items-center gap-2 my-3 w-100 justify-content-center" id="date_select">
                 <div className="d-flex flex-column">
@@ -270,9 +369,19 @@ const VendaInstituicao = () => {
             {hasResults && (
                 <>
                     {/* Gráfico centralizado */}
-                    <div ref={graphRef} className="w-100 d-flex justify-content-center my-4">
-                        <div style={{ width: "100%", maxWidth: "1000px", height: "400px" }}>
-                            <Bar data={chartData} options={chartOptions} />
+                    <div ref={graphRef}>
+                        <img src="./aspa.png" alt="Logomarca da empresa" className="relatorio-logo" />
+                        <br />
+                        <br />
+                        <div className="conteudo-relatorio">
+                            <div className="panel-heading w-100  align-items-center gap-2" style={{ maxWidth: "1000px" }}>
+                                <i className="ti ti-money" id="ti-black"></i>
+                                <h4 style={{ paddingTop: "15px" }}> FINANCIAMENTO POR INSTITUIÇÃO FINANCEIRA (Quantidade X Período) </h4>
+                            </div>
+                            <br />
+                            <div style={{ width: "100%", maxWidth: "1000px", height: "400px" }}>
+                                <Bar data={chartData} options={chartOptions} />
+                            </div>
                         </div>
                     </div>
 
@@ -289,7 +398,25 @@ const VendaInstituicao = () => {
 
                     {/* Tabela com barra de rolagem horizontal */}
                     <ModalContent isOpen={modalAberto} onClose={() => setModalAberto(false)} title="" size="fullscreen" >
+                        <img src="./aspa.png" alt="Logomarca da empresa" className="relatorio-logo" />
+                        <br />
+                        <br />
+                        <div className="conteudo-relatorio"></div>
                         <h2>Tabela de Valores (Loja X Instituição)</h2>
+                        <div className="d-flex flex-column align-items-end" id="date_select">
+                            <div className=" d-flex justify-content-between gap-3" >
+
+                                {/* Input de Data Início */}
+                                <div className="d-flex flex-column">
+                                    <Input label={"Data Inicial"} type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                                </div>
+
+                                {/* Input de Data Fim */}
+                                <div className="d-flex flex-column">
+                                    <Input label={"Data Final"} type="date" value={endDate} min={startDate || undefined} onChange={(e) => setEndDate(e.target.value)} />
+                                </div>
+                            </div>
+                        </div>
                         <div className="w-100 d-flex justify-content-center mt-4" style={{ overflowX: "auto" }} >
                             <div className="table-responsive">
                                 {dadosTabela.length > 0 ? (
@@ -344,12 +471,18 @@ const VendaInstituicao = () => {
                                 ) : null}
                             </div>
                         </div>
+                        <br />
+                        <br />
                         <div className="d-flex justify-content-start w-100 " style={{ maxWidth: "1000px" }}>
-                            <Button onClick={generateExcel} className="bg-green-500 text-white px-4 py-2 rounded mt-3">
-                                GERAR EXCEL
+                            <Button onClick={exportar} disabled={isExporting} className="bg-green-500 text-white px-4 py-2 rounded mt-3">
+                                {isExporting ? "EXPORTANDO" : "GERAR EXCEL"}
                             </Button>
+                            {error && <p role="alert">{error}</p>}
                         </div>
+                        <br />
+                        <br />
                     </ModalContent>
+                    <br />
                     <br />
                 </>
             )}

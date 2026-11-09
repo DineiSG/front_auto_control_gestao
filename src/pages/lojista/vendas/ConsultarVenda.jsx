@@ -4,6 +4,7 @@ import "../../../assets/css/themify-icons.css"
 import Box from '../../../components/box/Box';
 import Input from '../../../components/input/Input';
 import Form from '../../../components/form/Form';
+import ModalBootstrap from '../../../components/modal/ModalBootstrap';
 import { useState, useEffect, useRef } from "react";
 import { useGetData } from '../../../services/useGetData';
 import { useUpdateData } from '../../../services/useUpdateData';
@@ -25,7 +26,18 @@ const ConsultarVenda = () => {
         valorFipe: '', valorVenda: '', valorEntrada: '', valorFinanciamento: '', observacoes: '', tipoVenda: '', instituicao: '', dataRegistro: '', rua: ''
     })
 
+    // Estado para controlar o modal
+    const [modal, setModal] = useState({
+        aberto: false,
+        titulo: "Atenção",
+        mensagem: "",
+        tipo: "mensagem",
+        acao: null,
+
+    });
+
     const resetForm = () => {
+        setPlaca('')
         setDadosVeiculo({
             id: '', marca: '', modelo: '', cor: '', renavan: '', unidade: '', vendedor: '',
             comprador: '', telefone: '', email: '', cep: '', endereco: '', bairro: '', cidade: '', uf: '', nascimento: '', cpf: '', rg: '',
@@ -67,11 +79,23 @@ const ConsultarVenda = () => {
         const vendaLoja = await fetch(`${API_BASE_URL}/vendas/placa/${placaM}`);
 
         const dados = await vendaLoja.json()
-        console.log(`Dados do veículo: ${dados}`)
+
+        const alertaUnidade = (titulo, mensagem, aoFechar = null) => {
+
+            setModal({
+                aberto: true,
+                titulo,
+                mensagem,
+                tipo: "mensagem",
+                acao: "",
+                aoFechar
+            });
+        }
 
         if (dados.unidade !== usuarioAtivo) {
-            window.alert("O veiculo correspondente a essa placa nao foi vendido nessa unidade. Operação nao permitida.")
-            window.location.reload()
+
+            alertaUnidade("Atenção!", "O veiculo correspondente a essa placa não foi vendido nessa unidade. Operação não permitida.", resetForm)
+
         }
 
         try {
@@ -92,7 +116,18 @@ const ConsultarVenda = () => {
             }
 
         } catch {
-            window.alert("Não foi possivel obter os dados da venda. Entre em contato com o suporte.")
+            const alertaErro = (titulo, mensagem, aoFechar = null) => {
+
+                setModal({
+                    aberto: true,
+                    titulo,
+                    mensagem,
+                    tipo: "mensagem",
+                    acao: "",
+                    aoFechar
+                });
+            }
+            alertaErro("Atenção!", "Não foi possivel obter os dados da venda. Entre em contato com o suporte.", resetForm)
         }
 
     };
@@ -132,7 +167,18 @@ const ConsultarVenda = () => {
                 dataRegistro: veiculo.dataRegistro ? formatDateInfo(veiculo.dataRegistro) : ''
             }));
         } else if (veiculo && veiculo.erro) {
-            console.log('Veículo não encontrado');;
+            const veiculoErro = (titulo, mensagem, aoFechar = null) => {
+
+                setModal({
+                    aberto: true,
+                    titulo,
+                    mensagem,
+                    tipo: "mensagem",
+                    acao: "",
+                    aoFechar
+                });
+            }
+            veiculoErro("Atenção!", 'Veículo não encontrado', resetForm);
         }
 
     }, [veiculo]);
@@ -169,8 +215,22 @@ const ConsultarVenda = () => {
         setDadosVeiculo(prev => ({ ...prev, cpf: formatted }))
     }
 
+    // Função para executar a ação do modal
     const handleSubmit = async (e) => {
         e.preventDefault()
+
+        setModal({
+            aberto: true,
+            titulo: "Confirmação de Solicitação",
+            mensagem: "Confirmar a edição do registro de venda?",
+            tipo: "confirmacao",
+            acao: confirmarEdicao
+        });
+
+    }
+
+    // 
+    const confirmarEdicao = async () => {
 
         let dados = {
             placa, id: dadosVeiculo.id, marca: dadosVeiculo.marca, modelo: dadosVeiculo.modelo, cor: dadosVeiculo.cor, renavam: dadosVeiculo.renavan,
@@ -183,27 +243,53 @@ const ConsultarVenda = () => {
         }
 
         dados = toUpperFields(dados, ['placa', 'marca', 'modelo', 'cor', 'unidade', 'vendedor', 'comprador', 'cidade', 'uf', 'bairro', 'endereco', 'instituicao', 'tipoVenda'])
-        // Padroniza para caixa alta
-        console.log('Dados a serem enviados: ', dados)
 
-        const confirmar = window.confirm("Confirma a edição dos dados do veículo?");
+        try {
+            await updateData(dados, dadosVeiculo.id)
 
-        if (confirmar === true) {
-            try {
-                const resultado = await updateData(dados, dadosVeiculo.id)
-                console.log('Dados editados com sucesso, ', resultado)
-                window.alert('Dados editados com sucesso')
-                resetForm()
-                window.scrollTo({ top: 0, behavior: 'smooth' })
-            } catch (err) {
-                console.log(err)
-                window.alert("Falha ao editar o Registro de Venda.\nEntre em contato com o suporte.")
+            const registroOk = (titulo, mensagem, aoFechar = null) => {
+                setModal({
+                    aberto: true,
+                    titulo,
+                    mensagem,
+                    tipo: "mensagem",
+                    acao: "",
+                    aoFechar
+                });
             }
+            registroOk('Sucesso', 'Dados da venda editados com sucesso', resetForm)
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+        } catch {
+            const falhaEdicao = (titulo, mensagem, aoFechar = null) => {
+                setModal({
+                    aberto: true,
+                    titulo,
+                    mensagem,
+                    tipo: "mensagem",
+                    acao: "",
+                    aoFechar
+                })
+            }
+            falhaEdicao("Atenção!", "Falha ao editar o Registro de Venda.\nEntre em contato com o suporte.", resetForm)
         }
-
     }
+
+
     const handleDelete = async (e) => {
         e.preventDefault()
+
+        setModal({
+            aberto: true,
+            titulo: "Confirmação de Solicitação",
+            mensagem: "Confirmar a exclusao do registro de venda?",
+            tipo: "confirmacao",
+            acao: confirmarExclusao
+        });
+
+    }
+
+    const confirmarExclusao = async () => {
+
 
         let dados = {
             placa, id: dadosVeiculo.id, marca: dadosVeiculo.marca, modelo: dadosVeiculo.modelo, cor: dadosVeiculo.cor, renavam: dadosVeiculo.renavan,
@@ -215,22 +301,47 @@ const ConsultarVenda = () => {
             nascimento: dadosVeiculo.nascimento, cpf: dadosVeiculo.cpf, rg: dadosVeiculo.rg, rua: dadosVeiculo.rua, dataRegistro: dadosVeiculo.dataRegistro
         }
 
-        const confirmar = window.confirm("Confirma a exclusao do registro de venda?");
 
-        if (confirmar === true) {
-            try {
-                const resultado = await deleteData(dados.placa)
-                console.log('Registro excluido com sucesso, ', resultado)
-                window.alert('Registro de Venda excluido com sucesso')
-                resetForm()
-                window.scrollTo({ top: 0, behavior: 'smooth' })
-            } catch (err) {
-                console.log(err)
-                window.alert("Não foi possivel excluir o Registro de Venda.\nFavor entrar em contato com o suporte.")
+        try {
+            await deleteData(dados.placa)
+
+            const exclusaoOk = (titulo, mensagem, aoFechar = null) => {
+                setModal({
+                    aberto: true,
+                    titulo,
+                    mensagem,
+                    tipo: "mensagem",
+                    acao: "",
+                    aoFechar
+                });
             }
+
+            exclusaoOk('Sucesso', 'Registro de Venda excluido com sucesso', resetForm)
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+
+        } catch {
+
+            const exclusaoErro = (titulo, mensagem, aoFechar = null) => {
+                setModal({
+                    aberto: true,
+                    titulo,
+                    mensagem,
+                    tipo: "mensagem",
+                    acao: "",
+                    aoFechar
+                });
+            }
+            exclusaoErro("Atenção!", "Não foi possivel excluir o Registro de Venda.\nFavor entrar em contato com o suporte.", resetForm)
         }
 
     }
+
+    const fecharModal = () => {
+        setModal(prev => ({
+            ...prev,
+            aberto: false
+        }));
+    };
 
     return (
         <ContainerSecundario>
@@ -257,7 +368,7 @@ const ConsultarVenda = () => {
                 <Box onSubmit>
 
                     <div className='panel-heading'>
-                        <i className='ti ti-car' id="ti-black" ></i>
+                        <i className='ti ti-layout-tab' id="ti-black" ></i>
                         <p>DADOS DO VEÍCULO</p>
                     </div>
                     <div className='panel-heading'>
@@ -288,39 +399,39 @@ const ConsultarVenda = () => {
                         <p>DADOS DO COMPRADOR</p>
                     </div>
                     <Form>
-                        <div className="col-6 col-md-5">
+                        <div className="col-12 col-md-5">
                             <Input label={"Nome Completo:"} type={"text"} style={{ width: '250px' }} nameInput={"comprador"} value={dadosVeiculo.comprador} readOnly={!editavel} onChange={(e) =>
                                 setDadosVeiculo(prev => ({ ...prev, comprador: e.target.value }))} />
                         </div>
-                        <div className="col-6 col-md-4">
+                        <div className="col-12 col-md-4">
                             <Input label={"Data de Nascimento:"} style={{ width: '110px' }} value={dadosVeiculo.nascimento} required readOnly={!editavel} onChange={handleDateChange} />
                         </div>
-                        <div className="col-6 col-md-3">
+                        <div className="col-12 col-md-3">
                             <Input label={"CPF:"} type={"text"} style={{ width: '150px' }} maxLength={14} nameInput={"cpf"} value={dadosVeiculo.cpf} required onChange={handleCpfChange} />
                         </div>
-                        <div className="col-6 col-md-3">
+                        <div className="col-12 col-md-3">
                             <Input label={"RG:"} type={"text"} style={{ width: '150px' }} maxLength={14} nameInput={"rg"} value={dadosVeiculo.rg} required readOnly={!editavel} onChange={(e) =>
                                 setDadosVeiculo(prev => ({ ...prev, rg: e.target.value }))} />
                         </div>
-                        <div className="col-6 col-md-3">
+                        <div className="col-12 col-md-3">
                             <Input label={"Telefone:"} type={"text"} style={{ width: '150px' }} maxLength={14} nameInput={"telefone"} value={dadosVeiculo.telefone} readOnly={!editavel} onChange={handlePhoneChange} />
                         </div>
-                        <div className="col-6 col-md-3">
+                        <div className="col-12 col-md-3">
                             <Input label={"Email:"} type={"text"} style={{ width: '200px' }} nameInput={"email"} value={dadosVeiculo.email} required readOnly={!editavel} onChange={(e) =>
                                 setDadosVeiculo(prev => ({ ...prev, email: e.target.value }))} />
                         </div>
-                        <div className="col-6 col-md-4">
+                        <div className="col-12 col-md-4">
                             <Input label={"CEP:"} type={"text"} style={{ width: '100px' }} maxLength={9} nameInput={"cep"} value={dadosVeiculo.cep} required readOnly={!editavel} onChange={handleCepChange} />
                         </div>
-                        <div className="col-6 col-md-4">
+                        <div className="col-12 col-md-4">
                             <Input label={"Logradouro:"} type={"text"} style={{ width: '250px' }} nameInput={"logradouro"} value={dadosVeiculo.rua} readOnly={!editavel} onChange={(e) =>
                                 setDadosVeiculo(prev => ({ ...prev, rua: e.target.value }))} />
                         </div>
-                        <div className="col-6 col-md-4">
+                        <div className="col-12 col-md-4">
                             <Input label={"Complemento:"} type={"text"} style={{ width: '200px' }} nameInput={"complemento"} value={dadosVeiculo.endereco} required readOnly={!editavel} onChange={(e) =>
                                 setDadosVeiculo(prev => ({ ...prev, endereco: e.target.value }))} />
                         </div>
-                        <div className="col-6 col-md-4">
+                        <div className="col-12 col-md-4">
                             <Input label={"Bairro:"} type={"text"} style={{ width: '200px' }} nameInput={"bairro"} value={dadosVeiculo.bairro} readOnly={!editavel} onChange={(e) =>
                                 setDadosVeiculo(prev => ({ ...prev, bairro: e.target.value }))} />
                         </div>
@@ -368,22 +479,23 @@ const ConsultarVenda = () => {
                             <Input label={"Observações:"} type={"text"} style={{ width: '300px' }} nameInput={"observacoes"} value={dadosVeiculo.observacoes} required readOnly={!editavel} onChange={(e) =>
                                 setDadosVeiculo(prev => ({ ...prev, observacoes: e.target.value }))} />
                         </div>
-                        <div className="col-12 col-md-6">
+
+                        <div className="col-12 col-md-6" >
                             <div className="d-flex flex-row-start">
-                                <Button onClick={handleDelete} variant='danger' >EXCLUIR</Button>
+                                <Button id="botao-acao" onClick={handleDelete} variant='danger' >EXCLUIR</Button>
                             </div>
                         </div>
                         <div className="col-12 col-md-6">
                             <div className="d-flex flex-row-reverse">
-                                <Button onClick={handleSubmit} variant='primary' >SALVAR</Button>
+                                <Button id="botao-acao" onClick={handleSubmit} variant='primary' >SALVAR</Button>
                             </div>
                         </div>
-
                     </Form>
                 </Box>
-
+                <>
+                    <ModalBootstrap modal={modal} fecharModal={fecharModal} id="modal" />
+                </>
             </div>
-
         </ContainerSecundario>
     )
 

@@ -24,7 +24,7 @@ const Administracao = () => {
                         </div>
                     </div>
                 </div>
-                <div className="container d-flex justify-content-center card-container">
+                <div className="container d-flex justify-content-center card-container-2">
                     <div className="row justify-content-center  w-100">
                         <div className="card col-md-4 " id="bloco" >
                             <Card classBody={"card_home"} classLink={"/liberar_veiculo"} classNameIcon={"ti ti-new-window card-ti"} classFooter={"nome_footer"} text_title={"LIBERAÇÕES"}
@@ -40,7 +40,7 @@ const Administracao = () => {
                         </div>
                     </div>
                 </div>
-                <div className="container d-flex justify-content-center card-container">
+                <div className="container d-flex justify-content-center card-container-2">
                     <div className="row justify-content-center  w-100">
                         <div className="card col-md-4" id="bloco"  >
                             <Card classBody={"card_home"} classLink={"/historico"} classNameIcon={"ti ti-car card-ti"} classFooter={"nome_footer"} text_title={"HISTÓRICO DO VEICULO"}
@@ -56,7 +56,7 @@ const Administracao = () => {
                         </div>
                     </div>
                 </div>
-                <div className="container d-flex justify-content-center card-container">
+                <div className="container d-flex justify-content-center card-container-2">
                     <div className="row justify-content-center  w-100">
                         <div className="card col-md-4" id="bloco"  >
                             <Card classBody={"card_home"} classLink={"/cadastrar_loja"} classNameIcon={"ti ti-home card-ti"} classFooter={"nome_footer"} text_title={"LOJAS"}
@@ -72,25 +72,31 @@ const Administracao = () => {
                         </div>
                     </div>
                 </div>
-                <div className="container d-flex justify-content-center card-container">
-                    <div className="card col-md-4 " id="bloco" >
-                        <Card classBody={"card_home"} classLink={"/registro_venda"} classNameIcon={"ti ti-money card-ti"} classFooter={"nome_footer"} text_title={"REGISTRAR VENDA"}
-                            text_footer={"Registrar a venda de um veículo"} />
+                <div className="container d-flex justify-content-center card-container-2">
+                    <div className="row justify-content-center  w-100">
+                        <div className="card col-md-4 " id="bloco" >
+                            <Card classBody={"card_home"} classLink={"/registro_venda"} classNameIcon={"ti ti-money card-ti"} classFooter={"nome_footer"} text_title={"REGISTRAR VENDA"}
+                                text_footer={"Registrar a venda de um veículo"} />
+                        </div>
+                        <div className="card col-md-4" id="bloco"  >
+                            <Card classBody={"card_home"} classLink={"/consulta_venda"} classNameIcon={"ti ti-layout-tab card-ti"} classFooter={"nome_footer"} text_title={"CONSULTAR VENDA"}
+                                text_footer={"Consultar a venda de um veículo"} />
+                        </div>
+                        <div className="card col-md-4" id="bloco"  >
+                            <Card classBody={"card_home"} classLink={"/vendas_lojista"} classNameIcon={"ti ti-receipt card-ti"} classFooter={"nome_footer"} text_title={"RELATÓRIO DE VENDAS"}
+                                text_footer={"Gerar um relatório de vendas"} />
+                        </div>
                     </div>
-                    <div className="card col-md-4" id="bloco"  >
-                        <Card classBody={"card_home"} classLink={"/consulta_venda"} classNameIcon={"ti ti-layout-tab card-ti"} classFooter={"nome_footer"} text_title={"CONSULTAR VENDA"}
-                            text_footer={"Consultar a venda de um veículo"} />
-                    </div>
-                    <div className="card col-md-4" id="bloco"  >
-                        <Card classBody={"card_home"} classLink={"/vendas_lojista"} classNameIcon={"ti ti-receipt card-ti"} classFooter={"nome_footer"} text_title={"RELATÓRIO DE VENDAS"}
-                            text_footer={"Gerar um relatório de vendas"} />
-                    </div>
+
                 </div>
-                <div className="container d-flex justify-content-center card-container">
-                    <div className="card col-md-4" id="bloco"  >
-                        <Card classBody={"card_home"} classLink={"/cadastro_veiculo_compra"} classNameIcon={"ti ti-car card-ti"} classFooter={"nome_footer"} text_title={"CADASTRO FORPLAN"}
-                            text_footer={<>Cadastrar um veiculo adquirido <br /> por meio do Forplan</>} />
+                <div className="container d-flex justify-content-center card-container-2">
+                    <div className="row justify-content-center  w-100">
+                        <div className="card col-md-4" id="bloco"  >
+                            <Card classBody={"card_home"} classLink={"/cadastro_veiculo_compra"} classNameIcon={"ti ti-car card-ti"} classFooter={"nome_footer"} text_title={"CADASTRO FORPLAN"}
+                                text_footer={<>Cadastrar um veiculo adquirido <br /> por meio do Forplan</>} />
+                        </div>
                     </div>
+
                 </div>
             </ContainerSecundario>
         </div>

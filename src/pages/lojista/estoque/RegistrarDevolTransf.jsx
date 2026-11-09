@@ -5,6 +5,7 @@ import Box from '../../../components/box/Box';
 import Input from '../../../components/input/Input';
 import Form from '../../../components/form/Form';
 import Button from '../../../components/button/Button';
+import ModalBootstrap from '../../../components/modal/ModalBootstrap';
 import { useState, useEffect, useRef } from "react";
 import { useGetData } from '../../../services/useGetData';
 import { usePostData } from '../../../services/usePostData';
@@ -18,6 +19,13 @@ const RegistrarDevolTransf = () => {
     const [buscaPlaca, setBuscaPlaca] = useState("")
     const [observacao, setObservacao] = useState('')
     const [dadosVeiculo, setDadosVeiculo] = useState({ placa: '', marca: '', modelo: '', cor: '', unidade: '' })
+    const [modal, setModal] = useState({
+        aberto: false,
+        titulo: "Atenção",
+        mensagem: "",
+        tipo: "mensagem",
+        acao: null,
+    });
 
     const resetForm = () => {
         setDadosVeiculo({ placa: '', marca: '', modelo: '', cor: '', unidade: '' });
@@ -61,23 +69,32 @@ const RegistrarDevolTransf = () => {
             const dados = await lojaVeiculo.json()
             console.log(`Dados do veículo: ${dados}`)
 
-            if (dados.unidade !== usuarioAtivo) {
+            const alertaAcoes = (titulo, mensagem, aoFechar = null) => {
 
-                window.alert("O veiculo correspondente a essa placa nao pertence a essa unidade. Operação nao permitida.")
-                window.location.reload()
+                setModal({
+                    aberto: true,
+                    titulo,
+                    mensagem,
+                    tipo: "mensagem",
+                    acao: "",
+                    aoFechar
+                });
+            }
+
+            if (dados.unidade !== usuarioAtivo) {
+                alertaAcoes("Atenção!", "O veiculo correspondente a essa placa nao pertence a essa unidade. Operação nao permitida.", resetForm)
             }
 
             // 2 Verifica se ja existe alguma solicitação para a placa informada
             const resVenda = await fetch(`${API_BASE_URL}/solicitacoes/placa/${placaM}`);
 
             if (resVenda.status === 200) {
-                
-                window.alert('Ja consta uma solicitacao registrada para esta placa.');
-                window.location.reload()
-  
+
+                alertaAcoes('Atenção!', 'Ja consta uma solicitacao registrada para esta placa.', resetForm);
+
             } else if (resVenda.status === 404) {
                 setBuscaPlaca(placaM);
-                
+
             }
 
         } catch (erro) {
@@ -118,6 +135,17 @@ const RegistrarDevolTransf = () => {
     const handleSubmit = async (e) => {
         e.preventDefault()
 
+        setModal({
+            aberto: true,
+            titulo: "Confirmação de Cadastro",
+            mensagem: "Confirmar o cadastro do veiculo?",
+            tipo: "confirmacao",
+            acao: confirmarSolicitacao
+        });
+    }
+
+    const confirmarSolicitacao = async () => {
+
         //Dados que serao enviados para o bd
         let dados = {
             placa, id: veiculo.id, marca: veiculo.marca, modelo: veiculo.modelo, cor: veiculo.cor, unidade: veiculo.unidade,
@@ -128,30 +156,40 @@ const RegistrarDevolTransf = () => {
         dados = toUpperFields(dados, ['placa', 'marca', 'modelo', 'cor', 'unidade', 'observacoes'
         ])
 
-        const confirmou = window.confirm("Confirma o registro devolução/transferencia?")
-        if (!confirmou) {
-            window.alert('Registro de devolução/transferencia cancelado')
-            return
+        const alertasAcoes = (titulo, mensagem, aoFechar = null) => {
+            setModal({
+                aberto: true,
+                titulo,
+                mensagem,
+                tipo: "mensagem",
+                acao: "",
+                aoFechar
+            });
         }
 
         // Validação simples dos campos obrigatórios
         if (!window.confirm.ok && observacao === "") {
-            window.alert("Por favor, verifique o formulario novamente e preencha todos os campos")
+
+            alertasAcoes('Atençao!',"Verifique o formulario novamente e preencha todos os campos")
+
         } else {
             try {
-                const resultado = await createData(dados)
-                console.log('Registro realizado com sucesso, ', resultado)
-                window.alert('Registro realizado com sucesso.')
-                resetForm() //Chama a função que limpa o formulario
+                await createData(dados)
+                alertasAcoes('Sucesso','Registro realizado com sucesso.', resetForm)
                 window.scrollTo({ top: 0, behavior: 'smooth' });//Retorna a pagina para o topo
-            } catch (err) {
-                window.alert("Não foi possivel realizar o Registro de devolução ou transferencia.\nFavor entrar em contato com o suporte.")
-                console.error('Falha ao registrar a venda: ', err)
+            } catch {
+                alertasAcoes("Alerta!","Não foi possivel realizar o Registro de devolução ou transferencia.\nFavor entrar em contato com o suporte.", resetForm)
             }
         }
     }
 
-
+    //Função para fechar o modal
+    const fecharModal = () => {
+        setModal(prev => ({
+            ...prev,
+            aberto: false
+        }));
+    };
 
     return (
         <ContainerSecundario>
@@ -170,52 +208,51 @@ const RegistrarDevolTransf = () => {
                         <i className=' ti ti-angle-right ' id='card-path' />
                     </div>
                     <div className="p-2">
-                        <p className='atual'>Registrar Devolução ou Transferencia </p>
+                        <p className='atual'>Devolução ou Transferencia </p>
                     </div>
                 </div>
             </div>
             <div className="container d-flex justify-content-center card-container">
                 <Box>
-                                    <div className='panel-heading'>
-                    <i className='ti ti-car' id="ti-black" ></i>
-                    <p>REGISTRAR A DEVOLUÇÃO OU TRANSFERENCIA DE UM VEÍCULO <br /> Informe a placa do veículo para obter os dados</p>
-                </div>
-                <Form>
-                    <div className="col-12 col-md-2">
-                        <Input label={"Placa:"} type={"text"} maxLength={"7"} style={{ width: '80px' }} nameInput={"placa"}
-                            value={placa} onChange={(e) => setPlaca(e.target.value)} onBlur={handleBlur} required />
+                    <div className='panel-heading'>
+                        <i className='ti ti-share' id="ti-black" ></i>
+                        <p>REGISTRAR A DEVOLUÇÃO OU TRANSFERENCIA DE UM VEÍCULO <br /> Informe a placa do veículo para obter os dados</p>
                     </div>
-                    <div className="col-12 col-md-3">
-                        <Input label={"Marca:"} type={"text"} style={{ width: '150px' }} nameInput={"marca"} value={dadosVeiculo.marca} readOnly />
-                    </div>
-                    <div className="col-12 col-md-3">
-                        <Input label={"Modelo:"} type={"text"} style={{ width: '150px' }} nameInput={"modelo"} value={dadosVeiculo.modelo} readOnly />
-                    </div>
-                    <div className="col-12 col-md-4">
-                        <Input label={"Cor:"} type={"text"} style={{ width: '150px' }} nameInput={"cor"} value={dadosVeiculo.cor} readOnly />
-                    </div>
-                    <div className="col-6 col-md-12">
-                        <TextArea label={"Descrição do Registro:"} type={"text"} style={{ width: '800px' }} nameInput={"descricao"}
-                            value={observacao} onChange={(e) => setObservacao(e.target.value)} placeholder="Descreva aqui o motivo da devolução ou transferência do veiculo" required />
-                    </div>
-                    <div className="col-12 col-md-6">
-                        <div className="col-6 d-flex flex-row-start">
-                            {loading && (
-                                <div className="spinner-grow spinner-grow-sm flex-row-start" style={{ marginRight: '15px' }} role="status" > </div>
-                            )}
-                            <div className="d-flex flex-row-start">
-                                <Button onClick={handleSubmit} variant='primary' >ENVIAR</Button>
+                    <Form>
+                        <div className="col-12 col-md-2">
+                            <Input label={"Placa:"} type={"text"} maxLength={"7"} style={{ width: '80px' }} nameInput={"placa"}
+                                value={placa} onChange={(e) => setPlaca(e.target.value)} onBlur={handleBlur} required />
+                        </div>
+                        <div className="col-12 col-md-3">
+                            <Input label={"Marca:"} type={"text"} style={{ width: '150px' }} nameInput={"marca"} value={dadosVeiculo.marca} readOnly />
+                        </div>
+                        <div className="col-12 col-md-3">
+                            <Input label={"Modelo:"} type={"text"} style={{ width: '150px' }} nameInput={"modelo"} value={dadosVeiculo.modelo} readOnly />
+                        </div>
+                        <div className="col-12 col-md-4">
+                            <Input label={"Cor:"} type={"text"} style={{ width: '150px' }} nameInput={"cor"} value={dadosVeiculo.cor} readOnly />
+                        </div>
+                        <div className="col-6 col-md-12">
+                            <TextArea label={"Descrição do Registro:"} type={"text"} style={{ width: '250px' }} nameInput={"descricao"}
+                                value={observacao} onChange={(e) => setObservacao(e.target.value)} placeholder="Descreva aqui o motivo da devolução ou transferência do veiculo" required />
+                        </div>
+                        <div className="col-12 col-md-6">
+                            <div className="col-6 d-flex flex-row-start">
+                                {loading && (
+                                    <div className="spinner-grow spinner-grow-sm flex-row-start" style={{ marginRight: '15px' }} role="status" > </div>
+                                )}
+                                <div className="d-flex flex-row-start">
+                                    <Button onClick={handleSubmit} variant='primary' >ENVIAR</Button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </Form>
+                    </Form>
                 </Box>
-
+                <>
+                    <ModalBootstrap modal={modal} fecharModal={fecharModal} id="modal" />
+                </>
             </div>
-
-
         </ContainerSecundario>
-
     )
 }
 

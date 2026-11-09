@@ -83,7 +83,7 @@ const ModalCam = () => {
         return () => {
             client.deactivate();
         };
-    }, []);
+    }, [API_ALERT]);
 
     // Sempre que houver mensagens novas, abre o modal
     useEffect(() => {

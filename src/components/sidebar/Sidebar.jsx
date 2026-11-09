@@ -38,7 +38,7 @@ function Sidebar() {
 
   return (
 
-    <div className="corpo_menu">
+    <div className="corpo_menu ">
       <div className="menu">
         <li className="nav-separator" style={{ marginTop: "10px", alignItems: "center", display: "flex", justifyContent: "center" }} >
           <p style={{ color: "white", fontSize: "18px", fontWeight: "500" }}><span>Menu</span></p>

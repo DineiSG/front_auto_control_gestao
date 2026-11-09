@@ -2,7 +2,7 @@ import "../../../assets/css/thead.css";
 import "../../../assets/css/themify-icons.css"
 import { useState, useEffect, useRef } from "react";
 import ContainerSecundario from "../../../components/container/ContainerSecundario";
-import * as XLSX from "xlsx";
+//import * as XLSX from "xlsx";
 import { useGetArray } from "../../../services/useGetArray";
 import { formatDateInfo } from "../../../hooks/formatDate";
 import { calculateDaysInStock } from "../../../hooks/useCalc";
@@ -112,7 +112,7 @@ const HistoricoVeiculo = () => {
     ];
 
     //Funçao que gera o excel da tabela
-    const gerarExcel = () => {
+    /*const gerarExcel = () => {
         const formattedData = filteredBaixas.map(filtrados => ({
             Loja: filtrados.unidade,
             Marca: filtrados.marca,
@@ -129,7 +129,7 @@ const HistoricoVeiculo = () => {
         const workbook = XLSX.utils.book_new()
         XLSX.utils.book_append_sheet(workbook, worksheet, "Data")
         XLSX.writeFile(workbook, "Histórico do Veículo.xlsx")
-    };
+    };*/
 
     return (
         <ContainerSecundario >
@@ -149,7 +149,7 @@ const HistoricoVeiculo = () => {
                         <i className=' ti ti-angle-right ' id='card-path' />
                     </div>
                     <div className="p-2">
-                        <p className='atual'>Histórico do Veículo </p>
+                        <p className='atual'>Histórico Veícular </p>
                     </div>
                 </div>
             </div>
@@ -162,17 +162,19 @@ const HistoricoVeiculo = () => {
                                 <i className='ti ti-car' id="ti-black" />
                             </div>
                             <div className="p-2 ">
-                                <p>HISTÓRICO DE VEÍCULOS</p>
+                                <p>HISTÓRICO DE UM VEÍCULO</p>
                             </div>
                         </div>
                         <div className="d-flex justify-content-between">
                             <div className="p-2 ">
                                 <Input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} tooltipText="Buscar por um veículo pela placa" tooltipPlacement="top"
-                                    placeholder={"Filtro"} id='criterios-pesquisa' onBlur={handleBlur} />
+                                    placeholder={"Filtro"} id='criterios-pesquisa' onBlur={handleBlur} label="Informe a placa: " />
                             </div>
-                            <div className="p-1 ">
-                                <Select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} options={options} className={"quantidade"} />
-                            </div>
+                            {mostrarTabela && (
+                                <div className="p-1 ">
+                                    <Select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} options={options} className={"quantidade"} />
+                                </div>
+                            )}
                         </div>
                     </div>
                     <>
@@ -185,46 +187,47 @@ const HistoricoVeiculo = () => {
                         )}
                         <br />
                         <br />
-
-                        <div className="d-flex justify-content-between" id="pagination" >
-                            <div className="p-2 ">
+                        {mostrarTabela && (
+                            <div className="d-flex justify-content-between" id="pagination" >
+                                {/*<div className="p-2 ">
                                 <div className="d-flex justify-content-start">
                                     <Button onClick={gerarExcel} className="bg-blue-500 text-white px-4 py-2 rounded">
                                         GERAR EXCEL
                                     </Button>
                                 </div>
-                            </div>
-                            <div className="p-4 ">
-                                <p>
-                                    <span>
-                                        Mostrando página {currentPage} de {totalPages} | Total de registros: {filteredBaixas.length}
-                                    </span>
-                                </p>
-                            </div>
+                            </div>*/}
+                                <div className="p-4 ">
+                                    <p>
+                                        <span>
+                                            Mostrando página {currentPage} de {totalPages} | Total de registros: {filteredBaixas.length}
+                                        </span>
+                                    </p>
+                                </div>
 
-                            <div className="d-flex justify-content-end" >
-                                <div className="d-flex justify-content-between">
-                                    <div className="p-2 ">
-                                        <Button onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} variant={currentPage === 1 ? 'disabled' : 'primary'} className={"px-3 py-1 bg-gray-300 rounded"} >
-                                            <i className=' ti ti-angle-left px-3 py-1 bg-gray-300 rounded' id='card-path' />ANTERIOR
-                                        </Button>
-                                    </div>
-                                    <div className="p-4 ">
-                                        <p>
-                                            <span>
-                                                {currentPage}
-                                            </span>
-                                        </p>
-                                    </div>
+                                <div className="d-flex justify-content-end" >
+                                    <div className="d-flex justify-content-between">
+                                        <div className="p-2 ">
+                                            <Button onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} variant={currentPage === 1 ? 'disabled' : 'primary'} className={"px-3 py-1 bg-gray-300 rounded"} >
+                                                <i className=' ti ti-angle-left px-3 py-1 bg-gray-300 rounded' id='card-path' />ANTERIOR
+                                            </Button>
+                                        </div>
+                                        <div className="p-4 ">
+                                            <p>
+                                                <span>
+                                                    {currentPage}
+                                                </span>
+                                            </p>
+                                        </div>
 
-                                    <div className="p-2 ">
-                                        <Button onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages} className={"px-3 py-1 bg-gray-300 rounded"} >
-                                            PRÓXIMA <i className=' ti ti-angle-right px-3 py-1 bg-gray-300 rounded' />
-                                        </Button>
+                                        <div className="p-2 ">
+                                            <Button onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages} className={"px-3 py-1 bg-gray-300 rounded"} >
+                                                PRÓXIMA <i className=' ti ti-angle-right px-3 py-1 bg-gray-300 rounded' />
+                                            </Button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
                     </>
                 </Box>
             </div>

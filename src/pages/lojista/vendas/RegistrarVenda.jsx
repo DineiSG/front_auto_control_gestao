@@ -5,6 +5,8 @@ import Box from '../../../components/box/Box';
 import Input from '../../../components/input/Input';
 import Form from '../../../components/form/Form';
 import Button from '../../../components/button/Button';
+import TextArea from '../../../components/text_area/TextArea';
+import ModalBootstrap from '../../../components/modal/ModalBootstrap';
 import { formatCPF, formatCEP, formatDate, formatTel, formatValue } from "../../../hooks/useMask"
 import { useState, useEffect, useRef } from "react";
 import { useGetData } from '../../../services/useGetData';
@@ -39,7 +41,15 @@ const RegistrarVenda = () => {
   const [dadosCEP, setDadosCEP] = useState({ cep: '', rua: '', cidade: '', bairro: '', uf: '' })
   const [vendedor, setVendedor] = useState('')
   const [idVendedor, setIdVendedor] = useState('')
+  // Estado para controlar o modal
+  const [modal, setModal] = useState({
+    aberto: false,
+    titulo: "Atenção",
+    mensagem: "",
+    tipo: "mensagem",
+    acao: null,
 
+  });
 
   //Limpa o formulario apos o envio
   const resetForm = () => {
@@ -69,9 +79,6 @@ const RegistrarVenda = () => {
   // Só busca o vendendor se soubermos a loja:
   const { data: vendedoresLoja } = useGetData(usuarioAtivo ? `/vendedor/unidade/${encodeURIComponent(usuarioAtivo)}` : null);
 
-
-
-
   // Ref para manter a referência atualizada da última placa buscada
   const ultimaPlacaBuscada = useRef('');
 
@@ -95,23 +102,49 @@ const RegistrarVenda = () => {
       const dados = await lojaVeiculo.json()
       console.log(`Dados do veículo: ${dados}`)
 
+      const alertaUnidade = (titulo, mensagem, aoFechar = null) => {
+        //Mostra o modal com uma mensagem de alerta caso o veiculo nao pertença a unidade do usuario ativo
+        setModal({
+          aberto: true,
+          titulo,
+          mensagem,
+          tipo: "mensagem",
+          acao: "",
+          aoFechar
+        });
+      }
+
       if (dados.unidade !== usuarioAtivo) {
-        window.alert("O veiculo correspondente a essa placa nao pertence a essa unidade. Operação nao permitida.")
-        window.location.reload()
+
+        alertaUnidade("Atenção",
+          "A unidade do veículo não corresponde à unidade do usuário ativo. Operação não permitida",
+          resetForm)
       }
 
       // 1 Verifica se a placa existe em vendas
       const resVenda = await fetch(`${API_BASE_URL}/vendas/placa/${placaM}`);
 
+      const alertaRegVenda = (titulo, mensagem, aoFechar = null) => {
+
+        setModal({
+          aberto: true,
+          titulo,
+          mensagem,
+          tipo: "mensagem",
+          acao: "",
+          aoFechar
+        });
+      }
+
       if (resVenda.status === 200) {
         // Já vendida → limpar e bloquear
-        window.alert('Ja consta uma venda registrada para esta placa. Para confirmar os dados, acesse Consultar Venda.');
+        alertaRegVenda("Atenção", "Esta placa já está registrada como vendida. Para confirmar os dados, acesse Consultar Venda.", resetForm)
 
         setDadosVeiculo({ placa: '', marca: '', modelo: '', cor: '', renavam: '', unidade: '' });
         setBuscaPlaca(placaM);
         // Opcional: exibir mensagem ao usuário
         return;
-      } else if (resVenda.status !== 404) {
+      } else if (resVenda.status === 404) {
         throw new Error(`Erro na API de vendas: ${resVenda.status}`);
       }
 
@@ -222,12 +255,23 @@ const RegistrarVenda = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
+    setModal({
+      aberto: true,
+      titulo: "Confirmação de Solicitação",
+      mensagem: "Confirmar a solicitação de liberação do veículo?",
+      tipo: "confirmacao",
+      acao: confirmarRegistro
+    });
+  }
+
+  const confirmarRegistro = async () => {
+
     const dataRegistro = formatTimestamp(new Date())
 
     let dados = {
       placa, id: veiculo.id, marca: veiculo.marca, modelo: veiculo.modelo, cor: veiculo.cor, unidade: veiculo.unidade,
       renavam: veiculo.renavan, comprador, vendedor, nascimento, rg, cpf, telefone, email, cep: dadosPostais.cep, rua: dadosCEP.rua,
-      endereco, bairro: dadosPostais.neighborhood, cidade: dadosPostais.city, uf: dadosPostais.state, id_vendedor:idVendedor,
+      endereco, bairro: dadosPostais.neighborhood, cidade: dadosPostais.city, uf: dadosPostais.state, id_vendedor: idVendedor,
       valorVenda, valorFipe, valorFinanciamento, valorEntrada, tipoVenda, instituicao, dataRegistro, observacoes, audit: user?.nome
     }
 
@@ -236,31 +280,61 @@ const RegistrarVenda = () => {
       'instituicao', 'tipoVenda', 'observacoes'
     ])
 
-    const confirmou = window.confirm("Confirma o registro da venda?")
-    if (!confirmou) {
-      window.alert('Registro de venda cancelado')
-      return
-    }
-
-    console.log('Dados a serem enviados: ', dados)
 
     // Validação simples dos campos obrigatórios
-    if (!window.confirm.ok && comprador === "" || cpf === "" || rg === "" || telefone === "" || email === "" || cep === "" || endereco === "" || valorFipe === "" ||
+    if (comprador === "" || cpf === "" || rg === "" || telefone === "" || email === "" || cep === "" || endereco === "" || valorFipe === "" ||
       valorVenda === "" || tipoVenda === "") {
-      window.alert("Por favor, verifique o formulario novamente e preencha todos os campos")
+
+      const validacaoCampos = (titulo, mensagem, aoFechar = null) => {
+        setModal({
+          aberto: true,
+          titulo,
+          mensagem,
+          tipo: "mensagem",
+          acao: "",
+          aoFechar
+        });
+      }
+      validacaoCampos("Atenção!", "Por favor, verifique o formulario novamente e preencha todos os campos.")
+
     } else {
       try {
-        const resultado = await createData(dados)
-        console.log('Venda cadastrada com sucesso, ', resultado)
-        window.alert('Venda registrada com sucesso')
-        resetForm() //Chama a função que limpa o formulario
+
+        await createData(dados)
+
+        const registroOk = (titulo, mensagem, aoFechar = null) => {
+          setModal({
+            aberto: true,
+            titulo,
+            mensagem,
+            tipo: "mensagem",
+            acao: "",
+            aoFechar
+          });
+        }
+
+        registroOk("Sucesso", 'Registro de venda realizado com sucesso.', resetForm)
         window.scrollTo({ top: 0, behavior: 'smooth' });//Retorna a pagina para o topo
-      } catch (err) {
-        window.alert("Não foi possivel realizar o Registro de Venda.\nFavor entrar em contato com o suporte.")
-        console.error('Falha ao registrar a venda: ', err)
+
+      } catch {
+
+        const registroFalha = (titulo, mensagem, aoFechar = null) => {
+          setModal({
+            aberto: true,
+            titulo,
+            mensagem,
+            tipo: "mensagem",
+            acao: "",
+            aoFechar
+          })
+        }
+        
+        registroFalha("Atenção!", "Não foi possivel realizar o Registro de Venda.\nFavor entrar em contato com o suporte.", resetForm)
+        
       }
     }
   }
+
 
   // Função para lidar com a mudança de unidade
   const handleVendedorChange = (e) => {
@@ -270,185 +344,200 @@ const RegistrarVenda = () => {
 
   }
 
-  return (
-    <ContainerSecundario>
+  const fecharModal = () => {
+    setModal(prev => ({
+      ...prev,
+      aberto: false
+    }));
+  };
 
-      <div className='container d-flex flex-column ' id="path" >
-        <div className="d-flex align-items-start ">
-          <div className="p-2">
-            <a className="link_a" href="/home">Início</a>
-          </div>
-          <div className="p-2">
-            <i className=' ti ti-angle-right ' id='card-path' />
-          </div>
-          <div className="p-2">
-            <a className="link_a" href="/lojista/">Lojista</a>
-          </div>
-          <div className="p-2">
-            <i className=' ti ti-angle-right ' id='card-path' />
-          </div>
-          <div className="p-2">
-            <p className='atual'>Registrar Venda </p>
+  return (
+    <div>
+      <ContainerSecundario>
+        <div className='container d-flex flex-column ' id="path" >
+          <div className="d-flex align-items-start ">
+            <div className="p-2">
+              <a className="link_a" href="/home">Início</a>
+            </div>
+            <div className="p-2">
+              <i className=' ti ti-angle-right ' id='card-path' />
+            </div>
+            <div className="p-2">
+              <a className="link_a" href="/lojista/">Lojista</a>
+            </div>
+            <div className="p-2">
+              <i className=' ti ti-angle-right ' id='card-path' />
+            </div>
+            <div className="p-2">
+              <p className='atual'>Registrar Venda </p>
+            </div>
           </div>
         </div>
-      </div>
-      <div className="container d-flex justify-content-center card-container">
-        <Box onSubmit={handleSubmit}>
-          <div className='panel-heading'>
-            <i className='ti ti-car' id="ti-black" ></i>
-            <p>REGISTRAR A VENDA DE UM VEÍCULO <br /> Informe os dados do veículo</p>
-          </div>
-          <Form >
+        <div className="container  card-container">
+          <Box onSubmit={handleSubmit}>
+            <div className='panel-heading'>
+              <i className='ti ti-money' id="ti-black" ></i>
+              <p>REGISTRAR A VENDA DE UM VEÍCULO <br /> Informe os dados do veículo</p>
+            </div>
+            <div className={"col-12 col-md-12 col-sm-12"}>
 
-            <div className="col-12 col-md-2">
-              <Input label={"Placa:"} type={"text"} maxLength={"7"} style={{ width: '80px' }} nameInput={"placa"}
-                value={placa} onChange={(e) => setPlaca(e.target.value)} onBlur={handleBlur} required />
-            </div>
-            <div className="col-12 col-md-3">
-              <Input label={"Marca:"} type={"text"} style={{ width: '150px' }} nameInput={"marca"} value={dadosVeiculo.marca} readOnly />
-            </div>
-            <div className="col-12 col-md-3">
-              <Input label={"Modelo:"} type={"text"} style={{ width: '150px' }} nameInput={"modelo"} value={dadosVeiculo.modelo} readOnly />
-            </div>
-            <div className="col-12 col-md-4">
-              <Input label={"Cor:"} type={"text"} style={{ width: '150px' }} nameInput={"cor"} value={dadosVeiculo.cor} readOnly />
-            </div>
-            <div className="col-12 col-md-3">
-              <Input label={"Renavam:"} type={"text"} style={{ width: '150px' }} nameInput={"renavam"} value={dadosVeiculo.renavam} readOnly />
-            </div>
-            <div className="col-12 col-md-6">
-              <Input label={"Loja:"} type={"text"} style={{ width: '150px' }} nameInput={"unidade"} value={dadosVeiculo.unidade} readOnly />
-            </div>
-          </Form>
-          <div className='sub-panel-heading'>
-            <i className='ti ti-user' id="ti-black"></i>
-            <p>DADOS DO COMPRADOR <br /> Informe os dados do comprador</p>
-          </div>
-          <Form>
-            <div className="col-6 col-md-5">
-              <Input label={"Nome Completo:"} type={"text"} style={{ width: '250px' }} nameInput={"comprador"} value={comprador}
-                onChange={(e) => setComprador(e.target.value)} required />
-            </div>
-            <div className="col-6 col-md-4">
-              <Input label={"Data de Nascimento:"} style={{ width: '110px' }} value={nascimento}
-                nameInput={"data"} onChange={(e) => setNascimento(formatDate(e.target.value))} placeholder={"dd/mm/aaaa"} required />
-            </div>
-            <div className="col-6 col-md-3">
-              <Input label={"CPF:"} type={"text"} style={{ width: '150px' }} maxLength={14}
-                nameInput={"modelo"} value={cpf} onChange={(e) => setCpf(formatCPF(e.target.value))} placeholder={"XXX.XXX.XXX-XX"} required />
-            </div>
-            <div className="col-6 col-md-3">
-              <Input label={"RG:"} type={"text"} style={{ width: '150px' }} maxLength={14}
-                nameInput={"rg"} value={rg} onChange={(e) => setRg(e.target.value)} required />
-            </div>
-            <div className="col-6 col-md-3">
-              <Input label={"Telefone:"} type={"text"} style={{ width: '150px' }} maxLength={14}
-                nameInput={"telefone"} value={telefone} onChange={(e) => setTelefone(formatTel(e.target.value))} placeholder={"(XX)XXXXX-XXXX"} required />
-            </div>
-            <div className="col-6 col-md-3">
-              <Input label={"Email:"} type={"text"} style={{ width: '200px' }} nameInput={"email"} value={email} onChange={(e) => setEmail(e.target.value)} required />
-            </div>
-            <div className="col-6 col-md-4">
-              <Input label={"CEP:"} type={"text"} style={{ width: '100px' }} maxLength={9}
-                nameInput={"cep"} value={cep} onChange={(e) => setCep(formatCEP(e.target.value))} onBlur={handleBlur} required />
-            </div>
-            <div className="col-6 col-md-4">
-              <Input label={"Logradouro:"} type={"text"} style={{ width: '250px' }}
-                nameInput={"logradouro"} value={dadosCEP.rua} readOnly />
-            </div>
-            <div className="col-6 col-md-4">
-              <Input label={"Complemento:"} type={"text"} style={{ width: '200px' }} nameInput={"complemento"} value={endereco}
-                onChange={(e) => setEndereco(e.target.value)} required />
-            </div>
-            <div className="col-6 col-md-4">
-              <Input label={"Bairro:"} type={"text"} style={{ width: '200px' }} nameInput={"bairro"} value={dadosPostais.neighborhood} readOnly />
-            </div>
-            <div className="col-12 col-md-4">
-              <Input label={"Cidade:"} type={"text"} style={{ width: '200px' }} nameInput={"cidade"} value={dadosPostais.city} readOnly />
-            </div>
-            <div className="col-12 col-md-3">
-              <Input label={"UF:"} type={"text"} style={{ width: '70px' }} nameInput={"uf"} value={dadosPostais.state} readOnly />
-            </div>
-          </Form>
-          <div className='sub-panel-heading'>
-            <i className='ti ti-money' id="ti-black"></i>
-            <p>DADOS DA TRANSAÇÃO <br /> Informe os dados da venda</p>
-          </div>
-          <Form>{/*Select de vendedores */}
-            <div className='col-12 col-md-4' id='select-all'>
-              <label className="label" id="select-label"><span>Vendedor:</span></label>
-              <select type='text' name='loja' value={vendedor} onChange={handleVendedorChange} className="select-item" style={{ width: '250px' }} required >
-                <option value="" >SELECIONE UM VENDEDOR</option>
-                {vendedoresLoja.map((vendedores) => (
-                  <option key={vendedores.id} value={vendedores.nome} data-id={vendedores.id}>
-                    {vendedores.nome}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="col-12 col-md-6">
-            </div>
-            <br />
-            <div className='negociacao'>
-              <p>Forma de Negociação: </p>
-              <div className="form-check " id="options">
-                <Input label={"Financeira"} name={"tipoNegociacao"} className="form-check-input" type={"radio"} checked={tipoVenda === 'financeira'}
-                  value={"financeira"} onChange={handleVendaChange} onClick={(e) => setTipoVenda(e.target.value)} />
-                {tipoVenda === 'financeira' && (
-                  <Input placeholder="Informe a financeira" nameInput={"financeira"} value={instituicao} onChange={(e) => setInstituicao(e.target.value)} required />
-                )}
-                <Input label={"Banco"} name={"tipoNegociacao"} className="form-check-input" type={"radio"} checked={tipoVenda === 'banco'}
-                  value={"banco"} onChange={handleVendaChange} onClick={(e) => setTipoVenda(e.target.value)} />
-                {tipoVenda === 'banco' && (
-                  <Input placeholder="Informe o banco" nameInput={"banco"} value={instituicao} onChange={(e) => setInstituicao(e.target.value)} required />
-                )}
-                <Input label={"Consorcio"} name={"tipoNegociacao"} className="form-check-input" type={"radio"} checked={tipoVenda === 'consorcio'}
-                  value={"consorcio"} onChange={handleVendaChange} onClick={(e) => setTipoVenda(e.target.value)} />
-                {tipoVenda === 'consorcio' && (
-                  <Input placeholder="Informe o consórcio" nameInput={"consorcio"} value={instituicao} type={"text"} onChange={(e) => setInstituicao(e.target.value)} required />
-                )}
-                <Input label={"À Vista"} name={"tipoNegociacao"} className="form-check-input " type={"radio"} checked={tipoVenda === 'aVista'}
-                  value={"aVista"} onChange={handleVendaChange} onClick={(e) => setTipoVenda(e.target.value)} />
+              <Form >
+                <div className="col-12 col-md-2">
+                  <Input label={"Placa:"} type={"text"} maxLength={"7"} style={{ width: '80px' }} nameInput={"placa"}
+                    value={placa} onChange={(e) => setPlaca(e.target.value)} onBlur={handleBlur} required />
+                </div>
+                <div className="col-12 col-md-3">
+                  <Input label={"Marca:"} type={"text"} style={{ width: '150px' }} nameInput={"marca"} value={dadosVeiculo.marca} readOnly />
+                </div>
+                <div className="col-12 col-md-3">
+                  <Input label={"Modelo:"} type={"text"} style={{ width: '150px' }} nameInput={"modelo"} value={dadosVeiculo.modelo} readOnly />
+                </div>
+                <div className="col-12 col-md-3">
+                  <Input label={"Cor:"} type={"text"} style={{ width: '150px' }} nameInput={"cor"} value={dadosVeiculo.cor} readOnly />
+                </div>
+                <div className="col-12 col-md-3">
+                  <Input label={"Renavam:"} type={"text"} style={{ width: '150px' }} nameInput={"renavam"} value={dadosVeiculo.renavam} readOnly />
+                </div>
+                <div className="col-12 col-md-3">
+                  <Input label={"Loja:"} type={"text"} style={{ width: '150px' }} nameInput={"unidade"} value={dadosVeiculo.unidade} readOnly />
+                </div>
+              </Form>
+              <div className='sub-panel-heading'>
+                <i className='ti ti-user' id="ti-black"></i>
+                <p>DADOS DO COMPRADOR <br /> Informe os dados do comprador</p>
               </div>
-            </div>
-            <div className="col-12 col-md-6">
-              <Input label={"Valor Fipe R$:"} type={"text"} style={{ width: '150px' }} nameInput={"valor_fipe"} value={valorFipe}
-                onChange={(e) => setValorFipe(formatValue(e.target.value))} required />
-            </div>
-            <div className="col-12 col-md-6">
-              <Input label={"Valor Venda R$:"} type={"text"} style={{ width: '150px' }} nameInput={"valor_venda"} value={valorVenda}
-                onChange={(e) => setValorVenda(formatValue(e.target.value))} required />
-            </div>
-            {condicoes && (
-              <>
-                <div className="col-12 col-md-6">
-                  <Input label={"Valor Entrada R$:"} type={"text"} style={{ width: '150px' }} name={"valor_entrada"} value={valorEntrada}
-                    onChange={(e) => setValorEntrada(formatValue(e.target.value))} onBlur={handleBlur} required />
+              <Form className={"col-12"}>
+                <div className="col-12 col-md-5">
+                  <Input label={"Nome Completo:"} type={"text"} style={{ width: '230px' }} nameInput={"comprador"} value={comprador}
+                    onChange={(e) => setComprador(e.target.value)} required />
+                </div>
+                <div className="col-12 col-md-4">
+                  <Input label={"Data de Nascimento:"} style={{ width: '110px' }} value={nascimento}
+                    nameInput={"data"} onChange={(e) => setNascimento(formatDate(e.target.value))} placeholder={"dd/mm/aaaa"} required />
+                </div>
+                <div className="col-12 col-md-3">
+                  <Input label={"CPF:"} type={"text"} style={{ width: '150px' }} maxLength={14}
+                    nameInput={"modelo"} value={cpf} onChange={(e) => setCpf(formatCPF(e.target.value))} placeholder={"XXX.XXX.XXX-XX"} required />
+                </div>
+                <div className="col-12 col-md-3">
+                  <Input label={"RG:"} type={"text"} style={{ width: '150px' }} maxLength={14}
+                    nameInput={"rg"} value={rg} onChange={(e) => setRg(e.target.value)} required />
+                </div>
+                <div className="col-12 col-md-3">
+                  <Input label={"Telefone:"} type={"text"} style={{ width: '150px' }} maxLength={14}
+                    nameInput={"telefone"} value={telefone} onChange={(e) => setTelefone(formatTel(e.target.value))} placeholder={"(XX)XXXXX-XXXX"} required />
+                </div>
+                <div className="col-12 col-md-3">
+                  <Input label={"Email:"} type={"text"} style={{ width: '200px' }} nameInput={"email"} value={email} onChange={(e) => setEmail(e.target.value)} required />
+                </div>
+                <div className="col-12 col-md-10">
+                  <Input label={"CEP:"} type={"text"} style={{ width: '100px' }} maxLength={9}
+                    nameInput={"cep"} value={cep} onChange={(e) => setCep(formatCEP(e.target.value))} onBlur={handleBlur} required />
                 </div>
                 <div className="col-12 col-md-6">
-                  <Input label={"Valor Financiado R$:"} type={"text"} style={{ width: '150px' }} nameInput={"valor_financiado"}
-                    value={valorFinanciamento} onChange={(e) => setValorFinanciamento(e.target.value)} readOnly />
+                  <Input label={"Logradouro:"} type={"text"} style={{ width: '250px' }}
+                    nameInput={"logradouro"} value={dadosCEP.rua} readOnly />
                 </div>
-              </>
-            )}
-            <div className="col-6 col-md-12">
-              <Input label={"Observações:"} type={"text"} style={{ width: '500px' }} nameInput={"observacoes"}
-                value={observacoes} onChange={(e) => setObservacoes(e.target.value)} required />
-            </div>
-            <div className="col-12 col-md-6">
-              <div className="col-6 d-flex flex-row-start">
-                {loading && (
-                  <div className="spinner-grow spinner-grow-sm flex-row-start" style={{ marginRight: '15px' }} role="status" > </div>
-                )}
-                <div className="d-flex flex-row-start">
-                  <Button onClick={handleSubmit} variant='primary' >ENVIAR</Button>
+                <div className="col-12 col-md-6">
+                  <Input label={"Complemento:"} type={"text"} style={{ width: '200px' }} nameInput={"complemento"} value={endereco}
+                    onChange={(e) => setEndereco(e.target.value)} required />
                 </div>
+                <div className="col-12 col-md-4">
+                  <Input label={"Bairro:"} type={"text"} style={{ width: '200px' }} nameInput={"bairro"} value={dadosPostais.neighborhood} readOnly />
+                </div>
+                <div className="col-12 col-md-4">
+                  <Input label={"Cidade:"} type={"text"} style={{ width: '200px' }} nameInput={"cidade"} value={dadosPostais.city} readOnly />
+                </div>
+                <div className="col-12 col-md-6">
+                  <Input label={"UF:"} type={"text"} style={{ width: '70px' }} nameInput={"uf"} value={dadosPostais.state} readOnly />
+                </div>
+              </Form>
+              <div className='sub-panel-heading'>
+                <i className='ti ti-money' id="ti-black"></i>
+                <p>DADOS DA TRANSAÇÃO <br /> Informe os dados da venda</p>
               </div>
+              <Form className={"col-12"}>{/*Select de vendedores */}
+                <div className='col-12 col-md-4' id='select-all'>
+                  <label className="label" id="select-label"><span>Vendedor:</span></label>
+                  <select type='text' name='loja' value={vendedor} onChange={handleVendedorChange} className="select-item" style={{ width: '250px' }} required >
+                    <option value="" >SELECIONE UM VENDEDOR</option>
+                    {vendedoresLoja.map((vendedores) => (
+                      <option key={vendedores.id} value={vendedores.nome} data-id={vendedores.id}>
+                        {vendedores.nome}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="col-12 col-md-6">
+                </div>
+                <br />
+                <div className='negociacao'>
+                  <p>Forma de Negociação: </p>
+                  <div className="form-check " id="options">
+                    <Input label={"Financeira"} name={"tipoNegociacao"} className="form-check-input" type={"radio"} checked={tipoVenda === 'financeira'}
+                      value={"financeira"} onChange={handleVendaChange} onClick={(e) => setTipoVenda(e.target.value)} />
+                    {tipoVenda === 'financeira' && (
+                      <Input placeholder="Informe a financeira" nameInput={"financeira"} value={instituicao} onChange={(e) => setInstituicao(e.target.value)} required />
+                    )}
+                    <Input label={"Banco"} name={"tipoNegociacao"} className="form-check-input" type={"radio"} checked={tipoVenda === 'banco'}
+                      value={"banco"} onChange={handleVendaChange} onClick={(e) => setTipoVenda(e.target.value)} />
+                    {tipoVenda === 'banco' && (
+                      <Input placeholder="Informe o banco" nameInput={"banco"} value={instituicao} onChange={(e) => setInstituicao(e.target.value)} required />
+                    )}
+                    <Input label={"Consorcio"} name={"tipoNegociacao"} className="form-check-input" type={"radio"} checked={tipoVenda === 'consorcio'}
+                      value={"consorcio"} onChange={handleVendaChange} onClick={(e) => setTipoVenda(e.target.value)} />
+                    {tipoVenda === 'consorcio' && (
+                      <Input placeholder="Informe o consórcio" nameInput={"consorcio"} value={instituicao} type={"text"} onChange={(e) => setInstituicao(e.target.value)} required />
+                    )}
+                    <Input label={"À Vista"} name={"tipoNegociacao"} className="form-check-input " type={"radio"} checked={tipoVenda === 'aVista'}
+                      value={"aVista"} onChange={handleVendaChange} onClick={(e) => setTipoVenda(e.target.value)} />
+                  </div>
+                </div>
+                <div className="col-12 col-md-6">
+                  <Input label={"Valor Fipe R$:"} type={"text"} style={{ width: '150px' }} nameInput={"valor_fipe"} value={valorFipe}
+                    onChange={(e) => setValorFipe(formatValue(e.target.value))} required />
+                </div>
+                <div className="col-12 col-md-6">
+                  <Input label={"Valor Venda R$:"} type={"text"} style={{ width: '150px' }} nameInput={"valor_venda"} value={valorVenda}
+                    onChange={(e) => setValorVenda(formatValue(e.target.value))} required />
+                </div>
+                {condicoes && (
+                  <>
+                    <div className="col-12 col-md-6">
+                      <Input label={"Valor Entrada R$:"} type={"text"} style={{ width: '150px' }} name={"valor_entrada"} value={valorEntrada}
+                        onChange={(e) => setValorEntrada(formatValue(e.target.value))} onBlur={handleBlur} required />
+                    </div>
+                    <div className="col-12 col-md-6">
+                      <Input label={"Valor Financiado R$:"} type={"text"} style={{ width: '150px' }} nameInput={"valor_financiado"}
+                        value={valorFinanciamento} onChange={(e) => setValorFinanciamento(e.target.value)} readOnly />
+                    </div>
+                  </>
+                )}
+                <div className="col-6 col-md-12">
+                  <TextArea label={"Observações:"} type={"text"} style={{ width: '250px' }} nameInput={"observacoes"}
+                    value={observacoes} onChange={(e) => setObservacoes(e.target.value)} required />
+                </div>
+                <div className="col-12 col-md-6">
+                  <div className="col-12 d-flex flex-row-start">
+                    {loading && (
+                      <div className="spinner-grow spinner-grow-sm flex-row-start" style={{ marginRight: '15px' }} role="status" > </div>
+                    )}
+                    <div className="d-flex flex-row-start">
+                      <Button onClick={handleSubmit} variant='primary' >ENVIAR</Button>
+                    </div>
+                  </div>
+                </div>
+              </Form>
             </div>
-          </Form>
-        </Box>
-      </div>
-    </ContainerSecundario>
+
+          </Box>
+          <>
+            <ModalBootstrap modal={modal} fecharModal={fecharModal} id="modal" />
+          </>
+        </div>
+      </ContainerSecundario>
+    </div>
+
   )
 }
 

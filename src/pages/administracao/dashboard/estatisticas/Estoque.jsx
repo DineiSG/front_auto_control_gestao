@@ -38,11 +38,23 @@ const Estoque = () => {
     const gerarPDF = () => {
         const element = graphRef.current;
         const opt = {
-            margin: 0.5,
+            margin: [0.8, 0.5, 0.8, 0.5], //[superior, esquerda, inferior, direita]
             filename: 'Estoque Loja.pdf',
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2 },
-            jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+            image: {
+                type: 'jpeg',
+                quality: 1.0
+            },
+            html2canvas: {
+                scale: 3,
+                useCORS: true,
+                backgroundColor: '#ffffff'
+            },
+            jsPDF: {
+
+                unit: 'in',
+                format: 'a4',
+                orientation: 'landscape'
+            }
         };
 
         html2pdf().set(opt).from(element).save();
@@ -50,17 +62,26 @@ const Estoque = () => {
 
     return (
         <div>
-            <div className="panel-heading" style={{ maxWidth: "1000px" }}>
-                <i className='ti ti-bar-chart-alt' id="ti-black" style={{ marginRight: "5px" }} ></i>
-                <p style={{ paddingTop: "5px" }}>ESTOQUE DAS LOJAS<br /> TOTAL: {total} veiculos </p>
-            </div>
-            <div style={{ width: "1000px", height: "400px", alignItems: "center" }} ref={graphRef}>
-                <div style={{ height: 260 }}  >
-                    <Pie options={chartOptions} data={chartData} id="graficos" />
+            <div className="relatorio-pdf" style={{ width: "1000px", height: "500px", alignItems: "center" }} ref={graphRef}>
+                <img src="./aspa.png" alt="Logomarca da empresa" className="relatorio-logo" />
+                <br />
+                <br />
+                <div className="conteudo-relatorio">
+                    <div className="panel-heading" style={{ maxWidth: "1000px" }} >
+                        <i className='ti ti-bar-chart-alt' id="ti-black" style={{ marginRight: "5px" }} ></i>
+                        <h4 style={{ paddingTop: "5px" }}>ESTOQUE DAS LOJAS </h4>
+                    </div>
+                    <br />
+                    <strong><p>TOTAL: {total} veiculos</p></strong>
+                    <div style={{ height: 260 }} >
+                        <Pie options={chartOptions} data={chartData} id="graficos" />
+                    </div>
                 </div>
+
             </div>
-            <div className="d-flex justify-content-end w-100 px-3" style={{ maxWidth: "1000px" }}>
-                <Button onClick={gerarPDF} className="bg-blue-500 text-white px-4 py-2 rounded mt-3">
+            <br />
+            <div className="d-flex justify-content-end w-100 py-3">
+                <Button onClick={gerarPDF} className="bg-blue-500 text-white px-4 py-2 rounded mt-3" >
                     GERAR PDF
                 </Button>
             </div>

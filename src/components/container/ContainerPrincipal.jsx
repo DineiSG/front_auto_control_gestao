@@ -8,7 +8,7 @@
 
     return (
 
-      <div className="container-fluid container_principal min-vh-100 d-flex flex-column p-0" >
+      <div className="container-fluid container_principal min-vh-100 flex-column p-0" >
         {children}
       </div>
 
