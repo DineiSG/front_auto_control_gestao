@@ -1,11 +1,12 @@
 import "chart.js/auto";
-import { Pie } from "react-chartjs-2";
-import { useGetData } from "../../../../services/useGetData";// seu hook de fetch (mock abaixo)
 import useGroupPercent from "../../../../hooks/useGroupPercent";
 import useGroupedChart from "../../../../hooks/useGroupedChart";
 import Button from "../../../../components/button/Button";
 import html2pdf from 'html2pdf.js'
+
 import { useRef } from "react";
+import { Pie } from "react-chartjs-2";
+import { useGetData } from "../../../../services/useGetData";// seu hook de fetch (mock abaixo)
 
 const Estoque = () => {
 

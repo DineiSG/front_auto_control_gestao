@@ -1,16 +1,16 @@
 import "../../../assets/css/thead.css";
 import "../../../assets/css/themify-icons.css"
-import { useState, useEffect, useRef } from "react";
 import ContainerSecundario from "../../../components/container/ContainerSecundario";
-import * as XLSX from "xlsx";
-import { useGetArray } from "../../../services/useGetArray";
-import { formatTimestampWithTime } from "../../../hooks/formatDate";
 import Box from '../../../components/box/Box'
 import Table from "../../../components/table/Table";
 import Input from "../../../components/input/Input";
 import Select from "../../../components/select/Select";
 import Button from "../../../components/button/Button";
 import useExportExcel from "../../../hooks/useExportExcel"
+
+import { useState, useEffect, useRef } from "react";
+import { useGetArray } from "../../../services/useGetArray";
+import { formatTimestampWithTime } from "../../../hooks/formatDate";
 
 const HistoricoAcessos = () => {
 
@@ -21,7 +21,6 @@ const HistoricoAcessos = () => {
     const [mostrarTabela, setMostrarTabela] = useState(false);
     const tabelaRef = useRef(null);
     const ultimaPlacaBuscada = useRef('');
-
 
     //Recebendo os veículos da tabela
     const { data: acessos } = useGetArray(`/acessos`);
@@ -65,14 +64,11 @@ const HistoricoAcessos = () => {
                     v.placa?.toLowerCase().includes(lower)
                 );
             }
-
             // 4. Atualiza estado
             setFilteredAcessos(filtrados);
             setCurrentPage(1);
         }
     }, [acessos, searchTerm]);
-
-
 
     //Passando as colunas com as suas respectivas chaves
     const colunas = [
@@ -85,12 +81,10 @@ const HistoricoAcessos = () => {
 
     console.log('Acessos recebidos:', acessos); // Debug: veja o que está vindo da API
 
-
     //Função que trata da paginação da tabela acessos
     const startIndex = (currentPage - 1) * pageSize;
     const paginatedData = filteredAcessos.slice(startIndex, startIndex + pageSize);
     const totalPages = Math.ceil(filteredAcessos.length / pageSize);
-
 
     //Array de opções para o select
     const options = [
@@ -100,7 +94,6 @@ const HistoricoAcessos = () => {
         { value: 50, label: '50' },
         { value: 100, label: 'TODOS' },
     ];
-
 
     //############# Preparação para exportação do Excel ###############
 

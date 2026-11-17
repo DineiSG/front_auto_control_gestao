@@ -9,7 +9,6 @@ import "../../assets/css/themify-icons.css"
 const GestaoEstoque = () => {
     return (
         <ContainerSecundario>
-
             <div className='container d-flex flex-column ' id="path" >
                 <div className="d-flex align-items-start ">
                     <div className="p-2">
@@ -43,7 +42,6 @@ const GestaoEstoque = () => {
             </div>
             <div className="container d-flex justify-content-center card-container">
                 <div className="row justify-content-center  w-100">
-
                 </div>
             </div>
         </ContainerSecundario>

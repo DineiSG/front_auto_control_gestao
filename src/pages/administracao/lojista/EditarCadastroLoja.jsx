@@ -3,23 +3,30 @@ import "../../../assets/css/themify-icons.css";
 import Form from '../../../components/form/Form';
 import Input from '../../../components/input/Input';
 import Button from '../../../components/button/Button';
+import ModalBootstrap from '../../../components/modal/ModalBootstrap';
 
 import { useState, useRef, useEffect } from 'react';
 import { useGetData } from '../../../services/useGetData';
 import { useUpdateData } from "../../../services/useUpdateData";
-import { useDeleteData } from "../../../services/useDeleteData";
 import { formatTel } from "../../../hooks/useMask";
+import { useDeleteId } from "../../../services/useDeleteId";
 
 const EditarCadastroLoja = () => {
     const [buscaLoja, setBuscaLoja] = useState('');
     const [editavel, setEditavel] = useState(false);
     // estado local com todos os campos
     const [dadosLoja, setDadosLoja] = useState({ id: '', descricao: '', email: '', telefone: '', qtdVeiculos: '', qtdEstoqueExtra: '' });
-
     const resetForm = () => {
         setDadosLoja({ id: '', descricao: '', email: '', telefone: '', qtdVeiculos: '' });
         ultimaLoja.current = ''
     }
+    const [modal, setModal] = useState({
+        aberto: false,
+        titulo: "Atenção",
+        mensagem: "",
+        tipo: "mensagem",
+        acao: null,
+    });
 
     // busca os dados quando houver termo
     const { data: dados, loading } = useGetData(
@@ -27,7 +34,7 @@ const EditarCadastroLoja = () => {
     );
 
     const { updateData } = useUpdateData(`/lojas/${dadosLoja.id}`);
-    const { deleteData } = useDeleteData(`/lojas/${dadosLoja.id}`);
+    const { deleteData } = useDeleteId(`/lojas`);
 
     // para evitar buscas repetidas na API
     const ultimaLoja = useRef('');
@@ -84,9 +91,26 @@ const EditarCadastroLoja = () => {
     const handleEdit = async (e) => {
         e.preventDefault();
 
-        if (!dadosLoja.id) {
-            window.alert('Nenhuma loja selecionada para edição.');
-            return;
+        setModal({
+            aberto: true,
+            titulo: "Confirmação de Edição",
+            mensagem: `Confirma a edição dos dados da loja?`,
+            tipo: "confirmacao",
+            acao: confirmarEdicao
+        });
+    }
+
+    const confirmarEdicao = async () => {
+
+        const alertasAcoes = (titulo, mensagem, aoFechar = null) => {
+            setModal({
+                aberto: true,
+                titulo,
+                mensagem,
+                tipo: "mensagem",
+                acao: "",
+                aoFechar
+            });
         }
 
         const dadosPayload = {
@@ -100,53 +124,75 @@ const EditarCadastroLoja = () => {
 
         const dadosUpper = toUpperFields(dadosPayload, ['descricao']);
 
-        const confirmar = window.confirm("Confirma a edição do cadastro da loja?");
-        if (!confirmar) return;
         if (dadosLoja.qtdVeiculos === '' || isNaN(dadosLoja.qtdVeiculos)) {
-            window.alert('Quantidade de veículos deve ser um número válido.');
+            alertasAcoes("Atenção!", 'Quantidade de veículos deve ser um número válido.');
             return;
         }
 
         try {
             // ajuste conforme assinatura do seu hook
             await updateData(dadosUpper, dadosLoja.id);
-            window.alert('Cadastro editado com sucesso');
-            resetForm()
-        } catch (err) {
-            console.error('Falha ao editar cadastro: ', err);
-            window.alert('Falha ao editar o cadastro da loja.\nEntre em contato com o suporte.');
+            alertasAcoes("Sucesso", 'Cadastro editado com sucesso', resetForm);
+            return
+        } catch {
+            alertasAcoes("Atenção!", 'Falha ao editar o cadastro da loja.\nEntre em contato com o suporte.', resetForm);
+            return
         }
-    };
+    }
 
+    //Excluindo uma loja
     const handleDelete = async (e) => {
         e.preventDefault()
 
-        if (!dadosLoja.id) {
-            window.alert('Nenhuma loja selecionada para exclusão.');
-            return;
+        setModal({
+            aberto: true,
+            titulo: "Confirmação de Exclusao",
+            mensagem: `Confirma a exlusão da loja?`,
+            tipo: "confirmacao",
+            acao: confirmarExclusao
+        });
+    }
+
+    const confirmarExclusao = async () => {
+
+        const alertasAcoes = (titulo, mensagem, aoFechar = null) => {
+            setModal({
+                aberto: true,
+                titulo,
+                mensagem,
+                tipo: "mensagem",
+                acao: "",
+                aoFechar
+            });
         }
 
-        const confirmar = window.confirm("Confirma a exclusão da loja " + dadosLoja.descricao + "?")
-        if (!confirmar) {
+        if (dadosLoja.descricao === '' || dadosLoja.email === '' || dadosLoja.qtdEstoqueExtra === '' || dadosLoja.qtdVeiculos === '' || dadosLoja.telefone === '') {
+            alertasAcoes("Atenção!", "Todos os campos devem ser preenchidos. Verifique o formulario e tente novamente.")
             return
         } else {
             try {
                 await deleteData(dadosLoja.id)
-                window.alert("Loja excluída com sucesso")
-                setDadosLoja({ id: '', descricao: '', email: '', telefone: '', qtdVeiculos: '', qtdEstoqueExtra: '' })
-                setEditavel(false)
-                resetForm()
+                alertasAcoes("Sucesso", "Loja excluída com sucesso.", resetForm)
+                return
             } catch {
-                window.alert("Não foi possível excluir a loja.\nEntre em contato com o suporte.")
+                alertasAcoes("Atenção!", "Não foi possível excluir a loja.\nEntre em contato com o suporte.")
+                return
             }
         }
     }
+
+    const fecharModal = () => {
+        setModal(prev => ({
+            ...prev,
+            aberto: false
+        }));
+    };
 
     return (
         <div>
             <div className='panel-heading'>
                 <i className='ti ti-home' id="ti-black"></i>
-                <p>EDITAR LOJA <br /> Informe os dados e selecione o que deseja editar</p>
+                <p>EDITAR LOJA <br /> Informe o nome da loja para editar os dados</p>
             </div>
             <Form onSubmit={handleEdit}>
                 <div className="col-12 col-md-4">
@@ -196,6 +242,9 @@ const EditarCadastroLoja = () => {
                     </div>
                 </div>
             </Form>
+            <>
+                <ModalBootstrap modal={modal} fecharModal={fecharModal} id="modal" />
+            </>
         </div>
     );
 };

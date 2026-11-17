@@ -1,23 +1,24 @@
+import "../../../assets/css/thead.css";
+import "../../../assets/css/themify-icons.css"
 import ContainerSecundario from '../../../components/container/ContainerSecundario'
 import Box from '../../../components/box/Box';
 import Input from '../../../components/input/Input';
 import Form from '../../../components/form/Form';
 import Button from '../../../components/button/Button';
-
-import "../../../assets/css/thead.css";
-import "../../../assets/css/themify-icons.css"
+import ModalBootstrap from '../../../components/modal/ModalBootstrap';
 
 import { formatDateInfo, formatTimestamp } from '../../../hooks/formatDate';
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useGetData } from '../../../services/useGetData';
 import { usePostData } from '../../../services/usePostData';
 import { useDeleteData } from '../../../services/useDeleteData';
 import { useAuth } from '../../../hooks/useAuth';
 
-
 const BaixarVeiculo = () => {
 
     const [placa, setPlaca] = useState('')
+    const [dadosLiberacao, setDadosLiberacao] = useState({ id: '', tipoMovimentacao: '' })
+    const [buscaLiberacao, setBuscaLiberacao] = useState("")
     const [solicitante, setSolicitante] = useState('')
     const [observacoes, setObservacoes] = useState('')
     const [buscaPlaca, setBuscaPlaca] = useState("")
@@ -27,33 +28,44 @@ const BaixarVeiculo = () => {
         id: '', placa: '', marca: '', modelo: '', cor: '', observacoes: '', renavan: '',
         unidade: '', motivo: '', data_cadastro: '', ano_fabricacao: '', ano_modelo: '', dataRegistro: '',
     })
+    const [modal, setModal] = useState({
+        aberto: false,
+        titulo: "Atenção",
+        mensagem: "",
+        tipo: "mensagem",
+        acao: null,
+    });
 
     //Limpa o formulario apos o envio
     const resetForm = () => {
-        setDadosVeiculo({ placa: '', marca: '', modelo: '', cor: '', renavam: '', unidade: '' });
+        setDadosVeiculo({
+            id: '', placa: '', marca: '', modelo: '', cor: '', observacoes: '', renavan: '', unidade: '', motivo: '', data_cadastro: '',
+            ano_fabricacao: '', ano_modelo: '', dataRegistro: ''
+        });
         setPlaca(''), setSolicitante(''), setObservacoes('')
         ultimaPlacaBuscada.current = ''; // também reseta a ref
     };
 
     const { user } = useAuth()
 
-    // Base URL da API
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
     // buscando os dados no bd
-    const { data: veiculo, } = useGetData(buscaPlaca ? `/veiculos/placa/${placa}` : null)
-
+    const { data: veiculo } = useGetData(buscaPlaca ? `/veiculos/placa/${placa}` : null)
+    console.log(veiculo)
 
     // Enviando dados editados
     const { createData } = usePostData('/baixas')
 
     const { deleteData } = useDeleteData(`/veiculos`)
 
+    //Busca os dados da liberação na tabela liberação para excluir a liberação
+    const { data: liberacao } = useGetData(buscaLiberacao ? `/wow/movimentacoes/placa/${placa}` : null)
+
     // Ref para manter a referência atualizada da última placa buscada
     const ultimaPlacaBuscada = useRef('');
 
     // Função chamada quando o input da placa perde o foco
     const handleBlur = async () => {
+
         const placaM = placa.trim().toUpperCase();
 
         if (placaM.length !== 7) return;
@@ -61,70 +73,10 @@ const BaixarVeiculo = () => {
 
         ultimaPlacaBuscada.current = placaM;
 
-        try {
-            // 1. Verifica se a placa existe em liberações
-            const resLiberacoes = await fetch(`${API_BASE_URL}/liberacoes/placa/${placaM}`);
+        setBuscaPlaca(placaM);
+        setBuscaLiberacao(placaM)
 
-            let temBloqueio = false;
-            console.log(temBloqueio)
-
-            if (resLiberacoes.status === 200) {
-                const data = await resLiberacoes.json();
-                const tipoLiberacao = data.motivo;
-
-                const bloqueios = ['DEVOLUCAO', 'TRANSFERENCIA', 'VENDA', 'TROCA'];
-
-                if (bloqueios.includes(tipoLiberacao)) {
-                    window.alert(
-                        'Este veículo possui uma liberação com baixa agendada e não pode ser baixado manualmente. ' +
-                        'Realize o cancelamento da liberação antes de proceder com a baixa.'
-                    );
-
-                    setDadosVeiculo({
-                        id: '', placa: '', marca: '', modelo: '', cor: '', observacoes: '', renavan: '', unidade: '', motivo: '', data_cadastro: '',
-                        ano_fabricacao: '', ano_modelo: '', dataRegistro: ''
-                    });
-
-                    setBuscaPlaca(placaM);
-                    return; // Interrompe aqui: não deve cadastrar
-                }
-            }
-
-            // 2. Buscar dados do veículo
-            const resVeiculo = await fetch(`${API_BASE_URL}/veiculos/placa/${placaM}`);
-
-            if (resVeiculo.status === 200) {
-                const dados = await resVeiculo.json();
-
-                setDadosVeiculo({
-                    marca: dados.marca || '',
-                    modelo: dados.modelo || '',
-                    cor: dados.cor || '',
-                    renavan: dados.renavan || '',
-                    unidade: dados.unidade || '',
-                    ano_modelo: dados.ano_modelo || '',
-                    ano_fabricacao: dados.ano_fabricacao || '',
-                    data_cadastro: formatDateInfo(dados.data_registro),
-                });
-                setMostrarSelect(true);
-            } else {
-                // Veículo não encontrado
-                setMostrarSelect(false);
-                setDadosVeiculo({
-                    id: '', placa: '', marca: '', modelo: '', cor: '', observacoes: '', renavan: '',
-                    unidade: '', motivo: '', data_cadastro: '', ano_fabricacao: '', ano_modelo: '', dataRegistro: ''
-                });
-                setSelectedMotivo('');
-                setSolicitante('');
-                setObservacoes('');
-            }
-
-            setBuscaPlaca(placaM);
-
-        } catch (erro) {
-            console.error('Erro ao buscar placa:', erro);
-            setBuscaPlaca(placaM);
-        }
+        setMostrarSelect(true);
     };
 
     // Função para converter campos em CAIXA ALTA
@@ -138,41 +90,103 @@ const BaixarVeiculo = () => {
         return copy
     }
 
+    // Recebendo os dados do veiculo
+    useEffect(() => {
+        if (veiculo && !veiculo.erro) {
+            console.log(veiculo)
+            setDadosVeiculo(prev => ({
+                ...prev,
+                marca: veiculo.marca || '',
+                modelo: veiculo.modelo || '',
+                cor: veiculo.cor || '',
+                renavan: veiculo.renavan || '',
+                unidade: veiculo.unidade || '',
+                ano_modelo: veiculo.ano_modelo || '',
+                ano_fabricacao: veiculo.ano_fabricacao || '',
+                data_cadastro: formatDateInfo(veiculo.data_registro),
+            }))
+        } else if (veiculo && veiculo.erro) {
+            console.log('Veículo não encontrado');;
+        }
+
+        if (liberacao && !liberacao.erro) {
+            console.log('Dados da liberaçao: ', liberacao)
+            setDadosLiberacao(prev => ({
+                ...prev,
+                id: liberacao.id || '',
+                tipoMovimentacao: liberacao.tipoMovimentacao
+
+            }))
+        } else if (liberacao && liberacao.erro) {
+            console.log('Nenhuma liberação encontrada para a placa informada.');;
+        }
+    }, [veiculo, liberacao])
+
 
     const handleSubmit = async (e) => {
         e.preventDefault()
+
+        setModal({
+            aberto: true,
+            titulo: "Confirmação de Baixa",
+            mensagem: `Confirma a baixa do veículo por motivo de ${selectedMotivo}?`,
+            tipo: "confirmacao",
+            acao: confirmarBaixa
+        });
+    }
+
+    const confirmarBaixa = async () => {
+
+        const alertasAcoes = (titulo, mensagem, aoFechar = null) => {
+            setModal({
+                aberto: true,
+                titulo,
+                mensagem,
+                tipo: "mensagem",
+                acao: "",
+                aoFechar
+            });
+        }
 
         const dataRegistro = formatTimestamp(new Date())
 
         let dados = {
             id: veiculo.id, placa, marca: dadosVeiculo.marca, modelo: dadosVeiculo.modelo, cor: dadosVeiculo.cor, renavan: dadosVeiculo.renavan,
             unidade: dadosVeiculo.unidade, data_cadastro: dadosVeiculo.data_cadastro, solicitante, observacoes, motivo: selectedMotivo,
-            ano_fabricacao: veiculo.ano_fabricacao, ano_modelo: dadosVeiculo.ano_modelo, dataRegistro, audit:user?.nome
-
+            ano_fabricacao: veiculo.ano_fabricacao, ano_modelo: dadosVeiculo.ano_modelo, dataRegistro, audit: user?.nome
         }
 
         dados = toUpperFields(dados, ['placa', 'marca', 'modelo', 'cor', 'unidade', 'motivo', 'solicitante', 'observacoes'])
-        // Padroniza para caixa alta
-        console.log('Dados a serem enviados: ', dados)
 
-        const confirmar = window.confirm("Você tem certeza que deseja realizar a baixa deste veículo?");
+        if (dadosVeiculo.marca === "" || dadosVeiculo.modelo === "" || dadosVeiculo.cor === "" ||
+            dadosVeiculo.unidade === "" || selectedMotivo === "" || solicitante === "") {
+            alertasAcoes("Atencao", "Por favor, verifique o formulario novamente. Todos os campos precisam ser preenchidos.")
 
-        if (confirmar && dadosVeiculo.marca === "" || dadosVeiculo.modelo === "" || dadosVeiculo.cor === "" ||
-            dadosVeiculo.unidade === "" || dadosVeiculo.motivo === "" || solicitante === "") {
-            window.alert("Por favor, verifique o formulario novamente. Todos os campos precisam ser preenchidos.")
+        } else if (dadosLiberacao.tipoMovimentacao === 'VENDA' || dadosLiberacao.tipoMovimentacao === 'DEVOLUCAO' || dadosLiberacao.tipoMovimentacao === "TRANSFERENCIA") {
+            alertasAcoes('Atenção!', `O veículo informado possui uma liberação por ${dadosLiberacao.tipoMovimentacao} em aberto.\n
+                Antes de realizar a baixa, cancele a liberação.`, resetForm)
+            return
         } else {
-            try {
 
+            try {
                 await createData(dados)
                 await deleteData(placa)
-                window.alert('Baixa realizada com sucesso')
-                resetForm()
-            } catch (err) {
-                console.error('Falha ao baixar o veiculo: ', err)
-                window.alert('Falha ao baixar o veículo.\nEntre em contato com o suporte.')
+                alertasAcoes("Sucesso", 'Baixa realizada com sucesso', resetForm)
+                return
+            } catch {
+                alertasAcoes("Atenção!", 'Falha ao registrar o veículo. Entre em contato com suporte.', resetForm)
+                return
             }
         }
     }
+
+    //Função que fecha o modal
+    const fecharModal = () => {
+        setModal(prev => ({
+            ...prev,
+            aberto: false
+        }));
+    };
 
     return (
         <ContainerSecundario>
@@ -253,12 +267,12 @@ const BaixarVeiculo = () => {
                         <div className="d-flex flex-row-reverse">
                             <Button onClick={handleSubmit} variant='primary' >SALVAR</Button>
                         </div>
-
                     </Form>
                 </Box>
-
+                <>
+                    <ModalBootstrap modal={modal} fecharModal={fecharModal} id="modal" />
+                </>
             </div>
-
         </ContainerSecundario>
     )
 }

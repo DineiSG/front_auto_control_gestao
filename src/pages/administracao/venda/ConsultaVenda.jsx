@@ -4,12 +4,14 @@ import "../../../assets/css/themify-icons.css"
 import Box from '../../../components/box/Box';
 import Input from '../../../components/input/Input';
 import Form from '../../../components/form/Form';
+import Button from '../../../components/button/Button';
+import ModalBootstrap from '../../../components/modal/ModalBootstrap';
+
 import { useState, useEffect, useRef } from "react";
 import { useGetData } from '../../../services/useGetData';
 import { useUpdateData } from '../../../services/useUpdateData';
 import { useDeleteData } from '../../../services/useDeleteData';
 import { formatDateInfo } from '../../../hooks/formatDate';
-import Button from '../../../components/button/Button';
 import { formatTel, formatCEP, formatCPF, formatDate, formatValue } from "../../../hooks/useMask"
 import { calcValorFinanceiro } from '../../../hooks/useCalc';
 
@@ -23,6 +25,13 @@ const ConsultaVenda = () => {
         comprador: '', telefone: '', email: '', cep: '', endereco: '', bairro: '', cidade: '', uf: '', nascimento: '', cpf: '', rg: '',
         valorFipe: '', valorVenda: '', valorEntrada: '', valorFinanciamento: '', observacoes: '', tipoVenda: '', instituicao: '', dataRegistro: '', rua: ''
     })
+    const [modal, setModal] = useState({
+        aberto: false,
+        titulo: "Atenção",
+        mensagem: "",
+        tipo: "mensagem",
+        acao: null,
+    });
 
     const resetForm = () => {
         setDadosVeiculo({
@@ -39,6 +48,9 @@ const ConsultaVenda = () => {
         setDadosVeiculo(prev => ({ ...prev, valorFinanciamento: resultado }));
     }, [dadosVeiculo.valorVenda, dadosVeiculo.valorEntrada])
 
+    // Base URL da API
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
     // buscando os dados no bd
     const { data: veiculo } = useGetData(buscaPlaca ? `/vendas/placa/${placa}` : null)
 
@@ -51,25 +63,41 @@ const ConsultaVenda = () => {
     const ultimaPlacaBuscada = useRef('');
 
     // Função chamada quando o input da placa perde o foco
-    const handleBlur = () => {
+    const handleBlur = async () => {
 
-        const placaM = placa
+        const placaM = placa.trim().toUpperCase();
+        if (placaM.length !== 7) return;
+        if (placaM === ultimaPlacaBuscada.current) return;
 
-        if (placaM.length === 7) {
-            // Só busca se a placa for diferente da última buscada
-            if (placaM !== ultimaPlacaBuscada.current) {
-                console.log('Buscando placa:', placaM); // Debug
-                ultimaPlacaBuscada.current = placaM;
-                setBuscaPlaca(placaM);
-            }
-            setEditavel(true);
-        } else {
-            setDadosVeiculo({
-                placa: '', marca: '', modelo: '', cor: '', renavan: '', unidade: '', vendedor: '',
-                comprador: '', telefone: '', email: '', cep: '', endereco: '', bairro: '', cidade: '', uf: '', nascimento: '', cpf: '', rg: '',
-                valorFipe: '', valorVenda: '', valorEntrada: '', valorFinanciamento: '', observacoes: '', tipoVenda: '', instituicao: '', rua: ''
+        const alertasAcoes = (titulo, mensagem, aoFechar = null) => {
+            setModal({
+                aberto: true,
+                titulo,
+                mensagem,
+                tipo: "mensagem",
+                acao: "",
+                aoFechar
             });
         }
+
+        // 1 Verifica se a placa existe em vendas
+        const resVenda = await fetch(`${API_BASE_URL}/vendas/placa/${placaM}`);
+
+        if (resVenda.status === 404) {
+
+            alertasAcoes("Atenção!", 'Não existe venda registrada para esta placa.', resetForm);
+            return
+
+        } else if (placaM !== ultimaPlacaBuscada.current) {
+            ultimaPlacaBuscada.current = placaM;
+            setBuscaPlaca(placaM);
+            setEditavel(true);
+
+        } else {
+            resetForm
+        }
+
+
     };
 
     // Preencher campos quando os dados solicitados chegarem
@@ -147,6 +175,28 @@ const ConsultaVenda = () => {
     const handleSubmit = async (e) => {
         e.preventDefault()
 
+        setModal({
+            aberto: true,
+            titulo: "Confirmação de Edição",
+            mensagem: `Confirma a edição do registro da venda do veículo?`,
+            tipo: "confirmacao",
+            acao: confirmarEdicao
+        });
+    }
+
+    const confirmarEdicao = async () => {
+
+        const alertasAcoes = (titulo, mensagem, aoFechar = null) => {
+            setModal({
+                aberto: true,
+                titulo,
+                mensagem,
+                tipo: "mensagem",
+                acao: "",
+                aoFechar
+            });
+        }
+
         let dados = {
             placa, id: dadosVeiculo.id, marca: dadosVeiculo.marca, modelo: dadosVeiculo.modelo, cor: dadosVeiculo.cor, renavam: dadosVeiculo.renavan,
             unidade: dadosVeiculo.unidade, ano_fabricacao: dadosVeiculo.ano_fabricacao, ano_modelo: dadosVeiculo.ano_modelo, vendedor: dadosVeiculo.vendedor,
@@ -159,27 +209,42 @@ const ConsultaVenda = () => {
 
         dados = toUpperFields(dados, ['placa', 'marca', 'modelo', 'cor', 'unidade', 'vendedor', 'comprador', 'cidade', 'uf', 'bairro', 'endereco', 'instituicao', 'tipoVenda'])
         // Padroniza para caixa alta
-        console.log('Dados a serem enviados: ', dados)
+        //console.log('Dados a serem enviados: ', dados)
 
-        const confirmar = window.confirm("Confirma a edição dos dados da venda do veículo?");
-
-        if (confirmar === true) {
-            try {
-                const resultado = await updateData(dados, dadosVeiculo.id)
-                console.log('Dados editados com sucesso, ', resultado)
-                window.alert('Dados editados com sucesso')
-                resetForm()
-
-
-            } catch (err) {
-                console.log(err)
-                window.alert("Falha ao editar o Registro de Venda.\nEntre em contato com o suporte.")
-            }
+        try {
+            await updateData(dados, dadosVeiculo.id)
+            alertasAcoes("Sucesso", 'Dados editados com sucesso', resetForm)
+            return
+        } catch {
+            alertasAcoes("Atencao!", "Falha ao editar o Registro de Venda.\nEntre em contato com o suporte.", resetForm)
+            return
         }
-
     }
+
     const handleDelete = async (e) => {
         e.preventDefault()
+
+        setModal({
+            aberto: true,
+            titulo: "Confirmação de Exclusao",
+            mensagem: `Confirma a exclusao do registro da venda do veículo?`,
+            tipo: "confirmacao",
+            acao: confirmarExclusao
+        });
+    }
+
+    const confirmarExclusao = async () => {
+
+        const alertasAcoes = (titulo, mensagem, aoFechar = null) => {
+            setModal({
+                aberto: true,
+                titulo,
+                mensagem,
+                tipo: "mensagem",
+                acao: "",
+                aoFechar
+            });
+        }
 
         let dados = {
             placa, id: dadosVeiculo.id, marca: dadosVeiculo.marca, modelo: dadosVeiculo.modelo, cor: dadosVeiculo.cor, renavam: dadosVeiculo.renavan,
@@ -191,22 +256,22 @@ const ConsultaVenda = () => {
             nascimento: dadosVeiculo.nascimento, cpf: dadosVeiculo.cpf, rg: dadosVeiculo.rg, rua: dadosVeiculo.rua, dataRegistro: dadosVeiculo.dataRegistro
         }
 
-        const confirmar = window.confirm("Confirma a exclusao do registro de venda?");
-
-        if (confirmar === true) {
-            try {
-                const resultado = await deleteData(dados.placa)
-                console.log('Registro excluido com sucesso, ', resultado)
-                window.alert('Registro de Venda excluido com sucesso')
-                resetForm()
-
-            } catch (err) {
-                console.log(err)
-                window.alert("Não foi possivel excluir o Registro de Venda.\nFavor entrar em contato com o suporte.")
-            }
+        try {
+            await deleteData(dados.placa)
+            alertasAcoes("Sucesso",'Registro de venda excluido com sucesso.', resetForm )
+            return
+        } catch {
+           alertasAcoes("Atenção!","Não foi possivel excluir o Registro de Venda.\nFavor entrar em contato com o suporte.", resetForm)
+           return
         }
-
     }
+
+    const fecharModal = () => {
+        setModal(prev => ({
+            ...prev,
+            aberto: false
+        }));
+    };
 
     return (
         <ContainerSecundario>
@@ -357,9 +422,10 @@ const ConsultaVenda = () => {
 
                     </Form>
                 </Box>
-
+                <>
+                    <ModalBootstrap modal={modal} fecharModal={fecharModal} id="modal" />
+                </>
             </div>
-
         </ContainerSecundario>
     )
 }

@@ -1,13 +1,6 @@
 import "../../../assets/css/thead.css";
 import "../../../assets/css/themify-icons.css"
 import "../Administracao.css";
-
-import { useState, useEffect, useRef } from "react";
-import { useGetArray } from "../../../services/useGetArray";
-import { formatDateInfo } from "../../../hooks/formatDate";
-import { useFilterPeriodo } from "../../../hooks/useFilterPeriodo";
-
-
 import Box from '../../../components/box/Box'
 import Table from "../../../components/table/Table";
 import Input from "../../../components/input/Input";
@@ -16,6 +9,11 @@ import Button from "../../../components/button/Button";
 import ContainerSecundario from "../../../components/container/ContainerSecundario";
 import RelatorioSaidas from "./RelatorioSaidas";
 import useExportExcel from "../../../hooks/useExportExcel"
+
+import { useState, useEffect, useRef } from "react";
+import { useGetArray } from "../../../services/useGetArray";
+import { formatDateInfo } from "../../../hooks/formatDate";
+import { useFilterPeriodo } from "../../../hooks/useFilterPeriodo";
 
 const RelatoriosMovimentacao = () => {
 

@@ -5,12 +5,13 @@ import Box from "../../../components/box/Box"
 import ContainerSecundario from "../../../components/container/ContainerSecundario"
 import Input from '../../../components/input/Input';
 import Button from '../../../components/button/Button';
+import ModalBootstrap from '../../../components/modal/ModalBootstrap';
+import EditarCadastroLoja from "./EditarCadastroLoja";
 
 import { useState } from 'react';
 import { usePostData } from '../../../services/usePostData';
 import { formatTimestamp } from '../../../hooks/formatDate';
 import { formatCNPJ, formatTel } from "../../../hooks/useMask"
-import EditarCadastroLoja from "./EditarCadastroLoja";
 import { useAuth } from "../../../hooks/useAuth"
 
 const CadastroLoja = () => {
@@ -21,11 +22,20 @@ const CadastroLoja = () => {
   const [qtdVeiculos, setQtdVeiculos] = useState('')
   const [qtdEstoqueExtra, setQtdEstoqueExtra] = useState('')
   const [cnpj, setCnpj] = useState('')
+  const [modal, setModal] = useState({
+    aberto: false,
+    titulo: "Atenção",
+    mensagem: "",
+    tipo: "mensagem",
+    acao: null,
+  });
 
-  const resertForm = () => {
+  const resetForm = () => {
     setCnpj(''), setDescricao(''), setEmail(''), setQtdVeiculos(''), setTelefone(''), setQtdEstoqueExtra('')
   }
 
+  // Base URL da API
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   // Envia os dados do veículo
   const { createData } = usePostData('/lojas')
@@ -47,33 +57,67 @@ const CadastroLoja = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
+    setModal({
+      aberto: true,
+      titulo: "Confirmação de Cadastro",
+      mensagem: `Confirma o cadastro da loja?`,
+      tipo: "confirmacao",
+      acao: confirmarCadastro
+    });
+  }
+
+  const confirmarCadastro = async () => {
+
+    const alertasAcoes = (titulo, mensagem, aoFechar = null) => {
+      setModal({
+        aberto: true,
+        titulo,
+        mensagem,
+        tipo: "mensagem",
+        acao: "",
+        aoFechar
+      });
+    }
+
     const data_registro = formatTimestamp(new Date())
+
+    const resCnpj = await fetch(`${API_BASE_URL}/lojas`);
+    const validarLoja = await resCnpj.json()
+
+    //Esta funçao serve para verificar se o cnpj informado no formulario ja se encontra cadastrado
+    const resultado = validarLoja.some(validarLoja => validarLoja.cnpj === cnpj)
 
     // Envia os dados da loja
     let dados = { descricao, telefone, email, qtdVeiculos, qtdEstoqueExtra, data_registro, cnpj, audit: user?.nome }
-    console.log('Dados a serem enviados: ', dados)
 
     // Padroniza para caixa alta
     dados = toUpperFields(dados, ['descricao'])
 
-    // Verifica se todos os campos obrigatórios estão preenchidos
-    const confirmar = window.confirm("Confirma o cadastro da loja?");
-
-    if (confirmar && descricao === '' || telefone === '' || email === '' || qtdVeiculos === '' || data_registro === '' || cnpj === '') {
-      window.alert("Todos os campos devem ser preenchidos.")
+    if (descricao === '' || telefone === '' || email === '' || qtdVeiculos === '' || data_registro === '' || cnpj === '') {
+      alertasAcoes("Atenção", "Todos os campos devem ser preenchidos. Verifique o formulario e tente novamente.", resetForm)
       return
-    }
-    else {
+    } else if (resultado === true) {
+      alertasAcoes("Atenção!", `Esta loja ja se encontra cadastrada na base de dados. Operação nao permitida!`, resetForm)
+      return
+    } else {
+
       try {
         await createData(dados)
-        window.alert('Loja cadastrada com sucesso')
-        resertForm()
-      } catch (err) {
-        console.error('Falha ao registrar a loja: ', err)
-        window.alert('Falha ao cadastrar a loja.\nEntre em contato com o suporte.')
+        alertasAcoes("Sucesso", `Cadastro da loja ${descricao} realizado com sucesso.`, resetForm)
+        return
+      } catch {
+        alertasAcoes("Atencao!", 'Falha ao cadastrar a loja.\nEntre em contato com o suporte.', resetForm)
+        return
       }
     }
   }
+
+  const fecharModal = () => {
+    setModal(prev => ({
+      ...prev,
+      aberto: false
+    }));
+  };
 
 
   return (
@@ -138,6 +182,9 @@ const CadastroLoja = () => {
             <br />
             <EditarCadastroLoja />
           </Box>
+          <>
+            <ModalBootstrap modal={modal} fecharModal={fecharModal} id="modal" />
+          </>
         </div>
       </ContainerSecundario>
     </div>

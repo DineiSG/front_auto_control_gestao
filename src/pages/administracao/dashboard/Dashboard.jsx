@@ -1,5 +1,6 @@
 /*Essa pagina receberá os componentes de acesso à Dashboard */
 import { useState } from 'react'
+
 import ContainerSecundario from '../../../components/container/ContainerSecundario'
 import Box from '../../../components/box/Box'
 import Marca from './estatisticas/Marca'
@@ -14,7 +15,6 @@ import VendaInstituicaoQuantidade from './estatisticas/VendaInstituicaoQuantidad
 const Dashboard = () => {
 
   const [select, setSelect] = useState(false)
-
 
   const handleSelectChange = (e) => {
     setSelect(e.target.value);

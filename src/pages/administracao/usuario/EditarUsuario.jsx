@@ -3,6 +3,7 @@ import "../../../assets/css/themify-icons.css";
 import Form from '../../../components/form/Form';
 import Input from '../../../components/input/Input';
 import Button from '../../../components/button/Button';
+import ModalBootstrap from '../../../components/modal/ModalBootstrap';
 
 import { useState, useRef, useEffect } from 'react';
 import { useGetData } from '../../../services/useGetData';
@@ -14,7 +15,13 @@ const EditarUsuario = () => {
   const [buscaUsuario, setBuscaUsuario] = useState('')
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('')
-
+  const [modal, setModal] = useState({
+    aberto: false,
+    titulo: "Atenção",
+    mensagem: "",
+    tipo: "mensagem",
+    acao: null,
+  });
 
   const resetForm = () => {
     setDadosUsuario({ username: '', nome: '', unidade: '', tipo: '' })
@@ -70,49 +77,88 @@ const EditarUsuario = () => {
   const handleEdit = async (e) => {
     e.preventDefault();
 
-    let alterData = { password }
-
-    const confirmar = window.confirm("Confirma a alteração da senha do usuario: " + dadosUsuario.nome + " ?")
-    if (!confirmar) {
-      return
-    } else {
-      try {
-        await updateData(alterData, dadosUsuario.id)
-        window.alert("Senha alterada com sucesso")
-        resetForm()
-      } catch {
-        window.alert("Não foi possivel alterar a senha. Entre em contato com o suporte.")
-      }
-    }
+    setModal({
+      aberto: true,
+      titulo: "Confirmação de Edição",
+      mensagem: `Confirma a alteração de senha do usuário?`,
+      tipo: "confirmacao",
+      acao: confirmarEdicao
+    });
   }
 
+  const confirmarEdicao = async () => {
+    let alterData = { password }
+
+    const alertasAcoes = (titulo, mensagem, aoFechar = null) => {
+      setModal({
+        aberto: true,
+        titulo,
+        mensagem,
+        tipo: "mensagem",
+        acao: "",
+        aoFechar
+      });
+    }
+
+    try {
+      await updateData(alterData, dadosUsuario.id)
+      alertasAcoes("Sucesso", "Senha alterada com sucesso", resetForm)
+      return
+    } catch {
+      alertasAcoes("Atençaõ!", "Não foi possivel alterar a senha. Entre em contato com o suporte.", resetForm)
+      return
+    }
+
+  }
 
   const handleDelete = async (e) => {
     e.preventDefault()
 
+    setModal({
+      aberto: true,
+      titulo: "Confirmação de Exclusão",
+      mensagem: `Confirma a exclusao dos dados do usuário?`,
+      tipo: "confirmacao",
+      acao: confirmarExclusao
+    });
+  }
+
+  const confirmarExclusao = async () => {
+
+    const alertasAcoes = (titulo, mensagem, aoFechar = null) => {
+      setModal({
+        aberto: true,
+        titulo,
+        mensagem,
+        tipo: "mensagem",
+        acao: "",
+        aoFechar
+      });
+    }
     let deleteUser = (dadosUsuario.id)
 
-    const confirmar = window.confirm("Confirma a exclusao do usuario " + dados.nome + "?")
-    if (!confirmar) {
+    try {
+      await deleteData(deleteUser)
+      alertasAcoes("Sucesso", "Usuário excluido com sucesso.", resetForm)
       return
-    } else {
-      try {
-        await deleteData(deleteUser)
-        window.alert("Usuário excluido com sucesso")
-        resetForm()
-        console.log("Usuario criado")
-        window.scrollTo({ top: 0, behavior: 'smooth'})
-      } catch {
-        window.alert("Não foi possivel excluir o usuario. Entre em contato com o suporte.")
-      }
+    } catch {
+      alertasAcoes("Atenção!", "Não foi possivel excluir o usuario. Entre em contato com o suporte.", resetForm)
+      return
     }
   }
+
+  const fecharModal = () => {
+    setModal(prev => ({
+      ...prev,
+      aberto: false
+    }));
+  };
 
   return (
     <div>
       <div className='panel-heading'>
         <i className='ti ti-search' id="ti-black"></i>
-        <p>EDITAR A SENHA DE UM USUARIO <br /> Informe o username</p>
+        <p>ALTERAR A SENHA DE UM USUARIO OU EXCLUIR UM USUÁRIO  <br /> Informe o username</p>
       </div>
       <Form onSubmit={handleEdit}>
         <div className="col-12 col-md-4">
@@ -173,6 +219,9 @@ const EditarUsuario = () => {
           </div>
         </div>
       </Form>
+      <>
+        <ModalBootstrap modal={modal} fecharModal={fecharModal} id="modal" />
+      </>
     </div>
   )
 }

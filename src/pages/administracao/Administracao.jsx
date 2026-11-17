@@ -27,7 +27,7 @@ const Administracao = () => {
                 <div className="container d-flex justify-content-center card-container-2">
                     <div className="row justify-content-center  w-100">
                         <div className="card col-md-4 " id="bloco" >
-                            <Card classBody={"card_home"} classLink={"/liberar_veiculo"} classNameIcon={"ti ti-new-window card-ti"} classFooter={"nome_footer"} text_title={"LIBERAÇÕES"}
+                            <Card classBody={"card_home"} classLink={"/liberar_veiculo"} classNameIcon={"ti ti-new-window card-ti"} classFooter={"nome_footer"} text_title={"LIBERAR VEÍCULO"}
                                 text_footer={<> Solicitar liberação de um veículo <br /> Solicitar o cancelamento de uma liberação </>} />
                         </div>
                         <div className="card col-md-4" id="bloco"  >
@@ -47,7 +47,7 @@ const Administracao = () => {
                                 text_footer={<>Consultar o historico do veículo</>} />
                         </div>
                         <div className="card col-md-4" id="bloco"  >
-                            <Card classBody={"card_home"} classLink={"/historico_acessos"} classNameIcon={"ti ti-exchange-vertical card-ti"} classFooter={"nome_footer"} text_title={"ACESSOS"}
+                            <Card classBody={"card_home"} classLink={"/historico_acessos"} classNameIcon={"ti ti-exchange-vertical card-ti"} classFooter={"nome_footer"} text_title={"HISTÓRICO DE ENTRADAS E SAÍDAS"}
                                 text_footer={<>Consultar o historico de entradas<br /> e saidas de um veículo</>} />
                         </div>
                         <div className="card col-md-4" id="bloco"  >
@@ -59,16 +59,16 @@ const Administracao = () => {
                 <div className="container d-flex justify-content-center card-container-2">
                     <div className="row justify-content-center  w-100">
                         <div className="card col-md-4" id="bloco"  >
-                            <Card classBody={"card_home"} classLink={"/cadastrar_loja"} classNameIcon={"ti ti-home card-ti"} classFooter={"nome_footer"} text_title={"LOJAS"}
+                            <Card classBody={"card_home"} classLink={"/cadastrar_loja"} classNameIcon={"ti ti-home card-ti"} classFooter={"nome_footer"} text_title={"GESTÃO DE LOJAS"}
                                 text_footer={<>Cadastrar ou editar dados de uma loja</>} />
                         </div>
                         <div className="card col-md-4" id="bloco"  >
-                            <Card classBody={"card_home"} classLink={"/cadastro_financeira"} classNameIcon={"ti ti-money card-ti"} classFooter={"nome_footer"} text_title={"BANCOS"}
-                                text_footer={<>Cadastrar ou editar dados de um banco </>} />
+                            <Card classBody={"card_home"} classLink={"/cadastro_financeira"} classNameIcon={"ti ti-money card-ti"} classFooter={"nome_footer"} text_title={"GESTÃO INST. FINANCEIRA"}
+                                text_footer={<>Cadastrar ou editar dados de uma<br/> instituição financeira </>} />
                         </div>
                         <div className="card col-md-4" id="bloco"  >
-                            <Card classBody={"card_home"} classLink={"/cadastro_usuarios"} classNameIcon={"ti ti-user card-ti"} classFooter={"nome_footer"} text_title={"USUÁRIO"}
-                                text_footer={<>Cadastrar novo usuario <br />Editar a senha de um usuario </>} />
+                            <Card classBody={"card_home"} classLink={"/cadastro_usuarios"} classNameIcon={"ti ti-user card-ti"} classFooter={"nome_footer"} text_title={"GESTÃO DE USUÁRIO"}
+                                text_footer={<>Editar a senha de um usuario <br /> Excluir um usuario</>} />
                         </div>
                     </div>
                 </div>

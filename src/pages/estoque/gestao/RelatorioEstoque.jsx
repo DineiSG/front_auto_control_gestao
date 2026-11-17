@@ -1,15 +1,16 @@
-import { useState, useEffect, useRef } from "react";
-import ContainerSecundario from '../../../components/container/ContainerSecundario'
-import { useGetData } from '../../../services/useGetData';
-import { formatDateInfo } from "../../../hooks/formatDate";
-import { useFilterPeriodo } from "../../../hooks/useFilterPeriodo";
-import "../GestaoEstoque.css";
 import Box from '../../../components/box/Box'
 import Table from "../../../components/table/Table";
 import Input from "../../../components/input/Input";
 import Select from "../../../components/select/Select";
 import Button from "../../../components/button/Button";
 import useExportExcel from "../../../hooks/useExportExcel"
+import ContainerSecundario from '../../../components/container/ContainerSecundario'
+import "../GestaoEstoque.css";
+
+import { useState, useEffect, useRef } from "react";
+import { useGetData } from '../../../services/useGetData';
+import { formatDateInfo } from "../../../hooks/formatDate";
+import { useFilterPeriodo } from "../../../hooks/useFilterPeriodo";
 import { calculateDaysInStock } from "../../../hooks/useCalc";
 
 const RelatorioEstoque = () => {
@@ -39,7 +40,6 @@ const RelatorioEstoque = () => {
             ...veiculo,
             dias_estoque: calculateDaysInStock(veiculo.data_registro),
         }));
-
 
         // Filtrar por termo e por data
         let filtrados = [...dadosComDias];
@@ -105,7 +105,6 @@ const RelatorioEstoque = () => {
     const dataInicial = formatDateInfo(startDate)
     const dataFinal = formatDateInfo(endDate)
 
-
     const exportarExcel = async () => {
         try {
             await generateExcel({
@@ -129,14 +128,13 @@ const RelatorioEstoque = () => {
                     { chave: 'cambio', titulo: 'CÂMBIO', largura: 25 },
                     { chave: 'quilometragem', titulo: 'QUILOMETRAGEM', largura: 25 },
                     { chave: `data_registro`, titulo: `DATA CADASTRO`, largura: 25, tipo: 'data' },
-                    { chave: 'dias_estoque', titulo: 'DIAS EM ESTOQUE',largura: 25, format: (value) => value !== undefined ? `${value} dia(s)` : 'N/A' /*in */ },
+                    { chave: 'dias_estoque', titulo: 'DIAS EM ESTOQUE', largura: 25, format: (value) => value !== undefined ? `${value} dia(s)` : 'N/A' /*in */ },
                 ]
             })
         } catch (error) {
             console.error("Falha na exportação:", error);
         }
     }
-
 
     return (
         <ContainerSecundario >

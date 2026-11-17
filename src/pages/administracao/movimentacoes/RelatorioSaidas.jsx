@@ -1,17 +1,16 @@
 import "../../../assets/css/thead.css";
 import "../../../assets/css/themify-icons.css"
 import "../Administracao.css";
-
-import { useState, useEffect, useRef } from "react";
-import { useGetArray } from "../../../services/useGetArray";
-import { formatDateInfo } from "../../../hooks/formatDate";
-import { useFilterPeriodo } from "../../../hooks/useFilterPeriodo";
-
 import Table from "../../../components/table/Table";
 import Input from "../../../components/input/Input";
 import Select from "../../../components/select/Select";
 import Button from "../../../components/button/Button";
 import useExportExcel from "../../../hooks/useExportExcel"
+
+import { useState, useEffect, useRef } from "react";
+import { useGetArray } from "../../../services/useGetArray";
+import { formatDateInfo } from "../../../hooks/formatDate";
+import { useFilterPeriodo } from "../../../hooks/useFilterPeriodo";
 
 const RelatorioSaidas = () => {
     const [filteredSaidas, setFilteredSaidas] = useState([]);

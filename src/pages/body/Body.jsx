@@ -9,7 +9,6 @@ import "../../assets/css/themify-icons.css"
 import "./Body.css"
 
 //Importação de componentes
-
 import ContainerPrincipal from "../../components/container/ContainerPrincipal";
 import ContainerSecundario from "../../components/container/ContainerSecundario";
 import Sidebar from "../../components/sidebar/Sidebar";
@@ -71,7 +70,6 @@ function Body() {
 
   const shouldHideSidebar = hideSidebar.includes(location.pathname);
 
-
   return (
     <ContainerPrincipal className="container-principal">
       {!shouldHideNavbar && (
@@ -89,8 +87,8 @@ function Body() {
             </div>
 
           </div >
-          
-          {user?.role === "ADMINISTRADOR" || user?.role === "COLABORADOR"? <ModalCam/>: null}
+
+          {user?.role === "ADMINISTRADOR" || user?.role === "COLABORADOR" ? <ModalCam /> : null}
 
         </header>
       )}
@@ -103,7 +101,6 @@ function Body() {
         <ContainerSecundario >
           <Routes>
             <Route path="/" hideSidebar={hideSidebar} element={<Login />} />
-
             <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
 
             {/* Modulo Lojista */}
@@ -115,7 +112,7 @@ function Body() {
             <Route path="/estoque_lojista" element={<ProtectedRoute><EstoqueLojista /></ProtectedRoute>} />
             <Route path="/relatorio_venda" element={<ProtectedRoute><RelatorioVenda /></ProtectedRoute>} />
             <Route path="/cadastro_veiculo_lojista" element={<ProtectedRoute><CadastroVeiculoLojista /></ProtectedRoute>} />
-            <Route path="/devolucao_transferencia" element={<ProtectedRoute><RegistrarDevolTransf/></ProtectedRoute>}/>
+            <Route path="/devolucao_transferencia" element={<ProtectedRoute><RegistrarDevolTransf /></ProtectedRoute>} />
 
             {/* Modulo Administração */}
             <Route path="/administracao" element={<ProtectedRoute><Administracao /></ProtectedRoute>} />
@@ -143,11 +140,9 @@ function Body() {
 
             {/* Adicione outras rotas conforme necessário */}
           </Routes>
-
         </ContainerSecundario>
       </div>
     </ContainerPrincipal >
-
   );
 }
 export default Body;

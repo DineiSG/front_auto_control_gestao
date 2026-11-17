@@ -119,7 +119,7 @@ const CriarUsuario = () => {
 
   const colunas = [
     { key: 'nome', label: 'NOME' },
-    { key: 'username', label: 'NOME DE USUARIO' },
+    { key: 'username', label: 'NOME DE USUARIO - USERNAME' },
     { key: 'unidade', label: 'LOJA' },
     { key: 'tipo', label: 'TIPO DE USUARIO' }
   ]

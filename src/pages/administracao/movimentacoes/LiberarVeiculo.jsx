@@ -1,11 +1,12 @@
+
+import "../../../assets/css/thead.css";
+import "../../../assets/css/themify-icons.css"
 import ContainerSecundario from '../../../components/container/ContainerSecundario'
 import Box from '../../../components/box/Box';
 import Input from '../../../components/input/Input';
 import Form from '../../../components/form/Form';
 import Button from '../../../components/button/Button';
-
-import "../../../assets/css/thead.css";
-import "../../../assets/css/themify-icons.css"
+import ModalBootstrap from '../../../components/modal/ModalBootstrap';
 
 import { formatDateInfo } from '../../../hooks/formatDate';
 import { useState, useEffect, useRef } from "react";
@@ -31,22 +32,46 @@ const LiberarVeiculo = () => {
         id: '', placa: '', marca: '', modelo: '', cor: '', observacoes: '', renavan: '',
         unidade: '', motivo: '', dataRegistro: '', data_cadastro: ''
     })
+    const [modal, setModal] = useState({
+        aberto: false,
+        titulo: "Atenção",
+        mensagem: "",
+        tipo: "mensagem",
+        acao: null,
+    });
+
+    const resetForm = () => {
+        setDadosVeiculo({
+            id: '', placa: '', marca: '', modelo: '', cor: '', observacoes: '', renavan: '',
+            unidade: '', motivo: '', dataRegistro: '', data_cadastro: '', ano_fabricacao: '', ano_modelo: ''
+        })
+
+        setDeleteDados({
+            id: '', placa: '', marca: '', modelo: '', cor: '', observacoes: '', renavan: '',
+            unidade: '', motivo: '', dataRegistro: '', data_cadastro: '', ano_fabricacao: '', ano_modelo: ''
+        })
+
+        setSelectedMotivo('')
+        setSolicitante('')
+        setObservacoes('')
+    }
 
     const { user } = useAuth()
 
-    // buscando os dados no bd
+    // buscando os dados do veiculo na tabela veiculo
     const { data: veiculo } = useGetData(buscaPlaca ? `/veiculos/placa/${placa}` : null)
 
-    const { data: liberacao } = useGetData(buscaPlacaDelete ? `/liberacoes/placa/${placaDelete}` : null)
+    //Busca os dados da liberação na tabela liberação para excluir a liberação
+    const { data: liberacao } = useGetData(buscaPlacaDelete ? `/wow/movimentacoes/placa/${placaDelete}` : null)
 
-    // Enviando dados editados
-    const { createData } = usePostData('/liberacoes')
+    // Enviando dados da liberação
+    const { createData } = usePostData('/wow/movimentacoes')
 
-    const { deleteData } = useDeleteId(`/liberacoes`)
+    // Apagando uma liberação
+    const { deleteData } = useDeleteId(`/wow/movimentacoes`)
 
     // Base URL da API
     const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
 
     // Ref para manter a referência atualizada da última placa buscada
     const ultimaPlacaBuscada = useRef('');
@@ -58,25 +83,37 @@ const LiberarVeiculo = () => {
 
         if (placaM.length === 7) {
 
+            const lojaVeiculo = await fetch(`${API_BASE_URL}/veiculos/placa/${placaM}`);
+
+            const dados = await lojaVeiculo.json()
+            console.log(`Dados do veículo: ${dados}`)
+
             try {
-                // Verifica se a placa existe em liberações
-                const resPlaca = await fetch(`${API_BASE_URL}/liberacoes/placa/${placaM}`);
+
+                // Verifica se a placa existe em liberações de acordo com o retorno da busca no beck-end
+                const resPlaca = await fetch(`${API_BASE_URL}/wow/movimentacoes/placa/${placaM}`);
+
+                const verificarRegistro = (titulo, mensagem, aoFechar = null) => {
+                    setModal({
+                        aberto: true,
+                        titulo,
+                        mensagem,
+                        tipo: "mensagem",
+                        acao: "",
+                        aoFechar
+                    });
+                }
 
                 //caso exista, emite o alerta para o usuario
                 if (resPlaca.status === 200) {
 
-                    window.alert('Ja consta uma liberação solicitada para esta placa. Caso deseje solicitar uma nova liberação, cancele a antiga.');
+                    verificarRegistro("Atenção!", "Ja consta uma liberação solicitada para esta placa. Caso deseje solicitar uma nova liberação, cancele a antiga.", resetForm)
                     setMostrarSelect(false);
-                    setDadosVeiculo({
-                        id: '', placa: '', marca: '', modelo: '', cor: '', observacoes: '', renavan: '',
-                        unidade: '', motivo: '', dataRegistro: '', data_cadastro: '', ano_fabricacao: '', ano_modelo: ''
-                    });
-                    setSelectedMotivo('');
-                    setSolicitante('');
-                    setObservacoes('');
+                    resetForm();
+
                 } else if (resPlaca.status === 404) {
 
-                    // Caso nao exist, Só busca se a placa for diferente da última buscada
+                    // Caso nao exista, Só busca se a placa for diferente da última buscada
                     if (placaM !== ultimaPlacaBuscada.current) {
 
                         //console.log('Buscando placa:', placaM); // Debug
@@ -86,11 +123,12 @@ const LiberarVeiculo = () => {
                     setMostrarSelect(true);
                 }
 
-            } catch (erro) {
-                console.error('Erro ao buscar liberação:', erro);
+            } catch {
+                window.alert('Erro ao consultar liberação: entre em contato com o suporte.');
             }
         }
     };
+
 
     const handleBlurDelete = () => {
         const placaDeleteM = placaDelete.trim().toUpperCase();
@@ -100,15 +138,15 @@ const LiberarVeiculo = () => {
                 //console.log('Buscando placa para exclusão:', placaDeleteM); // Debug
                 ultimaPlacaBuscada.current = placaDeleteM;
                 setBuscaPlacaDelete(placaDeleteM);
-            } else setDeleteDados({
-                id: '', placa: '', marca: '', modelo: '', cor: '', observacoes: '', renavan: '',
-                unidade: '', motivo: '', dataRegistro: '', data_cadastro: '', ano_fabricacao: '', ano_modelo: ''
-            });
+            } else {
+                resetForm()
+            };
         }
     }
 
     // Preencher campos quando os dados solicitados chegarem
     useEffect(() => {
+
         if (veiculo && !veiculo.erro) {
             console.log('Dados do veículo recebidos:', veiculo); // Debug
             setDadosVeiculo(prev => ({
@@ -121,8 +159,6 @@ const LiberarVeiculo = () => {
                 ano_modelo: veiculo.ano_modelo || '',
                 ano_fabricacao: veiculo.ano_fabricacao || '',
                 data_cadastro: formatDateInfo(veiculo.data_registro),
-
-
             }));
         } else if (veiculo && veiculo.erro) {
             console.log('Veículo não encontrado');;
@@ -133,17 +169,10 @@ const LiberarVeiculo = () => {
             setDeleteDados(prev => ({
                 ...prev,
                 id: liberacao.id || '',
-                marca: liberacao.marca || '',
-                modelo: liberacao.modelo || '',
-                cor: liberacao.cor || '',
-                renavan: liberacao.renavan || '',
                 unidade: liberacao.unidade || '',
-                solicitante: liberacao.solicitante || '',
-                motivo: liberacao.motivo || '',
-                observacoes: liberacao.observacoes || '',
-                data_cadastro: formatDateInfo(liberacao.data_registro),
-
-
+                responsavelMovimentacaoNome: liberacao.responsavelMovimentacaoNome || '',
+                tipoMovimentacao: liberacao.tipoMovimentacao || '',
+                observacaoMovimentacao: liberacao.observacaoMovimentacao || '',
             }));
         } else if (liberacao && liberacao.erro) {
             console.log('Veículo não encontrado');;
@@ -165,40 +194,58 @@ const LiberarVeiculo = () => {
     // Função para lidar com o envio do formulário
     // Essa função é chamada quando o usuário deseja solicitar a liberação de um veículo
     const handleSubmit = async (e) => {
-        e.preventDefault()
+        e.preventDefault();
+
+        setModal({
+            aberto: true,
+            titulo: "Confirmação de Liberação",
+            mensagem: `Confirmar a liberação do veiculo por motivo de ${selectedMotivo}?`,
+            tipo: "confirmacao",
+            acao: confirmarLiberacao
+        });
+    }
+
+    const confirmarLiberacao = async () => {
 
         let dados = {
-            placa, id: veiculo.id, marca: dadosVeiculo.marca, modelo: dadosVeiculo.modelo, cor: dadosVeiculo.cor, renavan: dadosVeiculo.renavan,
-            unidade: dadosVeiculo.unidade, data_cadastro: dadosVeiculo.data_cadastro, solicitante, observacoes, motivo: selectedMotivo,
-            ano_fabricacao: veiculo.ano_fabricacao, ano_modelo: dadosVeiculo.ano_modelo, audit:user?.nome
-
+            placa, id: veiculo.id, usr_cad: veiculo.audit, chassi: veiculo.chassi, marca: dadosVeiculo.marca,
+            modelo: dadosVeiculo.modelo, cor: dadosVeiculo.cor, renavan: dadosVeiculo.renavan,
+            unidade: dadosVeiculo.unidade, data_cadastro: dadosVeiculo.data_cadastro, responsavelMovimentacaoNome: solicitante, solicitante, observacoes,
+            motivo: selectedMotivo, observacaoMovimentacao: observacoes, tipoMovimentacao: selectedMotivo,
+            ano_fabricacao: veiculo.ano_fabricacao, ano_modelo: dadosVeiculo.ano_modelo, audit: user?.nome
         }
 
-        dados = toUpperFields(dados, ['placa', 'marca', 'modelo', 'cor', 'unidade', 'motivo', 'solicitante', 'observacoes'])
-        // Padroniza para caixa alta
-        console.log('Dados a serem enviados: ', dados)
+        dados = toUpperFields(dados, ['placa', 'marca', 'modelo', 'cor', 'unidade', 'tipoMovimentacao',
+            'motivo', 'responsavelMovimentacaoNome', 'observacaoMovimentacao', 'solicitante', 'observacoes'
+        ])
 
-        const confirmar = window.confirm("Confirmar a solicitação de liberação do veículo? \nEm caso de liberção por devolução," +
-            "transferência ou venda, a baixa automática do veículo será efetuada às 23:45 de hoje.");
+        const validacaoCampos = (titulo, mensagem, aoFechar = null) => {
+            setModal({
+                aberto: true,
+                titulo,
+                mensagem,
+                tipo: "mensagem",
+                acao: "",
+                aoFechar
+            });
+        }
 
-        if (confirmar && dadosVeiculo.marca === "" || dadosVeiculo.modelo === "" || dadosVeiculo.cor === "" ||
+        if (dadosVeiculo.marca === "" || dadosVeiculo.modelo === "" || dadosVeiculo.cor === "" ||
             dadosVeiculo.unidade === "" || dadosVeiculo.motivo === "" || solicitante === "", observacoes === "") {
-            window.alert("Por favor, verifique o formulario novamente Todos os campos precisam ser preenchidos.")
+            validacaoCampos("Atencao", "Por favor, verifique o formulario novamente. Todos os campos precisam ser preenchidos.", resetForm)
+            return
         } else {
             try {
-                const resultado = await createData(dados)
+                await createData(dados)
 
                 // Enviar mensagem via WhatsApp
-                const mensagem = `Prezados, favor realizar a liberação do seguinte veiculo:\nLoja: *${veiculo.unidade}*\nPlaca: *${placa}*\nMarca: ${veiculo.marca}\nModelo: ${veiculo.modelo}\nCor: ${veiculo.cor}\nMotivo: ${selectedMotivo}\nObservação: ${observacoes}\nDesde já agradeço.`
+                /*const mensagem = `Prezados, favor realizar a liberação do seguinte veiculo:\nLoja: *${veiculo.unidade}*\nPlaca: *${placa}*\nMarca: ${veiculo.marca}\nModelo: ${veiculo.modelo}\nCor: ${veiculo.cor}\nMotivo: ${selectedMotivo}\nObservação: ${observacoes}\nDesde já agradeço.`
                 const urlWhatsApp = `https://wa.me/?text=${encodeURIComponent(mensagem)}`;
-                window.open(urlWhatsApp, '_blank')
+                window.open(urlWhatsApp, '_blank')*/
 
-                console.log('Liberação solicitada., ', resultado)
-                window.alert('Liberação solicitada.')
-                window.location.reload()
-            } catch (err) {
-                console.error('Falha ao registrar o veiculo: ', err)
-                window.alert('Falha ao registrar o veículo. Entre em contato com suporte.')
+                validacaoCampos("Sucesso!", `Liberação por motivo de ${selectedMotivo} realizada.`, resetForm)
+            } catch {
+                validacaoCampos("Atenção!", 'Falha ao registrar o veículo. Entre em contato com suporte.', resetForm)
             }
         }
     }
@@ -208,25 +255,46 @@ const LiberarVeiculo = () => {
     const handleDelete = async (e) => {
         e.preventDefault()
 
+        setModal({
+            aberto: true,
+            titulo: "Confirmação de Cancelamento",
+            mensagem: `Confirmar o cancelamento da solicitação de liberação por ${liberacao.motivo}?`,
+            tipo: "confirmacao",
+            acao: confirmarCancelamento
+        });
+    }
+
+    const confirmarCancelamento = async () => {
+
+        const alertaAcao = (titulo, mensagem, aoFechar = null) => {
+            setModal({
+                aberto: true,
+                titulo,
+                mensagem,
+                tipo: "mensagem",
+                acao: "",
+                aoFechar
+            });
+        }
+
         let idVeiculo = liberacao.id
+        try {
+            await deleteData(idVeiculo)
+            alertaAcao("Sucesso", `Cancelamento confirmado. Favor verificar se o veiculo ainda se encontra em estoque.\n Caso não esteja, devera ser recadastrado`)
 
-        console.log('ID a ser deletado: ', idVeiculo)
-        const confirmar = window.confirm("Confirmar o cancelamento da solicitação de liberação do veículo?");
-
-        if (confirmar === true) {
-            try {
-                const resultado = await deleteData(idVeiculo)
-
-
-                console.log('Liberação cancelada.', resultado)
-                window.alert('Liberação cancelada.')
-                window.location.reload()
-            } catch (err) {
-                console.error('Falha ao cancelar a liberação do veiculo: ', err)
-                window.alert('Falha ao cancelar a liberação do veículo.\nEntre em contato com o suporte.')
-            }
+        } catch (err) {
+            console.error('Falha ao cancelar a liberação do veiculo: ', err)
+            alertaAcao("", 'Falha ao cancelar a liberação do veículo.\nEntre em contato com o suporte.')
         }
     }
+
+    //Função que fecha o modal
+    const fecharModal = () => {
+        setModal(prev => ({
+            ...prev,
+            aberto: false
+        }));
+    };
 
     return (
         <ContainerSecundario>
@@ -255,21 +323,26 @@ const LiberarVeiculo = () => {
                         <i className='ti ti-new-window' id="ti-black" ></i>
                         <p>SOLICITAR A LIBERAÇÃO DE UM VEÍCULO <br /> Informe a placa do veículo para obter os demais dados</p>
                     </div>
+
+                    {/*
                     <br />
                     <br />
                     <br />
-                    <div className="position-absolute top-25 start-50 translate-middle" id="alerta">
+                   <div className="position-absolute top-25 start-50 translate-middle" id="alerta">
                         <div className="position-absolute top-25 start-50 translate-middle" >
                             <p><img src="./icons8-erro.gif" alt="alerta" /> ATENÇÃO!</p>
                         </div>
                         <div className="position-absolute top-25 start-50 translate-middle" >
                         </div>
                         <p><br />Em caso de solicitação de liberação por <strong>venda</strong> , <strong>devolução</strong> ou <strong>transferência</strong>,
-                            o veículo terá a sua baixa automática realizada às 23:45 do mesmo dia da solicitação.</p>
+                            o veículo terá a sua baixa automática realizada assim que passar pela cancela de saída. Caso realize o cancelamento da 
+                            liberação apos o veículo sair, ele deverá ser recadastrado.</p>
                     </div>
                     <br />
                     <br />
                     <br />
+                    */}
+
                     <Form >
                         <div className="col-12 col-md-2">
                             <Input label={"Placa:"} type={"text"} maxLength={"7"} style={{ width: '85px' }} nameInput={"placa"}
@@ -300,6 +373,7 @@ const LiberarVeiculo = () => {
                                         <option value="DEVOLUCAO" >DEVOLUÇÃO</option>
                                         <option value="TRANSFERENCIA" >TRANSFERÊNCIA</option>
                                         <option value="MANUTENCAO" >MANUTENÇÃO</option>
+                                        <option value="TESTE_DRIVE" >TESTE DRIVE</option>
                                         <option value="CORRECAO" >CORREÇÃO DE ESTOQUE</option>
                                     </select>
                                 </div>
@@ -326,35 +400,26 @@ const LiberarVeiculo = () => {
                     <Form>
                         <div className="col-12 col-md-2">
                             <Input label={"Placa:"} type={"text"} maxLength={"7"} style={{ width: '85px' }} nameInput={"placa"}
-                                value={placaDelete} onChange={(e) => setPlacaDelete(e.target.value)} onBlur={handleBlurDelete} required />
+                                value={placaDelete} onChange={(e) => setPlacaDelete(e.target.value)}
+                                onBlur={handleBlurDelete} required />
                         </div>
                         <div className="col-12 col-md-3">
-                            <Input label={"Loja:"} type={"text"} style={{ width: '150px' }} nameInput={"unidade"} value={deleteDados.unidade} readOnly />
+                            <Input label={"Motivo:"} type={"text"} style={{ width: '150px' }} nameInput={"tipoMovimentacao"} value={deleteDados.tipoMovimentacao} readOnly />
                         </div>
                         <div className="col-12 col-md-3">
-                            <Input label={"Marca:"} type={"text"} style={{ width: '150px' }} nameInput={"marca"} value={deleteDados.marca} readOnly />
+                            <Input label={"Solicitante:"} type={"text"} style={{ width: '150px' }} nameInput={"responsavelMovimentacaoNome"} value={deleteDados.responsavelMovimentacaoNome} readOnly />
                         </div>
                         <div className="col-12 col-md-3">
-                            <Input label={"Modelo:"} type={"text"} style={{ width: '150px' }} nameInput={"modelo"} value={deleteDados.modelo} readOnly />
-                        </div>
-                        <div className="col-12 col-md-3">
-                            <Input label={"Cor:"} type={"text"} style={{ width: '150px' }} nameInput={"cor"} value={deleteDados.cor} readOnly />
-                        </div>
-                        <div className="col-12 col-md-3">
-                            <Input label={"Renavam:"} type={"text"} style={{ width: '150px' }} nameInput={"renavam"} value={deleteDados.renavan} readOnly />
-                        </div>
-                        <div className="col-12 col-md-3">
-                            <Input label={"Solicitante:"} type={"text"} style={{ width: '150px' }} nameInput={"solicitante"} value={deleteDados.solicitante} readOnly />
-                        </div>
-                        <div className="col-12 col-md-3">
-                            <Input label={"Motivo:"} type={"text"} style={{ width: '150px' }} nameInput={"motivo"} value={deleteDados.motivo} readOnly />
+                            <Input label={"Observacao:"} type={"text"} style={{ width: '150px' }} nameInput={"observacaoMovimentacao"} value={deleteDados.observacaoMovimentacao} readOnly />
                         </div>
                         <div className="d-flex flex-row-reverse">
-                            <Button onClick={handleDelete} variant='primary' >ENVIAR</Button>
+                            <Button onClick={handleDelete} variant='danger' >CANCELAR </Button>
                         </div>
                     </Form>
                 </Box>
-
+                <>
+                    <ModalBootstrap modal={modal} fecharModal={fecharModal} id="modal" />
+                </>
             </div>
         </ContainerSecundario>
     )

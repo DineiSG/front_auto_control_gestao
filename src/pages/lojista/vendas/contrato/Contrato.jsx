@@ -228,9 +228,7 @@ const Contrato = () => {
                                 <p>Todo cliente que adquirir um veículo em qualquer loja do Auto Shopping Passeio das Águas e realizar o cadastro no aplicativo oficial do Passeio das Águas Shopping, terá direito a concorrer:</p>
 
                                 <ul style={{ listStyle: 'none', paddingLeft: 0 }}>
-                                    <li>⭐ 1 IPad 11 enviando 1 Nota Fiscal.</li>
-                                    <li>⭐⭐ 1 MacBook Neo 1 Nota Fiscal.</li>
-                                    <li>⭐⭐⭐ 1 IPhone 18 Pro enviando 1 Nota Fiscal.</li>
+                                    <li>Sorteio de <strong>1 Haval H6</strong> </li>
                                 </ul>
 
                                 <h6><strong>Requisitos para participar</strong></h6>
@@ -258,7 +256,7 @@ const Contrato = () => {
                                 <p>Este termo faz parte integrante das Regras Gerais da Promoção e o participante, ao aderir à campanha, declara ciência e concordância com todos os seus termos e condições.</p>
                                 <p>As partes reconhecem e concordam que este documento é exclusivamente para fins informativos, não constitui contrato vinculativo, tampouco gera obrigações legais de qualquer natureza, nem configura compromisso, direito ou obrigação juridicamente exigível por qualquer das partes.</p>
 
-                                <p>Promoção válida de <strong style={{ color: "red" }}>01/10/2026 a 12/11/2026</strong>. Sorteio Loteria Federal:<strong> 25/11/2026.</strong> A apuração acontecerá no dia <strong>26/11/2026</strong>, às 14 horas e os resultados serão divulgados no APP do Passeio das Águas Shopping e nas redes sociais, em até <strong>10(dez)</strong> dias úteis após a apuração.</p>
+                                <p>Promoção válida de <strong style={{ color: "red" }}>13/11/2026 a 31/12/2026.</strong>. Sorteio Loteria Federal:<strong> 13/01/2027.</strong> A apuração acontecerá no dia <strong>14/01/2027 </strong>, às 14 horas e os resultados serão divulgados no APP do Passeio das Águas Shopping e nas redes sociais, em até <strong>10(dez)</strong> dias úteis após a apuração.</p>
                             </div>
 
                             <p className="data_contrato" style={{ textAlign: 'center', marginTop: '20px' }}><strong>GOIANIA, {new Date().toLocaleDateString()}.</strong></p>

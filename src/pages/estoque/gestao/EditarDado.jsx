@@ -1,13 +1,15 @@
-import ContainerSecundario from '../../../components/container/ContainerSecundario'
 import "../../../assets/css/thead.css";
 import "../../../assets/css/themify-icons.css"
+import ContainerSecundario from '../../../components/container/ContainerSecundario'
 import Box from '../../../components/box/Box';
 import Input from '../../../components/input/Input';
 import Form from '../../../components/form/Form';
+import ModalBootstrap from '../../../components/modal/ModalBootstrap';
+import Button from '../../../components/button/Button';
+
 import { useState, useEffect, useRef } from "react";
 import { useGetData } from '../../../services/useGetData';
 import { useUpdateData } from '../../../services/useUpdateData';
-import Button from '../../../components/button/Button';
 import { formatMillionUnit } from '../../../hooks/useMask';
 
 const EditarDado = () => {
@@ -15,6 +17,14 @@ const EditarDado = () => {
   const [buscaPlaca, setBuscaPlaca] = useState("")
   const [dadosVeiculo, setDadosVeiculo] = useState({ marca: '', modelo: '', cor: '', renavam: '', ano_modelo: '', ano_fabricacao: '', unidade: '', quilometragem: '', combustivel: '', cambio: '' })
   const [editavel, setEditavel] = useState(false)
+  const [modal, setModal] = useState({
+    aberto: false,
+    titulo: "Atenção",
+    mensagem: "",
+    tipo: "mensagem",
+    acao: null,
+
+  });
 
   const resetForm = () => {
     setPlaca('')
@@ -27,7 +37,6 @@ const EditarDado = () => {
   // buscando os dados no bd
   const { data: veiculo, } = useGetData(buscaPlaca ? `/veiculos/placa/${placa}` : null)
 
-
   // Enviando dados editados
   const { updateData } = useUpdateData(`/veiculos/${veiculo?.id}`);
 
@@ -37,6 +46,7 @@ const EditarDado = () => {
   // Função chamada quando o input da placa perde o foco
   const handleBlur = () => {
     //Verifica se a placa tem 7 caracteres e se o input esta preenchido, se sim, busca os dados do veículo e libera o select
+
     const placaM = placa.trim().toUpperCase();
     if (placaM.length === 7) {
       // Só busca se a placa for diferente da última buscada
@@ -56,7 +66,7 @@ const EditarDado = () => {
   // Preencher campos quando os dados solicitados chegarem
   useEffect(() => {
     if (veiculo && !veiculo.erro) {
-      console.log('Dados do veículo recebidos:', veiculo); // Debug
+      //console.log('Dados do veículo recebidos:', veiculo); // Debug
       setDadosVeiculo(prev => ({
         ...prev,
         marca: veiculo.marca || '',
@@ -76,7 +86,6 @@ const EditarDado = () => {
 
   }, [veiculo]);
 
-
   // Função para converter campos em CAIXA ALTA
   const toUpperFields = (obj, fields = []) => {
     const copy = { ...obj }
@@ -91,6 +100,16 @@ const EditarDado = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
+    setModal({
+      aberto: true,
+      titulo: "Confirmação de Edição",
+      mensagem: "Confirma a edição dos dados do veiculo?",
+      tipo: "confirmacao",
+      acao: confirmarEdicao
+    });
+  }
+
+  const confirmarEdicao = async () => {
     let dados = {
       placa, id: veiculo.id, marca: dadosVeiculo.marca, modelo: dadosVeiculo.modelo, cor: dadosVeiculo.cor, renavan: dadosVeiculo.renavam,
       ano_fabricacao: dadosVeiculo.ano_fabricacao, ano_modelo: dadosVeiculo.ano_modelo, quilometragem: dadosVeiculo.quilometragem, combustivel: dadosVeiculo.combustivel, cambio: dadosVeiculo.cambio
@@ -98,21 +117,35 @@ const EditarDado = () => {
 
     dados = toUpperFields(dados, ['placa', 'marca', 'modelo', 'cor', 'unidade'])
     // Padroniza para caixa alta
-    console.log('Dados a serem enviados: ', dados)
+    //console.log('Dados a serem enviados: ', dados)
 
-    const confirmar = window.confirm("Confirma a edição dos dados do veículo?");
-    if (confirmar === true) {
-      try {
-        const resultado = await updateData(dados)
-        console.log('Dados editados com sucesso, ', resultado)
-        window.alert('Dados editados com sucesso')
-        resetForm()
-      } catch (err) {
-        console.error('Falha ao editar os dados: ', err)
-        window.alert("Erro ao tentar editar os dados do veículo. Entre em contato com o suporte.")
-      }
+    const confirmarEdicao = (titulo, mensagem, aoFechar = null) => {
+      setModal({
+        aberto: true,
+        titulo,
+        mensagem,
+        tipo: "mensagem",
+        acao: "",
+        aoFechar
+      });
+
+    }
+
+    try {
+      await updateData(dados)
+      confirmarEdicao("Sucesso!", "Dados do veiculo editados com sucesso.", resetForm)
+    } catch {
+      confirmarEdicao("Erro!", "Não foi possivel editar os dados do veículo. Entre em contato com o suporte", resetForm)
     }
   }
+
+  //Função que fecha o modal
+  const fecharModal = () => {
+    setModal(prev => ({
+      ...prev,
+      aberto: false
+    }));
+  };
 
   return (
     <ContainerSecundario>
@@ -189,6 +222,9 @@ const EditarDado = () => {
             </div>
           </Form>
         </Box>
+        <>
+          <ModalBootstrap modal={modal} fecharModal={fecharModal} id="modal" />
+        </>
       </div>
     </ContainerSecundario>
   )

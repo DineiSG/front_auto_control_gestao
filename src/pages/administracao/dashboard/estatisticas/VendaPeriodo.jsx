@@ -1,18 +1,17 @@
-import { useRef } from "react";
 import html2pdf from "html2pdf.js";
-import { Bar } from "react-chartjs-2";
 import Button from "../../../../components/button/Button";
 import Input from "../../../../components/input/Input"
-import { useGetArray } from "../../../../services/useGetArray"
 import useGroupedChart from "../../../../hooks/useGroupedChart"; // seu hook atual
+
 import { useFilterPeriodo } from "../../../../hooks/useFilterPeriodo"; // o hook criado acima
 import { formatDateInfo } from "../../../../hooks/formatDate";
+import { useRef } from "react";
+import { Bar } from "react-chartjs-2";
+import { useGetArray } from "../../../../services/useGetArray"
 
 const VendaPeriodo = () => {
     // Busca todas as vendas
     const { data: vendas = [] } = useGetArray("/vendas");
-
-
 
     // Hook de período (defina aqui a chave da data na sua venda: "dataVenda", "createdAt", etc.)
     const { startDate, endDate, setStartDate, setEndDate, filteredData, status, message, hasResults, } = useFilterPeriodo({

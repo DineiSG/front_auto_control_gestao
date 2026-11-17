@@ -1,16 +1,17 @@
-import { useRef, useState, useEffect, useMemo } from "react";
+
 import html2pdf from "html2pdf.js";
-import { Bar } from "react-chartjs-2";
+import ModalContent from "../../../../components/modal/ModalContent";
+import useExportExcel from "../../../../hooks/useExportExcel";
+import useGroupedChart from "../../../../hooks/useGroupedChart"; // seu hook atual
 import Button from "../../../../components/button/Button";
 import Input from "../../../../components/input/Input"
+
+import { Bar } from "react-chartjs-2";
 import { useGetArray } from "../../../../services/useGetArray"
-import useGroupedChart from "../../../../hooks/useGroupedChart"; // seu hook atual
 import { useFilterPeriodo } from "../../../../hooks/useFilterPeriodo"; // o hook criado acima
 import { formatDateInfo } from "../../../../hooks/formatDate";
-import ModalContent from "../../../../components/modal/ModalContent";
-//import * as XLSX from 'xlsx';
-import useExportExcel from "../../../../hooks/useExportExcel";
 import { prepararRelatorio } from "../../../../hooks/preparaRelatorioVendas";
+import { useRef, useState, useEffect, useMemo } from "react";
 
 const VendaPeriodoValor = () => {
     const [dadosTabela, setDadosTabela] = useState([]);
@@ -174,7 +175,7 @@ const VendaPeriodoValor = () => {
     };
 
     //##########################################################
-    
+
     // Preparando os dados para a planilha em excel
     const todasLojas = useMemo(() => {
         return [...new Set(dadosTabela.flatMap(linha =>

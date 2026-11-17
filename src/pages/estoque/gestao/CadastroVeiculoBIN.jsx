@@ -5,6 +5,7 @@ import Box from "../../../components/box/Box"
 import ContainerSecundario from "../../../components/container/ContainerSecundario"
 import Input from '../../../components/input/Input';
 import Button from '../../../components/button/Button';
+import ModalBootstrap from '../../../components/modal/ModalBootstrap';
 
 import { useState, useEffect, useRef } from 'react';
 import { useGetData } from '../../../services/useGetData';
@@ -13,6 +14,7 @@ import { formatTimestamp } from '../../../hooks/formatDate';
 import { toUpperCaseData } from '../../../hooks/transformToUppercase';
 import { formatMillionUnit } from '../../../hooks/useMask';
 import { useAuth } from "../../../hooks/useAuth"
+
 
 const CadastroVeiculoBIN = () => {
     const [placa, setPlaca] = useState('')
@@ -29,6 +31,13 @@ const CadastroVeiculoBIN = () => {
         quilometragem: '', combustivel: '', cambio: '', chassi: ''
     })
     const [editavel, setEditavel] = useState(true)
+    const [modal, setModal] = useState({
+        aberto: false,
+        titulo: "Atenção",
+        mensagem: "",
+        tipo: "mensagem",
+        acao: null,
+    });
 
     const { user } = useAuth()
 
@@ -88,11 +97,23 @@ const CadastroVeiculoBIN = () => {
             clearTimeout(timeoutRef.current);
         }
 
+        const binOff = (titulo, mensagem, aoFechar = null) => {
+            setModal({
+                aberto: true,
+                titulo,
+                mensagem,
+                tipo: "mensagem",
+                acao: "",
+                aoFechar
+            });
+        }
+
         // Inicia novo timeout
         timeoutRef.current = setTimeout(() => {
             setLoading(false);
-            window.alert('Base BIN offline ou dados do veiculo indisponiveis.\nTente novamente ou insira as informações de forma manual.');
-        }, 7000);
+            binOff('Atenção!', 'Base BIN offline ou dados do veiculo indisponiveis.\nTente novamente ou insira as informações de forma manual.');
+        }, 60000);
+
     };
 
     // useEffect para atualizar o estado de carregamento quando o veiculo for atualizado
@@ -157,6 +178,18 @@ const CadastroVeiculoBIN = () => {
     // Ela formata a data de registro e envia os dados para o backend
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        setModal({
+            aberto: true,
+            titulo: "Confirmação de Cadastro",
+            mensagem: "Confirmar o cadastro do veiculo?",
+            tipo: "confirmacao",
+            acao: confirmarCadastro
+        });
+    }
+
+    const confirmarCadastro = async () => {
+
         const data_registro = formatTimestamp(new Date());
 
         const tipoDeAquisicao = 'COMUM'
@@ -183,10 +216,18 @@ const CadastroVeiculoBIN = () => {
 
         // normaliza os campos para maiúsculo
         dados = toUpperFields(dados, ['placa', 'marca', 'modelo', 'cor', 'unidade', 'combustivel']);
-        console.log('Dados a serem enviados:', dados); // Debug
+        //console.log('Dados a serem enviados:', dados); // Debug
 
-        const confirmar = window.confirm("Confirma o cadastro do veículo?");
-        if (!confirmar) return;
+        const validacaoCampos = (titulo, mensagem, aoFechar = null) => {
+            setModal({
+                aberto: true,
+                titulo,
+                mensagem,
+                tipo: "mensagem",
+                acao: "",
+                aoFechar
+            });
+        }
 
         if (placa === "" ||
             unidade === "" ||
@@ -202,9 +243,21 @@ const CadastroVeiculoBIN = () => {
             dados.chassi === "" ||
             cambio === "" ||
             qtd_portas === "" || "") {
-            window.alert("Por favor, verifique o formulario novamente, todos os campos precisam ser preenchidos.")
-            return
+
+            validacaoCampos("Atenção!", "Verifique o formulario novamente e preencha todos os campos.")
+
         } else {
+            const validarOperacao = (titulo, mensagem, aoFechar = null) => {
+                setModal({
+                    aberto: true,
+                    titulo,
+                    mensagem,
+                    tipo: "mensagem",
+                    acao: "",
+                    aoFechar
+                });
+            }
+
             try {
                 // Verifica se a placa já existe antes de enviar os dados
                 const url = selectEstoque === 'pulmao'
@@ -214,21 +267,20 @@ const CadastroVeiculoBIN = () => {
                 const existente = await fetch(url).then((res) => res.ok ? res.json() : null);
 
                 if (existente) {
-                    window.alert("Já existe um veículo cadastrado com esta placa!");
-                    return;
+
+                    validarOperacao("Atenção!", "Já existe um veículo cadastrado com esta placa!", resetForm);
 
                 } else if (selectEstoque === 'pulmao') {
 
                     const dadosUpper = toUpperCaseData(dados);
                     const respostaEstoqueExtra = await createEstoqueExtra(dadosUpper);
-                    
+
                     if (respostaEstoqueExtra.success) {
-                        window.alert('Veículo cadastrado no Pulmao com sucesso');
-                        resetForm() //Chama a função que limpa o formulario
-                        //window.location.reload();
+
+                        validarOperacao('Sucesso', 'Veículo cadastrado no estoque extra com sucesso', resetForm);
                     } else {
-                        
-                        window.alert('Não há vagas disponíveis para esta loja.\nCadastro não realizado.');
+
+                        validarOperacao("Atenção!", 'Não há vagas disponíveis para esta loja.\nCadastro não realizado.', resetForm);
                     }
 
                 } else {
@@ -239,20 +291,25 @@ const CadastroVeiculoBIN = () => {
                     const respostaEstoquePrincipal = await createEstoquePrincipal(dadosUpper);
                     if (respostaEstoquePrincipal.success) {
 
-                        resetForm() //Chama a função que limpa o formulario
-                        window.alert('Veículo cadastrado com sucesso');
-                        //window.location.reload();
+                        validarOperacao("Sucesso", 'Veículo cadastrado com sucesso', resetForm);
                     } else {
-                        window.alert('Não há vagas disponíveis para esta loja.\nCadastro não realizado.');
+                        validarOperacao('Atenção!', 'Não há vagas disponíveis para esta loja.\nCadastro não realizado.', resetForm);
                     }
                 }
 
-            } catch (err) {
-                console.error('Falha ao registrar o veículo: ', err);
-                window.alert('Erro ao tentar registrar o veículo.\nEntre em contato com o suporte.');
+            } catch {
+                validarOperacao('Atenção!', 'Falha ao registrar o veículo, entre em contato com o suporte.', resetForm);
             }
         };
     }
+
+    //Função que fecha o modal
+    const fecharModal = () => {
+        setModal(prev => ({
+            ...prev,
+            aberto: false
+        }));
+    };
 
     return (
         <div>
@@ -300,7 +357,7 @@ const CadastroVeiculoBIN = () => {
                                 <select type='text' name='loja' value={selectEstoque} onChange={(e) => setSelectEstoque(e.target.value)} className="select-item" required >
                                     <option value='' >SELECIONE UM ESTOQUE</option>
                                     <option value='principal'>ESTOQUE PRINCIPAL</option>
-                                    <option value='pulmao'disabled={true}>ESTOQUE EXTRA</option>
+                                    <option value='pulmao' disabled={true}>ESTOQUE EXTRA</option>
                                 </select>
                             </div>
                             <div className="col-12 col-md-2">
@@ -365,6 +422,9 @@ const CadastroVeiculoBIN = () => {
                             </div>
                         </Form>
                     </Box>
+                    <>
+                        <ModalBootstrap modal={modal} fecharModal={fecharModal} id="modal" />
+                    </>
                 </div>
             </ContainerSecundario>
         </div>

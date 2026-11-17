@@ -5,6 +5,8 @@ import Box from '../../../components/box/Box';
 import Input from '../../../components/input/Input';
 import Form from '../../../components/form/Form';
 import Button from '../../../components/button/Button';
+import ModalBootstrap from '../../../components/modal/ModalBootstrap';
+
 import { formatCPF, formatCEP, formatDate, formatTel, formatValue } from "../../../hooks/useMask"
 import { useState, useEffect, useRef } from "react";
 import { useGetData } from '../../../services/useGetData';
@@ -39,13 +41,19 @@ const RegistrarVenda = () => {
   const [dadosVeiculo, setDadosVeiculo] = useState({ placa: '', marca: '', modelo: '', cor: '', renavam: '', unidade: '' })
   const [dadosCEP, setDadosCEP] = useState({ cep: '', rua: '', cidade: '', bairro: '', uf: '' })
   const [vendedor, setVendedor] = useState({ nome: '', unidade: '' })
-
+  const [modal, setModal] = useState({
+    aberto: false,
+    titulo: "Atenção",
+    mensagem: "",
+    tipo: "mensagem",
+    acao: null,
+  });
 
   //Limpa o formulario apos o envio
   const resetForm = () => {
+    setDadosVeiculo({ placa: '', marca: '', modelo: '', cor: '', renavam: '', unidade: '' });
     setPlaca(''); setComprador(''); setNascimento(''); setCpf(''); setRg(''); setTelefone(''); setEmail(''); setCep(''); setEndereco(''); setValorFipe('');
     setValorVenda(''); setValorEntrada(''); setInstituicao(''); setCondicoes(false); setTipoVenda(''); setObservacoes(''); setBuscaPlaca('');
-    setDadosVeiculo({ placa: '', marca: '', modelo: '', cor: '', renavam: '', unidade: '' });
     setDadosCEP({ cep: '', rua: '', cidade: '', bairro: '', uf: '' });
     setVendedor({ nome: '', unidade: '' });
     ultimaPlacaBuscada.current = ''; // também reseta a ref
@@ -75,47 +83,50 @@ const RegistrarVenda = () => {
 
     ultimaPlacaBuscada.current = placaM;
 
+    const alertasAcoes = (titulo, mensagem, aoFechar = null) => {
+      setModal({
+        aberto: true,
+        titulo,
+        mensagem,
+        tipo: "mensagem",
+        acao: "",
+        aoFechar
+      });
+    }
+
     // Verificaçao e busca de dados de veiculo
     try {
+
       // 1 Verifica se a placa existe em vendas
       const resVenda = await fetch(`${API_BASE_URL}/vendas/placa/${placaM}`);
 
       if (resVenda.status === 200) {
         // Já vendida → limpar e bloquear
-        window.alert('Ja consta uma venda registrada para esta placa. Para confirmar os dados, acesse Consultar Venda.');
-        setDadosVeiculo({ placa: '', marca: '', modelo: '', cor: '', renavam: '', unidade: '' });
-        setBuscaPlaca(placaM);
-        // Opcional: exibir mensagem ao usuário
-        return;
-      } else if (resVenda.status !== 404) {
-        throw new Error(`Erro na API de vendas: ${resVenda.status}`);
-      }
+        alertasAcoes("Atenção!", 'Ja consta uma venda registrada para esta placa. Para confirmar os dados, acesse Consultar Venda.', resetForm);
+        return
 
-      // 2. Busca veículo SOMENTE se não estiver vendida
-      const resVeiculo = await fetch(`${API_BASE_URL}/veiculos/placa/${placaM}`);
-
-      if (resVeiculo.status === 200) {
-        const dados = await resVeiculo.json();
-
-        setDadosVeiculo({
-          placa: dados.placa || placaM,
-          marca: dados.marca || '',
-          modelo: dados.modelo || '',
-          cor: dados.cor || '',
-          renavam: dados.renavam || dados.renavan || '', // cobre ambos os nomes
-          unidade: dados.unidade || ''
-        });
       } else {
-        // Veículo não encontrado
-        setDadosVeiculo({ placa: '', marca: '', modelo: '', cor: '', renavam: '', unidade: '' });
+        // 2. Busca veículo SOMENTE se não estiver vendida
+        const resVeiculo = await fetch(`${API_BASE_URL}/veiculos/placa/${placaM}`);
+
+        if (resVeiculo.status === 200) {
+          const dados = await resVeiculo.json();
+
+          setDadosVeiculo({
+            placa: dados.placa || placaM,
+            marca: dados.marca || '',
+            modelo: dados.modelo || '',
+            cor: dados.cor || '',
+            renavam: dados.renavam || dados.renavan || '', // cobre ambos os nomes
+            unidade: dados.unidade || ''
+          });
+        }
+        setBuscaPlaca(placaM);
       }
 
-      setBuscaPlaca(placaM);
-
-    } catch (erro) {
-      console.error('Erro ao buscar placa:', erro);
-      setDadosVeiculo({ placa: '', marca: '', modelo: '', cor: '', renavam: '', unidade: '' });
-      setBuscaPlaca(placaM);
+    } catch {
+      alertasAcoes("Atenção!", "Não foi possivel obter os dados do veículo.\nEntre em contato com o suporte", resetForm)
+      return
     }
   };
 
@@ -185,13 +196,35 @@ const RegistrarVenda = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
+    setModal({
+      aberto: true,
+      titulo: "Confirmação de Registro de Venda",
+      mensagem: `Confirma o registro da venda do veículo?`,
+      tipo: "confirmacao",
+      acao: confirmarRegistro
+    });
+  }
+
+  const confirmarRegistro = async () => {
+
+    const alertasAcoes = (titulo, mensagem, aoFechar = null) => {
+      setModal({
+        aberto: true,
+        titulo,
+        mensagem,
+        tipo: "mensagem",
+        acao: "",
+        aoFechar
+      });
+    }
+
     const dataRegistro = formatTimestamp(new Date())
 
     let dados = {
       placa, id: veiculo.id, marca: veiculo.marca, modelo: veiculo.modelo, cor: veiculo.cor, unidade: veiculo.unidade,
       renavam: veiculo.renavan, comprador, vendedor, nascimento, rg, cpf, telefone, email, cep: dadosPostais.cep, rua: dadosCEP.rua,
       endereco, bairro: dadosPostais.neighborhood, cidade: dadosPostais.city, uf: dadosPostais.state,
-      valorVenda, valorFipe, valorFinanciamento, valorEntrada, tipoVenda, instituicao, dataRegistro, observacoes, audit:user?.nome
+      valorVenda, valorFipe, valorFinanciamento, valorEntrada, tipoVenda, instituicao, dataRegistro, observacoes, audit: user?.nome
     }
 
     // Padroniza para caixa alta
@@ -199,28 +232,19 @@ const RegistrarVenda = () => {
       'instituicao', 'tipoVenda', 'observacoes'
     ])
 
-    const confirmou = window.confirm("Confirma o registro da venda?")
-    if (!confirmou) {
-      window.alert('Registro de venda cancelado')
-      return
-    }
-
-    console.log('Dados a serem enviados: ', dados)
-
     // Validação simples dos campos obrigatórios
-    if (!window.confirm.ok && comprador === "" || cpf === "" || rg === "" || telefone === "" || email === "" || cep === "" || endereco === "" || valorFipe === "" ||
+    if (comprador === "" || cpf === "" || rg === "" || telefone === "" || email === "" || cep === "" || endereco === "" || valorFipe === "" ||
       valorVenda === "" || tipoVenda === "") {
-      window.alert("Por favor, verifique o formulario novamente e preencha todos os campos")
+      alertasAcoes("Atenção!", "Por favor, verifique o formulario novamente e preencha todos os campos.", resetForm)
+      return
     } else {
       try {
-        const resultado = await createData(dados)
-        console.log('Venda cadastrada com sucesso, ', resultado)
-        window.alert('Venda registrada com sucesso')
-        resetForm() //Chama a função que limpa o formulario
+        await createData(dados)
+        alertasAcoes("Sucesso", 'Venda registrada com sucesso.', resetForm)
         window.scrollTo({ top: 0, behavior: 'smooth' });//Retorna a pagina para o topo
-      } catch (err) {
-        window.alert("Não foi possivel realizar o Registro de Venda.\nFavor entrar em contato com o suporte.")
-        console.error('Falha ao registrar a venda: ', err)
+      } catch {
+        alertasAcoes("Atenção!", "Não foi possivel realizar o Registro de Venda.\nEntre em contato com o suporte.", resetForm)
+        return
       }
     }
   }
@@ -231,6 +255,13 @@ const RegistrarVenda = () => {
     const nome = selectedOption.getAttribute('data-descricao')
     setVendedor(nome)
   }
+
+  const fecharModal = () => {
+    setModal(prev => ({
+      ...prev,
+      aberto: false
+    }));
+  };
 
   return (
     <ContainerSecundario>
@@ -258,7 +289,7 @@ const RegistrarVenda = () => {
         <Box onSubmit={handleSubmit}>
           <div className='panel-heading'>
             <i className='ti ti-car' id="ti-black" ></i>
-            <p>REGISTRAR A VENDA DE UM VEÍCULO <br /> Informe os dados do veículo</p>
+            <p>REGISTRAR A VENDA DE UM VEÍCULO <br /> Informe a placa para obter os dados do veículo</p>
           </div>
           <Form >
 
@@ -408,9 +439,10 @@ const RegistrarVenda = () => {
             </div>
           </Form>
         </Box>
-
+        <>
+          <ModalBootstrap modal={modal} fecharModal={fecharModal} id="modal" />
+        </>
       </div>
-
     </ContainerSecundario>
   )
 }

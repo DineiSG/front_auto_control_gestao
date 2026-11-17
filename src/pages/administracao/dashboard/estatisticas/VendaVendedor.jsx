@@ -1,11 +1,12 @@
-import { useState, useRef } from "react";
 import html2pdf from "html2pdf.js";
-import { Bar } from "react-chartjs-2";
 import Button from "../../../../components/button/Button";
 import Input from "../../../../components/input/Input"
+import useGroupedChart from "../../../../hooks/useGroupedChart"; // seu hook atual
+
+import { useState, useRef } from "react";
+import { Bar } from "react-chartjs-2";
 import { useGetArray } from "../../../../services/useGetArray"
 import { useGetData } from "../../../../services/useGetData"
-import useGroupedChart from "../../../../hooks/useGroupedChart"; // seu hook atual
 import { useFilterPeriodo } from "../../../../hooks/useFilterPeriodo"; // o hook criado acima
 import { formatDateInfo } from "../../../../hooks/formatDate"
 
@@ -21,8 +22,6 @@ const VendaVendedor = () => {
 
     // Ordena as lojas por descrição
     const lojasOrdenadas = dadosLoja.sort((a, b) => a.descricao.localeCompare(b.descricao))
-
-
 
     // Hook de período (defina aqui a chave da data na sua venda: "dataVenda", "createdAt", etc.)
     const { startDate, endDate, setStartDate, setEndDate, filteredData, status, message, hasResults, } = useFilterPeriodo({

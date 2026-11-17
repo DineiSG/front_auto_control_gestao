@@ -1,15 +1,16 @@
-import { useRef, useState, useEffect, useMemo } from "react";
-import html2pdf from "html2pdf.js";
-import { Bar } from "react-chartjs-2";
 import Button from "../../../../components/button/Button";
 import Input from "../../../../components/input/Input";
-import { useGetArray } from "../../../../services/useGetArray";
+import html2pdf from "html2pdf.js";
 import useGroupedChart from "../../../../hooks/useGroupedChart";
-import { useFilterPeriodo } from "../../../../hooks/useFilterPeriodo";
 import ModalContent from "../../../../components/modal/ModalContent";
 import useExportExcel from "../../../../hooks/useExportExcel";
+
+import { Bar } from "react-chartjs-2";
+import { useGetArray } from "../../../../services/useGetArray";
+import { useFilterPeriodo } from "../../../../hooks/useFilterPeriodo";
 import { prepararRelatorio } from "../../../../hooks/preparaRelatorioVendas";
 import { formatDateInfo } from "../../../../hooks/formatDate";
+import { useRef, useState, useEffect, useMemo } from "react";
 
 const VendaInstituicao = () => {
     const [dadosTabela, setDadosTabela] = useState([]);

@@ -1,10 +1,11 @@
 import "chart.js/auto";
-import { Bar } from "react-chartjs-2";
-import { useGetData } from "../../../../services/useGetData"
 import useGroupedChart from "../../../../hooks/useGroupedChart";
-import { useRef } from "react";
 import html2pdf from 'html2pdf.js'
 import Button from "../../../../components/button/Button";
+
+import { Bar } from "react-chartjs-2";
+import { useGetData } from "../../../../services/useGetData"
+import { useRef } from "react";
 
 const AnoModelo = () => {
 

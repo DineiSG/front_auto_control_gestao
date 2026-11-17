@@ -1,9 +1,10 @@
 import "chart.js/auto";
-import { Bar } from "react-chartjs-2";
-import { useGetData } from "../../../../services/useGetData"
 import useGroupedChart from "../../../../hooks/useGroupedChart";
 import Button from "../../../../components/button/Button";
 import html2pdf from 'html2pdf.js'
+
+import { Bar } from "react-chartjs-2";
+import { useGetData } from "../../../../services/useGetData"
 import { useRef } from "react";
 
 const Marca = () => {

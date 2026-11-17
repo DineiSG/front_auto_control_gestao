@@ -1,18 +1,17 @@
 import "../../../assets/css/thead.css";
 import "../../../assets/css/themify-icons.css"
-import { useState, useEffect, useRef } from "react";
-import ContainerSecundario from "../../../components/container/ContainerSecundario";
-//import * as XLSX from "xlsx";
-import { useGetArray } from "../../../services/useGetArray";
-import { formatDateInfo } from "../../../hooks/formatDate";
-import { calculateDaysInStock } from "../../../hooks/useCalc";
-import "../Administracao.css";
 import Box from '../../../components/box/Box'
 import Table from "../../../components/table/Table";
 import Input from "../../../components/input/Input";
 import Select from "../../../components/select/Select";
 import Button from "../../../components/button/Button";
+import ContainerSecundario from "../../../components/container/ContainerSecundario";
+import "../Administracao.css";
 
+import { useState, useEffect, useRef } from "react";
+import { useGetArray } from "../../../services/useGetArray";
+import { formatDateInfo } from "../../../hooks/formatDate";
+import { calculateDaysInStock } from "../../../hooks/useCalc";
 
 const HistoricoVeiculo = () => {
 
@@ -24,10 +23,8 @@ const HistoricoVeiculo = () => {
     const tabelaRef = useRef(null);
     const ultimaPlacaBuscada = useRef('');
 
-
     //Recebendo os veículos da tabela
     const { data: baixas } = useGetArray(`/baixas`);
-
 
     const handleBlur = () => {
 
@@ -43,7 +40,6 @@ const HistoricoVeiculo = () => {
         } else {
             setMostrarTabela(false);
         }
-
     };
 
     //Recebe o array de objetos veiculos e realiza as tratativas de busca 
@@ -62,7 +58,6 @@ const HistoricoVeiculo = () => {
                 dias_estoque: calculateDaysInStock(veiculo.dataRegistro),
             }));
 
-
             // Filtrar por termo e por data
             let filtrados = [...dadosComDias];
 
@@ -77,9 +72,6 @@ const HistoricoVeiculo = () => {
             setFilteredBaixas(filtrados);     // dados filtrados
             setCurrentPage(1);                // reseta para primeira página ao filtrar
         }
-
-
-
     }, [baixas, searchTerm]);
 
     //Passando as colunas com as suas respectivas chaves

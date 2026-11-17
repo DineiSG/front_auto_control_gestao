@@ -3,6 +3,7 @@ import "../../../assets/css/themify-icons.css";
 import Form from '../../../components/form/Form';
 import Input from '../../../components/input/Input';
 import Button from '../../../components/button/Button';
+import ModalBootstrap from '../../../components/modal/ModalBootstrap';
 
 import { useState, useRef, useEffect } from 'react';
 import { useGetData } from '../../../services/useGetData';
@@ -15,11 +16,17 @@ const EditarCadastroFinanceira = () => {
     const [editavel, setEditavel] = useState(false);
     // estado local com todos os campos
     const [dadosFinanceira, setDadosFinanceira] = useState({ id: '', descricao: '', cnpj: '', agente: '', email: '', telefone: '' });
-
     const resetForm = () => {
         setDadosFinanceira({ id: '', descricao: '', cnpj: '', agente: '', email: '', telefone: '' })
         ultimaInstituicao.current = ''
     }
+    const [modal, setModal] = useState({
+        aberto: false,
+        titulo: "Atenção",
+        mensagem: "",
+        tipo: "mensagem",
+        acao: null,
+    });
 
     // busca os dados quando houver termo
     const { data: dados, loading } = useGetData(
@@ -92,9 +99,26 @@ const EditarCadastroFinanceira = () => {
     const handleEdit = async (e) => {
         e.preventDefault();
 
-        if (!dadosFinanceira.id) {
-            window.alert('Nenhuma instituiçao selecionada para edição.');
-            return;
+        setModal({
+            aberto: true,
+            titulo: "Confirmação de Edição",
+            mensagem: `Confirma a edição dos dados da instituição financeira?`,
+            tipo: "confirmacao",
+            acao: confirmarEdicao
+        });
+    };
+
+    const confirmarEdicao = async () => {
+
+        const alertasAcoes = (titulo, mensagem, aoFechar = null) => {
+            setModal({
+                aberto: true,
+                titulo,
+                mensagem,
+                tipo: "mensagem",
+                acao: "",
+                aoFechar
+            });
         }
 
         const dadosPayload = {
@@ -108,52 +132,73 @@ const EditarCadastroFinanceira = () => {
 
         const dadosUpper = toUpperFields(dadosPayload, ['descricao']);
 
-        const confirmar = window.confirm("Confirma a edição do cadastro da instituição?");
-        if (!confirmar) return;
         if (dadosFinanceira.descricao === '' || dadosFinanceira.telefone === '' || dadosFinanceira.email === '' || dadosFinanceira.agente === '', dadosFinanceira.cnpj === '') {
-            window.alert('Por favor, preencha todos os campos obrigatórios antes de enviar.');
+            alertasAcoes("Atenção!", "Todos os campos devem ser preenchidos.\nVerifique o formulario e tente novamente.", resetForm);
             return;
+
         } else {
-            if (confirmar === true) {
-                try {
-                    // ajuste conforme assinatura do seu hook
-                    await updateData(dadosUpper, dadosFinanceira.id);
-                    window.alert('Cadastro editado com sucesso');
-                    resetForm()
-                    //window.location.reload()
-                } catch (err) {
-                    console.error('Falha ao editar cadastro: ', err);
-                    window.alert('Falha ao editar o cadastro da instituição.\nEntre em contato com o suporte.');
-                }
+
+            try {
+                await updateData(dadosUpper, dadosFinanceira.id);
+                alertasAcoes("Sucesso", 'Cadastro da instituição editado com sucesso.', resetForm);
+                return
+            } catch {
+                alertasAcoes("Atenção", 'Falha ao editar os dados da instituição.\nEntre em contato com suporte.')
             }
         }
+    }
 
-    };
 
     const handleDelete = async (e) => {
         e.preventDefault()
 
+        setModal({
+            aberto: true,
+            titulo: "Confirmação de Exclusão",
+            mensagem: `Confirma a exclusao dos dados da instituição financeira?`,
+            tipo: "confirmacao",
+            acao: confirmarExclusao
+        });
+    }
+
+    const confirmarExclusao = async () => {
+
+        const alertasAcoes = (titulo, mensagem, aoFechar = null) => {
+            setModal({
+                aberto: true,
+                titulo,
+                mensagem,
+                tipo: "mensagem",
+                acao: "",
+                aoFechar
+            });
+        }
+
         let deleteInstituicao = (dadosFinanceira.id)
 
-        const confirmar = window.confirm("Confirma a exclusao da instituiçao?")
-        if (!confirmar) {
+        try {
+            await deleteData(deleteInstituicao)
+            alertasAcoes("Sucesso", "Instituição excluida com sucesso", resetForm)
             return
-        } else {
-            try {
-                await deleteData(deleteInstituicao)
-                window.alert("Instituição excluida com sucesso")
-                resetForm()
-            } catch {
-                window.alert("Não foi possivel excluir a instituiçao. Entre em contato com o suporte.")
-            }
+        } catch {
+            alertasAcoes("Atenção!", "Não foi possivel excluir a instituiçao. Entre em contato com o suporte.", resetForm)
+            return
         }
+
     }
+
+    const fecharModal = () => {
+        setModal(prev => ({
+            ...prev,
+            aberto: false
+        }));
+    };
 
     return (
         <div>
             <div className='panel-heading'>
                 <i className='ti ti-money' id="ti-black"></i>
-                <p>EDITAR BANCO <br /> Informe os dados e selecione o que deseja editar</p>
+                <p>EDITAR OU EXCLUIR INSTITUIÇÃO <br /> Informe o nome para buscar os dados e selecione o que deseja editar. Caso deseje excluir os dados da instituição, apenas clique em EXCLUIR</p>
             </div>
             <Form onSubmit={handleEdit}>
                 <div className="col-12 col-md-5">
@@ -195,11 +240,14 @@ const EditarCadastroFinanceira = () => {
                             {loading && (
                                 <div className="d-flex flex-row-start" role="status" > </div>
                             )}
-                            EXCLUIR LOJA
+                            EXCLUIR
                         </Button>
                     </div>
                 </div>
             </Form>
+            <>
+                <ModalBootstrap modal={modal} fecharModal={fecharModal} id="modal" />
+            </>
         </div>
     );
 };
